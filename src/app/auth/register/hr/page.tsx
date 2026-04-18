@@ -42,24 +42,10 @@ export default function HRRegisterPage() {
               <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-white/12">
                 <Building2 className="h-5 w-5" />
               </div>
-              <div>
-                <div className="text-lg font-bold tracking-tight">EduLink</div>
-                <div className="text-xs text-white/65">학교 담당자 가입</div>
-              </div>
+              <div className="text-lg font-bold tracking-tight">EduLink</div>
             </Link>
 
-            <div className="max-w-xl">
-              <span className="kicker text-white/85 before:bg-white">학교 가입</span>
-              <h1 className="mt-5 text-5xl font-bold leading-tight">
-                학교 운영 흐름에 맞는
-                <br />
-                채용 화면으로 바로 연결됩니다.
-              </h1>
-              <p className="mt-5 text-base leading-7 text-white/78">
-                기관 확인과 승인 흐름을 단순하게 정리해 학교 담당자가 빠르게 가입할 수
-                있게 재구성했습니다.
-              </p>
-            </div>
+            <div className="text-5xl font-bold leading-tight">학교 가입</div>
           </div>
         </section>
 
@@ -69,10 +55,7 @@ export default function HRRegisterPage() {
               <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-primary-50 text-primary-700">
                 <Building2 className="h-5 w-5" />
               </div>
-              <div>
-                <div className="text-lg font-bold tracking-tight">EduLink</div>
-                <div className="text-xs text-ink-muted">학교 담당자 가입</div>
-              </div>
+              <div className="text-lg font-bold tracking-tight">EduLink</div>
             </Link>
 
             <div className="mb-8 flex items-center justify-between gap-3 overflow-x-auto">

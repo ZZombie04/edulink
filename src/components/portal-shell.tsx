@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
-import { Bell, BookOpen, ChevronRight, type LucideIcon } from "lucide-react";
+import { Bell, BookOpen, type LucideIcon } from "lucide-react";
 
 import { CharacterAvatar } from "@/components/character-avatar";
 import type { AvatarPresetId } from "@/lib/avatar-presets";
@@ -65,10 +65,7 @@ export function PortalShell({
           <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-primary-50 text-primary-700 shadow-panel">
             <BookOpen className="h-5 w-5" />
           </div>
-          <div>
-            <div className="text-lg font-bold tracking-tight text-ink">EduLink</div>
-            <div className="text-xs font-medium text-ink-muted">학교 교원 매칭 플랫폼</div>
-          </div>
+          <div className="text-lg font-bold tracking-tight text-ink">EduLink</div>
         </Link>
 
         {primaryAction ? (
@@ -106,21 +103,7 @@ export function PortalShell({
           ))}
         </nav>
 
-        <div className="mt-auto panel-surface p-4">
-          <div className="text-xs font-semibold uppercase tracking-[0.18em] text-ink-muted">
-            운영 팁
-          </div>
-          <div className="mt-3 text-sm leading-6 text-ink-soft">
-            검토 중인 매칭과 공고를 한 화면에서 관리하면 응답 속도가 더 안정적으로 유지됩니다.
-          </div>
-          <Link
-            className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-primary-700"
-            href="/jobs"
-          >
-            공고 현황 보기
-            <ChevronRight className="h-4 w-4" />
-          </Link>
-        </div>
+        <div className="mt-auto hidden lg:block" />
       </aside>
 
       <div className="lg:pl-72">

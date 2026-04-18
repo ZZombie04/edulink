@@ -49,24 +49,10 @@ export default function LoginPage() {
               <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-white/12">
                 <Building2 className="h-5 w-5" />
               </div>
-              <div>
-                <div className="text-lg font-bold tracking-tight">EduLink</div>
-                <div className="text-xs text-white/65">학교 교원 매칭 플랫폼</div>
-              </div>
+              <div className="text-lg font-bold tracking-tight">EduLink</div>
             </Link>
 
-            <div className="max-w-xl">
-              <span className="kicker text-white/85 before:bg-white">다시 돌아온 운영 화면</span>
-              <h1 className="mt-5 text-5xl font-bold leading-tight">
-                역할에 맞는 운영 화면으로
-                <br />
-                바로 이어집니다.
-              </h1>
-              <p className="mt-5 text-base leading-7 text-white/78">
-                교사, 학교 담당자, 관리자 각각의 흐름을 하나의 브랜드 언어로 정리했습니다.
-                로그인 후 즉시 필요한 화면으로 이동합니다.
-              </p>
-            </div>
+            <div className="text-5xl font-bold leading-tight">로그인</div>
           </div>
         </section>
 
@@ -76,18 +62,12 @@ export default function LoginPage() {
               <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-primary-50 text-primary-700">
                 <Building2 className="h-5 w-5" />
               </div>
-              <div>
-                <div className="text-lg font-bold tracking-tight">EduLink</div>
-                <div className="text-xs text-ink-muted">학교 교원 매칭 플랫폼</div>
-              </div>
+              <div className="text-lg font-bold tracking-tight">EduLink</div>
             </Link>
 
             <div className="panel-surface p-8">
               <div>
                 <div className="text-3xl font-bold text-ink">로그인</div>
-                <div className="mt-2 text-sm leading-6 text-ink-soft">
-                  역할별 운영 화면으로 바로 이동합니다.
-                </div>
               </div>
 
               {error ? (

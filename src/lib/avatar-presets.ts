@@ -1,9 +1,7 @@
 export const avatarPresets = [
   {
     id: "teacher-f-rose",
-    gender: "female",
-    name: "로즈",
-    description: "차분한 인상의 단발 캐릭터",
+    name: "캐릭터 1",
     backgroundFrom: "#ffe1ef",
     backgroundTo: "#ffd4dd",
     skin: "#f3c7a6",
@@ -15,9 +13,7 @@ export const avatarPresets = [
   },
   {
     id: "teacher-f-mint",
-    gender: "female",
-    name: "민트",
-    description: "밝은 긴 머리 캐릭터",
+    name: "캐릭터 2",
     backgroundFrom: "#d9fff3",
     backgroundTo: "#d4f3ff",
     skin: "#f2c4a0",
@@ -29,9 +25,7 @@ export const avatarPresets = [
   },
   {
     id: "teacher-f-violet",
-    gender: "female",
-    name: "바이올렛",
-    description: "번 헤어와 또렷한 분위기",
+    name: "캐릭터 3",
     backgroundFrom: "#efe3ff",
     backgroundTo: "#dcd7ff",
     skin: "#f0c9aa",
@@ -43,9 +37,7 @@ export const avatarPresets = [
   },
   {
     id: "teacher-f-sky",
-    gender: "female",
-    name: "스카이",
-    description: "포니테일의 활동적인 캐릭터",
+    name: "캐릭터 4",
     backgroundFrom: "#d8ecff",
     backgroundTo: "#d7f7ff",
     skin: "#efc6a2",
@@ -57,9 +49,7 @@ export const avatarPresets = [
   },
   {
     id: "teacher-m-navy",
-    gender: "male",
-    name: "네이비",
-    description: "정갈한 짧은 머리 캐릭터",
+    name: "캐릭터 5",
     backgroundFrom: "#d9e7ff",
     backgroundTo: "#cfe0ff",
     skin: "#efc59d",
@@ -71,9 +61,7 @@ export const avatarPresets = [
   },
   {
     id: "teacher-m-amber",
-    gender: "male",
-    name: "앰버",
-    description: "따뜻한 톤의 캐주얼 캐릭터",
+    name: "캐릭터 6",
     backgroundFrom: "#ffe8c7",
     backgroundTo: "#fff0d8",
     skin: "#eec09b",
@@ -85,9 +73,7 @@ export const avatarPresets = [
   },
   {
     id: "teacher-m-forest",
-    gender: "male",
-    name: "포레스트",
-    description: "차분한 녹색 계열 캐릭터",
+    name: "캐릭터 7",
     backgroundFrom: "#d6f4db",
     backgroundTo: "#e1ffef",
     skin: "#efc7a5",
@@ -99,9 +85,7 @@ export const avatarPresets = [
   },
   {
     id: "teacher-m-plum",
-    gender: "male",
-    name: "플럼",
-    description: "웨이브 헤어의 부드러운 캐릭터",
+    name: "캐릭터 8",
     backgroundFrom: "#ecdfff",
     backgroundTo: "#f8e7ff",
     skin: "#efc7a8",
@@ -113,9 +97,7 @@ export const avatarPresets = [
   },
   {
     id: "teacher-n-cloud",
-    gender: "neutral",
-    name: "클라우드",
-    description: "성별 공개 없이 쓰기 좋은 중성 캐릭터",
+    name: "캐릭터 9",
     backgroundFrom: "#e4eef8",
     backgroundTo: "#edf6ff",
     skin: "#efc8a7",
@@ -127,9 +109,7 @@ export const avatarPresets = [
   },
   {
     id: "teacher-n-coral",
-    gender: "neutral",
-    name: "코랄",
-    description: "밝고 친근한 표정의 캐릭터",
+    name: "캐릭터 10",
     backgroundFrom: "#ffe2d8",
     backgroundTo: "#fff0ea",
     skin: "#f0c7a6",
@@ -139,34 +119,41 @@ export const avatarPresets = [
     hairStyle: "round",
     accessory: "clip",
   },
+  {
+    id: "teacher-c-lime",
+    name: "캐릭터 11",
+    backgroundFrom: "#e5ffd4",
+    backgroundTo: "#f4ffd8",
+    skin: "#f0c8a2",
+    hair: "#42533a",
+    shirt: "#7bbf3d",
+    accent: "#fbfff2",
+    hairStyle: "crop",
+    accessory: "star",
+  },
+  {
+    id: "teacher-c-indigo",
+    name: "캐릭터 12",
+    backgroundFrom: "#dbe2ff",
+    backgroundTo: "#e8ebff",
+    skin: "#efc7a6",
+    hair: "#2f355f",
+    shirt: "#5d6fe8",
+    accent: "#f5f7ff",
+    hairStyle: "long",
+    accessory: "earring",
+  },
 ] as const;
 
 export type AvatarPreset = (typeof avatarPresets)[number];
 export type AvatarPresetId = AvatarPreset["id"];
-export type AvatarGender = AvatarPreset["gender"];
 
-export const defaultAvatarPresetByGender: Record<AvatarGender, AvatarPresetId> = {
-  female: "teacher-f-rose",
-  male: "teacher-m-navy",
-  neutral: "teacher-n-cloud",
-};
+export const defaultAvatarPreset: AvatarPresetId = avatarPresets[0].id;
 
 export function getAvatarPreset(presetId?: AvatarPresetId) {
   if (!presetId) {
     return avatarPresets[0];
   }
 
-  return (
-    avatarPresets.find((preset) => preset.id === presetId) ?? avatarPresets[0]
-  );
+  return avatarPresets.find((preset) => preset.id === presetId) ?? avatarPresets[0];
 }
-
-export function getAvatarPresetsByGender(gender: AvatarGender) {
-  return avatarPresets.filter((preset) => preset.gender === gender);
-}
-
-export const avatarGenderLabels: Record<AvatarGender, string> = {
-  female: "여성",
-  male: "남성",
-  neutral: "공개 안 함",
-};

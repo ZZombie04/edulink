@@ -85,10 +85,7 @@ export default function JobsPage() {
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary-50 text-primary-700">
               <Building2 className="h-5 w-5" />
             </div>
-            <div>
-              <div className="text-lg font-bold tracking-tight">EduLink</div>
-              <div className="text-xs text-ink-muted">학교 교원 매칭 플랫폼</div>
-            </div>
+            <div className="text-lg font-bold tracking-tight">EduLink</div>
           </Link>
 
           <div className="flex items-center gap-2">
@@ -122,10 +119,6 @@ export default function JobsPage() {
             <br />
             학교 채용 공고를 모았습니다.
           </h1>
-          <p className="mt-5 max-w-2xl text-base leading-7 text-white/78">
-            지역, 자격, 고용 형태 기준으로 공고를 빠르게 좁혀볼 수 있습니다. 마감
-            임박 공고가 먼저 눈에 들어오도록 정보 밀도를 다시 설계했습니다.
-          </p>
 
           <div className="mt-8 max-w-2xl">
             <div className="relative">

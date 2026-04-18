@@ -72,8 +72,7 @@ model TeacherProfile {
   residenceRegion  String // 거주 시/군
   residenceAddress String? // 상세 주소
   preferredRegions String[] // 희망 근무 지역 (복수 선택)
-  gender           Gender   @default(NEUTRAL)
-  avatarPreset     String   @default("teacher-n-cloud")
+  avatarPreset     String   @default("teacher-f-rose")
 
   // 구직 상태
   seekingStatus      SeekingStatus @default(SEEKING)
@@ -115,12 +114,6 @@ enum EducationLevel {
   BACHELOR // 학사
   MASTER // 석사
   DOCTOR // 박사
-}
-
-enum Gender {
-  FEMALE
-  MALE
-  NEUTRAL
 }
 
 enum SeekingStatus {
