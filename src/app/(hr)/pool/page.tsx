@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Search, MapPin, Briefcase, ChevronDown, Check, Star, Filter } from "lucide-react";
-import { Card, CardHeader, CardContent, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
+import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

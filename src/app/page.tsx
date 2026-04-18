@@ -41,7 +41,7 @@ export default function Home() {
         {/* Hero Section */}
         <section className="relative pt-20 pb-32 lg:pt-36 lg:pb-40 overflow-hidden">
           {/* Background decorations */}
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[500px] bg-gradient-to-tr from-primary-200/40 to-secondary-200/40 blur-3xl -z-10 rounded-full opacity-70 animate-pulse-slow"></div>
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[500px] bg-gradient-to-tr from-primary-200/30 to-secondary-200/20 blur-3xl -z-10 rounded-full opacity-50 animate-pulse-slow"></div>
           
           <div className="container mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
             <motion.div
@@ -71,7 +71,7 @@ export default function Home() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.2 }}
-              className="text-lg md:text-xl text-gray-600 mb-10 max-w-3xl mx-auto leading-relaxed"
+              className="text-lg md:text-xl text-gray-700 mb-10 max-w-3xl mx-auto leading-relaxed"
             >
               기간제교사와 시간강사, 그리고 학교 인사담당자를 위한 양방향 매칭 서비스입니다.
               복잡한 절차 없이 클릭 몇 번으로 최적의 교육 인재를 만나보세요.
@@ -87,7 +87,7 @@ export default function Home() {
                 <Building2 size={20} />
                 학교 담당자로 시작하기
               </Link>
-              <Link href="/auth/register/teacher" className="w-full sm:w-auto flex items-center justify-center gap-2 bg-white text-gray-800 border items-center justify-center border-gray-200 px-8 py-4 rounded-full text-lg font-semibold hover:bg-gray-50 hover:border-gray-300 transition-colors shadow-sm">
+              <Link href="/auth/register/teacher" className="w-full sm:w-auto flex items-center justify-center gap-2 bg-white text-gray-800 border border-gray-300 px-8 py-4 rounded-full text-lg font-semibold hover:bg-gray-50 hover:border-gray-400 transition-colors shadow-md">
                 <Users size={20} className="text-secondary-600" />
                 구직 교사로 이력 등록
               </Link>

@@ -41,8 +41,11 @@ const config = {
         secondary: {
           DEFAULT: "hsl(var(--secondary))",
           foreground: "hsl(var(--secondary-foreground))",
+          200: "var(--secondary-200)",
+          400: "var(--secondary-400)",
           500: "var(--secondary-500)",
           600: "var(--secondary-600)",
+          700: "var(--secondary-700)",
         },
         status: {
           seeking: "var(--seeking)",

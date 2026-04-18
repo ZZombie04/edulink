@@ -14,24 +14,35 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !password) {
       setError("이메일과 비밀번호를 입력해주세요.");
       return;
     }
     
-    // Demo routing based on email domain or just routing directly
-    if (email.includes("school")) {
-      router.push("/pool");
+    setLoading(true);
+    setError("");
+
+    // Demo routing based on email pattern
+    // In production, this would be a real authentication API call
+    await new Promise(resolve => setTimeout(resolve, 800));
+
+    if (email.includes("admin")) {
+      router.push("/admin/dashboard");
+    } else if (email.includes("school") || email.includes("hr")) {
+      router.push("/hr/dashboard");
     } else {
-      router.push("/jobs");
+      router.push("/teacher/dashboard");
     }
+
+    setLoading(false);
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-primary-50 to-gray-50 p-4">
       <div className="w-full max-w-md">
         <div className="flex justify-center mb-8">
           <Link href="/" className="flex items-center gap-2">
@@ -89,10 +100,28 @@ export default function LoginPage() {
                   onChange={(e) => setPassword(e.target.value)}
                 />
               </div>
-              <Button type="submit" className="w-full h-12 bg-primary-600 hover:bg-primary-700 text-white font-bold text-base shadow-md mt-6 rounded-xl">
-                로그인
+              <Button 
+                type="submit" 
+                className="w-full h-12 bg-primary-600 hover:bg-primary-700 text-white font-bold text-base shadow-md mt-6 rounded-xl"
+                disabled={loading}
+              >
+                {loading ? (
+                  <span className="flex items-center gap-2">
+                    <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    로그인 중...
+                  </span>
+                ) : "로그인"}
               </Button>
             </form>
+
+            {/* Demo credentials hint */}
+            <div className="bg-primary-50 border border-primary-200 p-3 rounded-lg text-xs text-primary-700 space-y-1">
+              <p className="font-semibold">🔑 데모 로그인 안내</p>
+              <p>• <code className="bg-primary-100 px-1 rounded">teacher@email.com</code> → 교사 대시보드</p>
+              <p>• <code className="bg-primary-100 px-1 rounded">hr@school.go.kr</code> → 인사담당자 대시보드</p>
+              <p>• <code className="bg-primary-100 px-1 rounded">admin@educonnect.kr</code> → 관리자 대시보드</p>
+              <p className="text-primary-500 mt-1">비밀번호: 아무 값이나 입력</p>
+            </div>
             
             <div className="relative my-8">
               <div className="absolute inset-0 flex items-center">

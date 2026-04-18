@@ -2,16 +2,31 @@
 
 import { useState } from "react";
 import { Search, MapPin, Building, ChevronDown, Calendar, ArrowRight, Briefcase } from "lucide-react";
-import { Card, CardHeader, CardContent, CardTitle, CardFooter } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import Link from "next/link";
 
+interface Job {
+  id: number;
+  schoolName: string;
+  schoolRegion: string;
+  employmentType: string;
+  startDate: string;
+  endDate: string;
+  qualificationType: string;
+  qualificationSubject?: string;
+  gradeLevel: string;
+  isHomeroom: boolean;
+  duties: string;
+  status: string;
+}
+
 export default function JobsPage() {
   const [searchQuery, setSearchQuery] = useState("");
 
-  const jobs = [
+  const jobs: Job[] = [
     {
       id: 1,
       schoolName: "○○초등학교",
@@ -55,6 +70,11 @@ export default function JobsPage() {
     }
   ];
 
+  const getJobTitle = (job: Job) => {
+    const subject = job.qualificationSubject ? `(${job.qualificationSubject})` : "";
+    return `[${job.employmentType}] ${job.gradeLevel} ${job.qualificationType} ${subject} 선생님 모십니다.`;
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col pb-20">
       <header className="w-full bg-white border-b sticky top-0 z-30 shadow-sm">
@@ -73,9 +93,9 @@ export default function JobsPage() {
         </div>
       </header>
 
-      <div className="bg-primary-900 text-white py-12">
+      <div className="bg-gradient-to-br from-primary-900 via-primary-800 to-primary-700 text-white py-16">
           <div className="container mx-auto px-4 text-center">
-              <h2 className="text-3xl font-bold mb-4">내게 딱 맞는 학교를 찾아보세요</h2>
+              <h2 className="text-3xl md:text-4xl font-bold mb-4">내게 딱 맞는 학교를 찾아보세요</h2>
               <p className="text-primary-200 mb-8 max-w-2xl mx-auto">
                  수원, 화성, 용인 등 경기도 전 지역의 기간제 교사 및 시간 강사 구인 공고를 한눈에 확인하고 지원할 수 있습니다.
               </p>
@@ -176,12 +196,14 @@ export default function JobsPage() {
                 </div>
             </div>
 
-            {jobs.map((job) => (
-               <Card key={job.id} className={\`border overflow-hidden transition-all duration-200 hover:shadow-lg hover:border-primary-200 \${job.status === 'CLOSED' ? 'opacity-60 bg-gray-50' : 'bg-white'}\`}>
+            {jobs.map((job) => {
+              const isClosed = job.status === "CLOSED";
+              return (
+               <Card key={job.id} className={`border overflow-hidden transition-all duration-200 hover:shadow-lg hover:border-primary-200 ${isClosed ? "opacity-60 bg-gray-50" : "bg-white"}`}>
                   <div className="flex flex-col sm:flex-row">
                       <div className="flex-grow p-6">
-                           <div className="flex items-center gap-2 mb-3">
-                               {job.status === 'OPEN' ? (
+                           <div className="flex items-center gap-2 mb-3 flex-wrap">
+                               {job.status === "OPEN" ? (
                                    <Badge className="bg-primary-50 text-primary-700 border-primary-200 hover:bg-primary-100">모집중</Badge>
                                ) : (
                                    <Badge variant="secondary" className="bg-gray-200 text-gray-600 hover:bg-gray-300 border-transparent">모집마감</Badge>
@@ -194,9 +216,9 @@ export default function JobsPage() {
                                </span>
                            </div>
 
-                           <Link href={\`/jobs/\${job.id}\`} className="block group">
+                           <Link href={"/jobs/" + job.id} className="block group">
                                <h4 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-primary-600 transition-colors">
-                                   [{job.employmentType}] {job.gradeLevel} {job.qualificationType} {job.qualificationSubject ? `(${job.qualificationSubject})` : ''} 선생님 모십니다.
+                                   {getJobTitle(job)}
                                </h4>
                            </Link>
 
@@ -211,18 +233,18 @@ export default function JobsPage() {
                                </div>
                            </div>
                            
-                           <div className="mt-4 text-sm text-gray-600 line-clamp-2 border-t border-gray-50 pt-4">
+                           <div className="mt-4 text-sm text-gray-600 line-clamp-2 border-t border-gray-50 pt-4 whitespace-pre-line">
                                {job.duties}
                            </div>
                       </div>
                       
                       <div className="sm:w-48 bg-gray-50 border-t sm:border-t-0 sm:border-l border-gray-100 p-6 flex flex-col justify-center items-center gap-3 shrink-0">
                           <Button 
-                             className={\`w-full rounded-full font-bold shadow-md \${job.status === 'OPEN' ? 'bg-primary-600 hover:bg-primary-700 text-white' : ''}\`}
-                             variant={job.status === 'OPEN' ? 'default' : 'secondary'}
-                             disabled={job.status === 'CLOSED'}
+                             className={`w-full rounded-full font-bold shadow-md ${job.status === "OPEN" ? "bg-primary-600 hover:bg-primary-700 text-white" : ""}`}
+                             variant={job.status === "OPEN" ? "default" : "secondary"}
+                             disabled={isClosed}
                           >
-                              {job.status === 'OPEN' ? "지원하기" : "마감됨"}
+                              {job.status === "OPEN" ? "지원하기" : "마감됨"}
                           </Button>
                           <Button variant="outline" className="w-full rounded-full border-gray-300 text-gray-700 hover:bg-white hover:text-primary-600 hover:border-primary-300">
                               상세보기 <ArrowRight size={14} className="ml-1" />
@@ -230,7 +252,8 @@ export default function JobsPage() {
                       </div>
                   </div>
                </Card>
-            ))}
+              );
+            })}
 
             <div className="mt-8 flex justify-center pb-8">
                 <Button variant="outline" className="px-8 font-medium rounded-full border-gray-200 text-gray-700 shadow-sm hover:shadow">더 보기</Button>
