@@ -10,6 +10,7 @@ import {
   Users,
 } from "lucide-react";
 
+import { CharacterAvatar } from "@/components/character-avatar";
 import { featuredTeachers, jobPosts } from "@/lib/demo-data";
 
 function teacherStatusLabel(status: string) {
@@ -214,10 +215,10 @@ export default function Home() {
                     >
                       <div className="flex items-start justify-between gap-3">
                         <div className="flex items-center gap-3">
-                          <img
-                            alt={teacher.name}
-                            className="h-14 w-14 rounded-lg object-cover"
-                            src={teacher.avatar}
+                          <CharacterAvatar
+                            className="h-14 w-14 rounded-lg"
+                            presetId={teacher.avatarPreset}
+                            size={56}
                           />
                           <div>
                             <div className="text-lg font-bold text-ink">{teacher.name}</div>

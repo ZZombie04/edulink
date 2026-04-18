@@ -9,6 +9,7 @@ import {
   Users,
 } from "lucide-react";
 
+import { CharacterAvatar } from "@/components/character-avatar";
 import { PortalShell } from "@/components/portal-shell";
 import { featuredTeachers, hrMatchRequests, jobPosts } from "@/lib/demo-data";
 
@@ -43,8 +44,6 @@ export default function HRDashboardPage() {
         name: "홍수진",
         role: "인사담당",
         detail: "정인초등학교",
-        avatar:
-          "https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&w=240&q=80",
       }}
     >
       <section className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
@@ -210,10 +209,10 @@ export default function HRDashboardPage() {
                 key={teacher.id}
                 className="flex items-center gap-4 rounded-lg border border-outline bg-surface p-4"
               >
-                <img
-                  alt={teacher.name}
-                  className="h-14 w-14 rounded-lg object-cover"
-                  src={teacher.avatar}
+                <CharacterAvatar
+                  className="h-14 w-14 rounded-lg"
+                  presetId={teacher.avatarPreset}
+                  size={56}
                 />
                 <div className="flex-1">
                   <div className="font-semibold text-ink">{teacher.name}</div>

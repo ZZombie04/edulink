@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import {
   ArrowLeft,
@@ -10,46 +10,69 @@ import {
   GraduationCap,
   MapPin,
   ShieldCheck,
+  Sparkles,
   User,
 } from "lucide-react";
 
+import { CharacterAvatar } from "@/components/character-avatar";
+import {
+  avatarGenderLabels,
+  defaultAvatarPresetByGender,
+  getAvatarPreset,
+  getAvatarPresetsByGender,
+  type AvatarGender,
+  type AvatarPresetId,
+} from "@/lib/avatar-presets";
 import { gyeonggiRegions, secondarySubjects } from "@/lib/demo-data";
 
 const steps = [
-  { id: 1, title: "동의", icon: ShieldCheck },
+  { id: 1, title: "약관 동의", icon: ShieldCheck },
   { id: 2, title: "기본 정보", icon: User },
-  { id: 3, title: "자격", icon: GraduationCap },
-  { id: 4, title: "선호 조건", icon: MapPin },
+  { id: 3, title: "자격 정보", icon: GraduationCap },
+  { id: 4, title: "근무 조건", icon: MapPin },
 ];
+
+const qualificationTypes = ["초등", "중등", "특수"] as const;
+const genderOptions: AvatarGender[] = ["female", "male", "neutral"];
 
 export default function TeacherRegisterPage() {
   const [currentStep, setCurrentStep] = useState(1);
   const [privacyConsent, setPrivacyConsent] = useState(false);
   const [thirdPartyConsent, setThirdPartyConsent] = useState(false);
   const [termsConsent, setTermsConsent] = useState(false);
-  const [qualificationType, setQualificationType] = useState<"초등" | "중등" | "특수">(
+  const [gender, setGender] = useState<AvatarGender>("female");
+  const [selectedAvatarId, setSelectedAvatarId] = useState<AvatarPresetId>(
+    defaultAvatarPresetByGender.female
+  );
+  const [qualificationType, setQualificationType] = useState<(typeof qualificationTypes)[number]>(
     "초등"
   );
-  const [selectedRegions, setSelectedRegions] = useState<string[]>(["수원", "화성"]);
+  const [selectedRegions, setSelectedRegions] = useState<string[]>(["수원", "성남", "용인"]);
+
+  const allConsents = privacyConsent && thirdPartyConsent && termsConsent;
+  const visibleAvatars = useMemo(() => getAvatarPresetsByGender(gender), [gender]);
+  const selectedAvatar = getAvatarPreset(selectedAvatarId);
+
+  const handleGenderChange = (nextGender: AvatarGender) => {
+    setGender(nextGender);
+    setSelectedAvatarId(defaultAvatarPresetByGender[nextGender]);
+  };
 
   const toggleRegion = (region: string) => {
-    setSelectedRegions((prev) =>
-      prev.includes(region) ? prev.filter((item) => item !== region) : [...prev, region]
+    setSelectedRegions((current) =>
+      current.includes(region)
+        ? current.filter((item) => item !== region)
+        : [...current, region]
     );
   };
 
-  const allConsents = privacyConsent && thirdPartyConsent && termsConsent;
-
   return (
     <div className="min-h-screen bg-surface text-ink">
-      <div className="grid min-h-screen lg:grid-cols-[0.9fr_1.1fr]">
+      <div className="grid min-h-screen lg:grid-cols-[0.95fr_1.05fr]">
         <section className="relative hidden overflow-hidden lg:block">
-          <img
-            alt="교실 안에서 준비 중인 교사"
-            className="absolute inset-0 h-full w-full object-cover"
-            src="https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&w=1400&q=80"
-          />
-          <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(7,18,43,0.88),rgba(0,88,190,0.74),rgba(0,110,47,0.36))]" />
+          <div className="absolute inset-0 bg-[linear-gradient(135deg,#08172f,#0058be,#1e9156)]" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.18),transparent_42%),radial-gradient(circle_at_bottom_right,rgba(255,255,255,0.14),transparent_36%)]" />
+
           <div className="relative flex h-full flex-col justify-between p-10 text-white">
             <Link href="/" className="flex items-center gap-3">
               <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-white/12">
@@ -57,21 +80,56 @@ export default function TeacherRegisterPage() {
               </div>
               <div>
                 <div className="text-lg font-bold tracking-tight">EduLink</div>
-                <div className="text-xs text-white/65">교사 회원가입</div>
+                <div className="text-xs text-white/70">교사 회원가입</div>
               </div>
             </Link>
 
             <div className="max-w-xl">
-              <span className="kicker text-white/85 before:bg-white">교사 가입</span>
+              <span className="kicker text-white/88 before:bg-white">프로필 시작</span>
               <h1 className="mt-5 text-5xl font-bold leading-tight">
-                프로필이 바로
+                사진 없이도
                 <br />
-                검색 가능한 인재풀로 이어집니다.
+                신뢰감 있는 프로필을 만듭니다.
               </h1>
               <p className="mt-5 text-base leading-7 text-white/78">
-                자격, 경력, 희망 지역을 한 번에 정리하면 학교 담당자가 같은 시선으로 읽을
-                수 있게 구조를 맞췄습니다.
+                실제 사진은 저장하지 않고, 가입 단계에서 선택한 SVG 캐릭터를 프로필과 인재풀에
+                표시합니다. 비용 부담은 줄이고 화면 완성도는 더 높게 가져가도록 설계했습니다.
               </p>
+            </div>
+
+            <div className="grid gap-4">
+              <div className="rounded-lg border border-white/14 bg-white/10 p-5 backdrop-blur">
+                <div className="flex items-center gap-4">
+                  <CharacterAvatar className="h-20 w-20 rounded-lg border-0 shadow-none" presetId="teacher-f-rose" size={80} />
+                  <div>
+                    <div className="text-lg font-semibold">사진 업로드 없음</div>
+                    <div className="mt-1 text-sm leading-6 text-white/72">
+                      선택한 캐릭터만 저장되어 회원가입과 이력서 등록 흐름이 가벼워집니다.
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="rounded-lg border border-white/14 bg-white/10 p-5 backdrop-blur">
+                  <div className="flex items-center gap-3">
+                    <CharacterAvatar className="h-14 w-14 rounded-lg border-0 shadow-none" presetId="teacher-m-navy" size={56} />
+                    <div>
+                      <div className="font-semibold">성별별 캐릭터 선택</div>
+                      <div className="mt-1 text-sm text-white/72">여성 / 남성 / 공개 안 함 기준으로 표시</div>
+                    </div>
+                  </div>
+                </div>
+                <div className="rounded-lg border border-white/14 bg-white/10 p-5 backdrop-blur">
+                  <div className="flex items-center gap-3">
+                    <CharacterAvatar className="h-14 w-14 rounded-lg border-0 shadow-none" presetId="teacher-n-cloud" size={56} />
+                    <div>
+                      <div className="font-semibold">프로필 일관성</div>
+                      <div className="mt-1 text-sm text-white/72">대시보드와 인재풀 카드까지 같은 캐릭터로 연결</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </section>
@@ -95,7 +153,7 @@ export default function TeacherRegisterPage() {
                 const isDone = currentStep > step.id;
 
                 return (
-                  <div key={step.id} className="flex min-w-[120px] items-center gap-3">
+                  <div key={step.id} className="flex min-w-[132px] items-center gap-3">
                     <div
                       className={`flex h-11 w-11 items-center justify-center rounded-lg text-sm font-bold ${
                         isActive || isDone
@@ -119,7 +177,7 @@ export default function TeacherRegisterPage() {
                 <>
                   <div className="text-3xl font-bold text-ink">필수 동의</div>
                   <div className="mt-2 text-sm leading-6 text-ink-soft">
-                    인재풀 공개와 매칭 진행에 필요한 항목입니다.
+                    인재풀 공개와 학교 매칭 진행에 필요한 항목입니다.
                   </div>
 
                   <div className="mt-6 space-y-4">
@@ -129,14 +187,14 @@ export default function TeacherRegisterPage() {
                         setter: setPrivacyConsent,
                         title: "개인정보 수집 및 이용 동의",
                         detail:
-                          "성명, 연락처, 자격, 경력, 희망 지역 정보를 인재풀 운영에 사용합니다.",
+                          "성명, 연락처, 자격, 경력, 희망 지역 정보를 인재풀 운영과 매칭 검토에 사용합니다.",
                       },
                       {
                         checked: thirdPartyConsent,
                         setter: setThirdPartyConsent,
-                        title: "학교 담당자 대상 정보 제공 동의",
+                        title: "학교 담당자 제공 동의",
                         detail:
-                          "연락처는 수락 이후 공개하고, 요약 정보는 학교 담당자가 먼저 확인합니다.",
+                          "연락처는 제안 수락 이후 공개하고, 요약 프로필은 학교 담당자가 먼저 검토합니다.",
                       },
                       {
                         checked: termsConsent,
@@ -157,9 +215,7 @@ export default function TeacherRegisterPage() {
                         />
                         <div>
                           <div className="font-semibold text-ink">{item.title}</div>
-                          <div className="mt-1 text-sm leading-6 text-ink-soft">
-                            {item.detail}
-                          </div>
+                          <div className="mt-1 text-sm leading-6 text-ink-soft">{item.detail}</div>
                         </div>
                       </label>
                     ))}
@@ -179,9 +235,9 @@ export default function TeacherRegisterPage() {
 
               {currentStep === 2 ? (
                 <>
-                  <div className="text-3xl font-bold text-ink">기본 정보</div>
+                  <div className="text-3xl font-bold text-ink">기본 정보와 캐릭터</div>
                   <div className="mt-2 text-sm leading-6 text-ink-soft">
-                    학교에서 가장 먼저 보게 될 기본 프로필입니다.
+                    학교에서 처음 보게 되는 요약 프로필과 캐릭터를 함께 설정합니다.
                   </div>
 
                   <div className="mt-6 grid gap-4 sm:grid-cols-2">
@@ -211,6 +267,79 @@ export default function TeacherRegisterPage() {
                     </label>
                   </div>
 
+                  <div className="mt-8 rounded-lg border border-outline bg-surface-subtle p-6">
+                    <div className="flex flex-col gap-6 lg:flex-row lg:items-center">
+                      <div className="flex items-center gap-4">
+                        <CharacterAvatar className="h-24 w-24 rounded-lg" presetId={selectedAvatarId} size={96} />
+                        <div>
+                          <div className="text-sm font-semibold text-primary-700">
+                            {avatarGenderLabels[gender]} 캐릭터
+                          </div>
+                          <div className="mt-1 text-2xl font-bold text-ink">{selectedAvatar.name}</div>
+                          <div className="mt-2 text-sm leading-6 text-ink-soft">
+                            {selectedAvatar.description}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="rounded-lg bg-white px-4 py-3 text-sm leading-6 text-ink-soft lg:ml-auto lg:max-w-sm">
+                        실제 사진은 저장하지 않습니다. 선택한 SVG 캐릭터만 프로필과 인재풀 카드에
+                        표시됩니다.
+                      </div>
+                    </div>
+
+                    <div className="mt-6">
+                      <div className="mb-3 text-sm font-semibold text-ink">성별 선택</div>
+                      <div className="grid gap-3 sm:grid-cols-3">
+                        {genderOptions.map((option) => (
+                          <button
+                            key={option}
+                            type="button"
+                            className={`rounded-lg px-4 py-3 text-sm font-semibold ${
+                              gender === option
+                                ? "bg-primary-50 text-primary-700"
+                                : "bg-white text-ink-soft"
+                            }`}
+                            onClick={() => handleGenderChange(option)}
+                          >
+                            {avatarGenderLabels[option]}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="mt-6">
+                      <div className="mb-3 flex items-center justify-between gap-3">
+                        <div className="text-sm font-semibold text-ink">캐릭터 선택</div>
+                        <div className="text-xs text-ink-muted">
+                          성별에 따라 보여지는 캐릭터가 바뀝니다.
+                        </div>
+                      </div>
+
+                      <div className="grid gap-3 sm:grid-cols-2">
+                        {visibleAvatars.map((avatar) => (
+                          <button
+                            key={avatar.id}
+                            type="button"
+                            className={`flex items-center gap-4 rounded-lg border p-4 text-left transition-colors ${
+                              selectedAvatarId === avatar.id
+                                ? "border-primary-200 bg-white shadow-panel"
+                                : "border-outline bg-white/70 hover:border-primary-100"
+                            }`}
+                            onClick={() => setSelectedAvatarId(avatar.id)}
+                          >
+                            <CharacterAvatar className="h-16 w-16 rounded-lg" presetId={avatar.id} size={64} />
+                            <div>
+                              <div className="font-semibold text-ink">{avatar.name}</div>
+                              <div className="mt-1 text-sm leading-6 text-ink-soft">
+                                {avatar.description}
+                              </div>
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
                   <div className="mt-6 flex gap-3">
                     <button
                       type="button"
@@ -236,14 +365,14 @@ export default function TeacherRegisterPage() {
                 <>
                   <div className="text-3xl font-bold text-ink">자격과 경력</div>
                   <div className="mt-2 text-sm leading-6 text-ink-soft">
-                    검색 결과에서 바로 읽히는 항목을 먼저 정리합니다.
+                    검색 결과에서 바로 확인할 수 있도록 자격 정보와 경력을 정리합니다.
                   </div>
 
                   <div className="mt-6 space-y-5">
                     <div>
                       <div className="mb-3 text-sm font-semibold text-ink">자격 유형</div>
                       <div className="grid gap-3 sm:grid-cols-3">
-                        {(["초등", "중등", "특수"] as const).map((type) => (
+                        {qualificationTypes.map((type) => (
                           <button
                             key={type}
                             type="button"
@@ -264,13 +393,13 @@ export default function TeacherRegisterPage() {
                       <label className="block">
                         <div className="mb-2 text-sm font-semibold text-ink">자격 급수</div>
                         <select className="input-surface">
-                          <option>2정교사</option>
-                          <option>1정교사</option>
+                          <option>2급 정교사</option>
+                          <option>1급 정교사</option>
                         </select>
                       </label>
                       {qualificationType === "중등" ? (
                         <label className="block">
-                          <div className="mb-2 text-sm font-semibold text-ink">교과</div>
+                          <div className="mb-2 text-sm font-semibold text-ink">과목</div>
                           <select className="input-surface">
                             {secondarySubjects.map((subject) => (
                               <option key={subject}>{subject}</option>
@@ -289,7 +418,7 @@ export default function TeacherRegisterPage() {
                       </label>
                       <label className="block">
                         <div className="mb-2 text-sm font-semibold text-ink">최근 근무 학교</div>
-                        <input className="input-surface" placeholder="정인초등학교" />
+                        <input className="input-surface" placeholder="가온초등학교" />
                       </label>
                     </div>
                   </div>
@@ -317,9 +446,9 @@ export default function TeacherRegisterPage() {
 
               {currentStep === 4 ? (
                 <>
-                  <div className="text-3xl font-bold text-ink">선호 조건</div>
+                  <div className="text-3xl font-bold text-ink">근무 조건</div>
                   <div className="mt-2 text-sm leading-6 text-ink-soft">
-                    학교가 요청을 보낼 때 가장 중요하게 보는 조건입니다.
+                    학교가 제안을 보낼 때 중요하게 보는 조건을 정리합니다.
                   </div>
 
                   <div className="mt-6 space-y-5">
@@ -345,9 +474,9 @@ export default function TeacherRegisterPage() {
 
                     <div className="grid gap-4 sm:grid-cols-2">
                       <label className="block">
-                        <div className="mb-2 text-sm font-semibold text-ink">선호 형태</div>
+                        <div className="mb-2 text-sm font-semibold text-ink">희망 형태</div>
                         <select className="input-surface">
-                          <option>기간제 + 시간강사</option>
+                          <option>기간제와 시간강사 모두</option>
                           <option>기간제만</option>
                           <option>시간강사만</option>
                         </select>
@@ -359,12 +488,32 @@ export default function TeacherRegisterPage() {
                     </div>
 
                     <label className="block">
-                      <div className="mb-2 text-sm font-semibold text-ink">한 줄 소개</div>
+                      <div className="mb-2 text-sm font-semibold text-ink">자기소개</div>
                       <textarea
                         className="input-surface textarea-surface"
-                        placeholder="학교에서 바로 파악할 수 있게 강점과 경험을 짧게 정리해 주세요."
+                        placeholder="학교에서 빠르게 파악할 수 있도록 강점과 수업 경험을 짧게 정리해 주세요."
                       />
                     </label>
+
+                    <div className="rounded-lg border border-outline bg-surface-subtle p-5">
+                      <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+                        <CharacterAvatar className="h-20 w-20 rounded-lg" presetId={selectedAvatarId} size={80} />
+                        <div>
+                          <div className="text-sm font-semibold text-primary-700">가입 미리보기</div>
+                          <div className="mt-1 text-lg font-bold text-ink">
+                            {selectedAvatar.name} / {avatarGenderLabels[gender]}
+                          </div>
+                          <div className="mt-2 text-sm text-ink-soft">
+                            희망 지역 {selectedRegions.slice(0, 3).join(", ")}
+                            {selectedRegions.length > 3 ? ` 외 ${selectedRegions.length - 3}곳` : ""}
+                          </div>
+                        </div>
+                        <div className="rounded-lg bg-white px-4 py-3 text-sm leading-6 text-ink-soft sm:ml-auto sm:max-w-xs">
+                          사진 파일 대신 가벼운 SVG 캐릭터만 저장되므로 프로필 운영 비용을 줄일 수
+                          있습니다.
+                        </div>
+                      </div>
+                    </div>
                   </div>
 
                   <div className="mt-6 flex gap-3">
@@ -388,8 +537,9 @@ export default function TeacherRegisterPage() {
               ) : null}
             </div>
 
-            <div className="mt-6 text-center text-sm text-ink-soft">
-              이미 계정이 있다면{" "}
+            <div className="mt-6 flex items-center justify-center gap-2 text-sm text-ink-soft">
+              <Sparkles className="h-4 w-4 text-primary-600" />
+              이미 계정이 있다면
               <Link href="/auth/login" className="font-semibold text-primary-700">
                 로그인
               </Link>

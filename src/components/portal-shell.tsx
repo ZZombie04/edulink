@@ -2,6 +2,8 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 import { Bell, BookOpen, ChevronRight, type LucideIcon } from "lucide-react";
 
+import { CharacterAvatar } from "@/components/character-avatar";
+import type { AvatarPresetId } from "@/lib/avatar-presets";
 import { cn } from "@/lib/utils";
 
 export interface PortalNavItem {
@@ -19,7 +21,7 @@ interface PortalShellProps {
     name: string;
     role: string;
     detail?: string;
-    avatar?: string;
+    avatarPreset?: AvatarPresetId;
   };
   sectionLabel?: string;
   primaryAction?: {
@@ -32,19 +34,13 @@ interface PortalShellProps {
 
 function UserAvatar({
   name,
-  avatar,
+  avatarPreset,
 }: {
   name: string;
-  avatar?: string;
+  avatarPreset?: AvatarPresetId;
 }) {
-  if (avatar) {
-    return (
-      <img
-        alt={name}
-        className="h-11 w-11 rounded-lg object-cover"
-        src={avatar}
-      />
-    );
+  if (avatarPreset) {
+    return <CharacterAvatar className="h-11 w-11 rounded-lg" presetId={avatarPreset} size={44} />;
   }
 
   return (
@@ -71,9 +67,7 @@ export function PortalShell({
           </div>
           <div>
             <div className="text-lg font-bold tracking-tight text-ink">EduLink</div>
-            <div className="text-xs font-medium text-ink-muted">
-              학교 교원 매칭 플랫폼
-            </div>
+            <div className="text-xs font-medium text-ink-muted">학교 교원 매칭 플랫폼</div>
           </div>
         </Link>
 
@@ -114,10 +108,10 @@ export function PortalShell({
 
         <div className="mt-auto panel-surface p-4">
           <div className="text-xs font-semibold uppercase tracking-[0.18em] text-ink-muted">
-            운영 포인트
+            운영 팁
           </div>
           <div className="mt-3 text-sm leading-6 text-ink-soft">
-            검색, 매칭, 공고 관리 흐름을 한 화면에서 빠르게 이어갈 수 있게 정리했습니다.
+            검토 중인 매칭과 공고를 한 화면에서 관리하면 응답 속도가 더 안정적으로 유지됩니다.
           </div>
           <Link
             className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-primary-700"
@@ -160,11 +154,11 @@ export function PortalShell({
               </button>
 
               <div className="hidden items-center gap-3 rounded-lg border border-outline bg-white px-3 py-2 sm:flex">
-                <UserAvatar avatar={user.avatar} name={user.name} />
+                <UserAvatar avatarPreset={user.avatarPreset} name={user.name} />
                 <div>
                   <div className="text-sm font-semibold text-ink">{user.name}</div>
                   <div className="text-xs text-ink-muted">
-                    {[user.role, user.detail].filter(Boolean).join(" · ")}
+                    {[user.role, user.detail].filter(Boolean).join(" / ")}
                   </div>
                 </div>
               </div>

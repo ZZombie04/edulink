@@ -1,3 +1,5 @@
+import type { AvatarGender, AvatarPresetId } from "@/lib/avatar-presets";
+
 export type TeacherStatus = "seeking" | "interviewing" | "employed" | "paused";
 
 export interface TeacherProfile {
@@ -5,6 +7,8 @@ export interface TeacherProfile {
   name: string;
   age: number;
   birthYear: number;
+  gender: AvatarGender;
+  avatarPreset: AvatarPresetId;
   qualification: string;
   qualificationCategory: "초등" | "중등" | "특수";
   subject?: string;
@@ -18,7 +22,6 @@ export interface TeacherProfile {
   reservation?: boolean;
   reservationCount?: number;
   summary: string;
-  avatar: string;
   portfolioViews: number;
 }
 
@@ -90,6 +93,8 @@ export const featuredTeachers: TeacherProfile[] = [
     name: "박서영",
     age: 28,
     birthYear: 1998,
+    gender: "female",
+    avatarPreset: "teacher-f-rose",
     qualification: "초등 2정교사",
     qualificationCategory: "초등",
     experience: "2년 6개월",
@@ -98,8 +103,6 @@ export const featuredTeachers: TeacherProfile[] = [
     preferredTypes: ["기간제", "시간강사"],
     status: "seeking",
     summary: "기초학력 지원과 저학년 담임 운영 경험이 많아 빠른 적응이 가능합니다.",
-    avatar:
-      "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=480&q=80",
     portfolioViews: 12,
   },
   {
@@ -107,6 +110,8 @@ export const featuredTeachers: TeacherProfile[] = [
     name: "이준호",
     age: 45,
     birthYear: 1981,
+    gender: "male",
+    avatarPreset: "teacher-m-navy",
     qualification: "중등 1정교사",
     qualificationCategory: "중등",
     subject: "수학",
@@ -117,8 +122,6 @@ export const featuredTeachers: TeacherProfile[] = [
     status: "interviewing",
     interviewCount: 2,
     summary: "고등 수학과 평가 설계, 학년부장 협업 경험이 강점입니다.",
-    avatar:
-      "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=480&q=80",
     portfolioViews: 26,
   },
   {
@@ -126,6 +129,8 @@ export const featuredTeachers: TeacherProfile[] = [
     name: "김도현",
     age: 52,
     birthYear: 1974,
+    gender: "male",
+    avatarPreset: "teacher-m-forest",
     qualification: "초등 1정교사",
     qualificationCategory: "초등",
     experience: "25년",
@@ -137,8 +142,6 @@ export const featuredTeachers: TeacherProfile[] = [
     reservation: true,
     reservationCount: 1,
     summary: "장기 결원 대체와 학년 운영 조율에 익숙한 베테랑 교사입니다.",
-    avatar:
-      "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=480&q=80",
     portfolioViews: 18,
   },
   {
@@ -146,6 +149,8 @@ export const featuredTeachers: TeacherProfile[] = [
     name: "최하린",
     age: 31,
     birthYear: 1995,
+    gender: "female",
+    avatarPreset: "teacher-f-violet",
     qualification: "특수 2정교사",
     qualificationCategory: "특수",
     experience: "6년 4개월",
@@ -154,8 +159,6 @@ export const featuredTeachers: TeacherProfile[] = [
     preferredTypes: ["기간제", "시간강사"],
     status: "paused",
     summary: "통합학급 협업과 개별화교육계획 작성에 강합니다.",
-    avatar:
-      "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=480&q=80",
     portfolioViews: 9,
   },
 ];

@@ -15,6 +15,7 @@ import {
   User,
 } from "lucide-react";
 
+import { CharacterAvatar } from "@/components/character-avatar";
 import { PortalShell } from "@/components/portal-shell";
 import { featuredTeachers, teacherMatchRequests } from "@/lib/demo-data";
 
@@ -50,7 +51,7 @@ export default function TeacherDashboardPage() {
         name: teacher.name,
         role: "등록 교사",
         detail: teacher.qualification,
-        avatar: teacher.avatar,
+        avatarPreset: teacher.avatarPreset,
       }}
     >
       <section className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
@@ -193,10 +194,10 @@ export default function TeacherDashboardPage() {
           <div className="panel-surface p-6">
             <div className="text-xl font-bold text-ink">내 프로필 요약</div>
             <div className="mt-6 flex items-center gap-4">
-              <img
-                alt={teacher.name}
-                className="h-20 w-20 rounded-lg object-cover"
-                src={teacher.avatar}
+              <CharacterAvatar
+                className="h-20 w-20 rounded-lg"
+                presetId={teacher.avatarPreset}
+                size={80}
               />
               <div>
                 <div className="text-2xl font-bold text-ink">{teacher.name}</div>

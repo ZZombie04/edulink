@@ -13,6 +13,7 @@ import {
   Users,
 } from "lucide-react";
 
+import { CharacterAvatar } from "@/components/character-avatar";
 import { PortalShell } from "@/components/portal-shell";
 import { featuredTeachers, type TeacherStatus } from "@/lib/demo-data";
 
@@ -110,8 +111,6 @@ export default function HCPoolPage() {
         name: "홍수진",
         role: "인사담당",
         detail: "정인초등학교",
-        avatar:
-          "https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&w=240&q=80",
       }}
     >
       <section className="grid gap-6 xl:grid-cols-[1.35fr_0.65fr]">
@@ -281,10 +280,10 @@ export default function HCPoolPage() {
               >
                 <div className="flex flex-col gap-6 xl:flex-row xl:items-center">
                   <div className="flex flex-1 items-start gap-4">
-                    <img
-                      alt={teacher.name}
-                      className="h-20 w-20 rounded-lg object-cover"
-                      src={teacher.avatar}
+                    <CharacterAvatar
+                      className="h-20 w-20 rounded-lg"
+                      presetId={teacher.avatarPreset}
+                      size={80}
                     />
                     <div className="flex-1">
                       <div className="flex flex-wrap items-center gap-2">
