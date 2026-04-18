@@ -1,0 +1,475 @@
+generator client {
+  provider        = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─────────────────────────────────────
+// 사용자 기본 테이블
+// ─────────────────────────────────────
+model User {
+  id                String          @id @default(cuid())
+  email             String          @unique
+  passwordHash      String
+  role              UserRole
+  name              String
+  phone             String
+  birthDate         DateTime
+  isActive          Boolean         @default(true)
+  isVerified        Boolean         @default(false)
+  privacyConsent    Boolean         @default(false)
+  privacyConsentAt  DateTime?
+  termsConsent      Boolean         @default(false)
+  termsConsentAt    DateTime?
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+  lastLoginAt       DateTime?
+  
+  teacherProfile    TeacherProfile?
+  hrProfile         HRProfile?
+  notifications     Notification[]
+  
+  @@index([role, isActive])
+  @@map("users")
+}
+
+enum UserRole {
+  TEACHER        // 구직 교사
+  HR_MANAGER     // 학교 인사담당자
+  EDU_ADMIN      // 교육청 관리자
+  SUPER_ADMIN    // 시스템 관리자
+}
+
+// ─────────────────────────────────────
+// 구직 교사 프로필
+// ─────────────────────────────────────
+model TeacherProfile {
+  id                   String              @id @default(cuid())
+  userId               String              @unique
+  user                 User                @relation(fields: [userId], references: [id])
+  
+  // 교원 자격 정보
+  qualificationType    QualificationType   // 초등/중등
+  qualificationGrade   QualificationGrade  // 1급/2급 정교사
+  qualificationSubject String?             // 중등의 경우 과목 (국어, 수학, 영어 등)
+  qualificationNumber  String              // 자격증 번호
+  qualificationFileUrl String?             // 자격증 사본 파일
+  
+  // 경력 정보
+  totalExperienceYears Int                 @default(0)  // 총 교직 경력 (연)
+  totalExperienceMonths Int                @default(0)  // 총 교직 경력 (월)
+  careers              Career[]
+  
+  // 학력 정보
+  university           String              // 출신 대학
+  major                String              // 전공
+  graduationYear       Int                 // 졸업 연도
+  educationLevel       EducationLevel      // 학사/석사/박사
+  
+  // 거주지 및 희망 지역
+  residenceRegion      String              // 거주 시/군
+  residenceAddress     String?             // 상세 주소
+  preferredRegions     String[]            // 희망 근무 지역 (복수 선택)
+  
+  // 구직 상태
+  seekingStatus        SeekingStatus       @default(SEEKING)
+  reservationEnabled   Boolean             @default(false) // 예약하기 활성화 여부
+  
+  // 추가 정보
+  introduction         String?             @db.Text  // 자기소개
+  specialSkills        String?             @db.Text  // 특기사항
+  profileImageUrl      String?
+  
+  // 교사 유형 (어떤 유형의 근무를 원하는지)
+  preferredTypes       TeacherType[]       // 기간제, 시간강사 복수 선택
+  
+  // 관계
+  receivedRequests     MatchRequest[]      @relation("TeacherRequests")
+  contracts            Contract[]
+  applications         Application[]
+  reservations         Reservation[]       @relation("TeacherReservations")
+  
+  createdAt            DateTime            @default(now())
+  updatedAt            DateTime            @updatedAt
+  
+  @@index([seekingStatus])
+  @@index([preferredRegions])
+  @@map("teacher_profiles")
+}
+
+enum QualificationType {
+  ELEMENTARY    // 초등
+  SECONDARY     // 중등
+  SPECIAL       // 특수
+}
+
+enum QualificationGrade {
+  GRADE_1       // 1급 정교사
+  GRADE_2       // 2급 정교사
+}
+
+enum EducationLevel {
+  BACHELOR      // 학사
+  MASTER        // 석사
+  DOCTOR        // 박사
+}
+
+enum SeekingStatus {
+  SEEKING       // 구직중
+  INTERVIEWING  // 면접진행중
+  EMPLOYED      // 재직중
+  NOT_SEEKING   // 구직중지
+  RESERVED      // 예약확정
+}
+
+enum TeacherType {
+  FIXED_TERM    // 기간제교사 (1개월 이상)
+  PART_TIME     // 시간강사 (1개월 미만)
+}
+
+// ─────────────────────────────────────
+// 경력 사항
+// ─────────────────────────────────────
+model Career {
+  id               String          @id @default(cuid())
+  teacherProfileId String
+  teacherProfile   TeacherProfile  @relation(fields: [teacherProfileId], references: [id])
+  
+  schoolName       String          // 근무 학교
+  schoolType       String          // 초/중/고/특수
+  position         String          // 담당 업무 (담임, 교과, 등)
+  subject          String?         // 담당 과목
+  startDate        DateTime
+  endDate          DateTime?
+  employmentType   TeacherType     // 기간제/시간강사
+  description      String?         @db.Text // 업무 설명
+  
+  createdAt        DateTime        @default(now())
+  
+  @@map("careers")
+}
+
+// ─────────────────────────────────────
+// 학교 인사담당자 프로필
+// ─────────────────────────────────────
+model HRProfile {
+  id                String          @id @default(cuid())
+  userId            String          @unique
+  user              User            @relation(fields: [userId], references: [id])
+  
+  schoolName        String          // 소속 학교명
+  schoolCode        String          // 학교 고유 코드 (NEIS 코드)
+  schoolType        String          // 초/중/고/특수
+  schoolRegion      String          // 학교 소재 시/군
+  schoolAddress     String          // 학교 주소
+  position          String          // 직위 (교감, 행정실장, 교무부장 등)
+  department        String?         // 부서
+  
+  // 가입 인증
+  verificationCode  String          // 교육지원청 발급 인증번호
+  approvalStatus    ApprovalStatus  @default(PENDING)
+  approvedBy        String?         // 승인한 교육청 관리자 ID
+  approvedAt        DateTime?
+  rejectionReason   String?         // 반려 사유
+  
+  // 관계
+  sentRequests      MatchRequest[]  @relation("HRRequests")
+  jobPostings       JobPosting[]
+  contracts         Contract[]      @relation("HRContracts")
+  reservations      Reservation[]   @relation("HRReservations")
+  
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+  
+  @@index([approvalStatus])
+  @@index([schoolRegion])
+  @@map("hr_profiles")
+}
+
+enum ApprovalStatus {
+  PENDING         // 승인 대기
+  APPROVED        // 승인 완료
+  REJECTED        // 반려
+}
+
+// ─────────────────────────────────────
+// 매칭 요청 (인사담당자 → 교사)
+// ─────────────────────────────────────
+model MatchRequest {
+  id               String            @id @default(cuid())
+  
+  hrProfileId      String
+  hrProfile        HRProfile         @relation("HRRequests", fields: [hrProfileId], references: [id])
+  
+  teacherProfileId String
+  teacherProfile   TeacherProfile    @relation("TeacherRequests", fields: [teacherProfileId], references: [id])
+  
+  direction        MatchDirection    // HR→TEACHER 또는 TEACHER→HR(구인공고 지원)
+  status           MatchStatus       @default(PENDING)
+  
+  // 요청 정보
+  employmentType   TeacherType       // 기간제/시간강사
+  expectedPeriod   String?           // 예상 채용 기간
+  message          String?           @db.Text  // 요청 메시지
+  
+  // 면접 관련
+  interviewDate    DateTime?
+  interviewLocation String?
+  interviewMemo    String?           @db.Text
+  
+  // 채용 결과
+  resultMessage    String?           @db.Text  // 채용/미채용 안내 메시지
+  
+  // 관련 구인공고 (구인공고를 통한 지원인 경우)
+  jobPostingId     String?
+  jobPosting       JobPosting?       @relation(fields: [jobPostingId], references: [id])
+  
+  // 관련 계약
+  contractId       String?           @unique
+  contract         Contract?         @relation(fields: [contractId], references: [id])
+  
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  
+  @@index([hrProfileId, status])
+  @@index([teacherProfileId, status])
+  @@map("match_requests")
+}
+
+enum MatchDirection {
+  HR_TO_TEACHER     // 인사담당자가 교사에게 요청
+  TEACHER_TO_HR     // 교사가 구인공고에 지원
+}
+
+enum MatchStatus {
+  PENDING           // 요청 대기
+  ACCEPTED          // 수락됨
+  REJECTED          // 거절됨
+  INTERVIEWING      // 면접 진행중
+  HIRED             // 채용 완료
+  NOT_HIRED         // 미채용
+  CANCELLED         // 취소됨
+  EXPIRED           // 만료됨
+}
+
+// ─────────────────────────────────────
+// 구인 공고
+// ─────────────────────────────────────
+model JobPosting {
+  id               String          @id @default(cuid())
+  hrProfileId      String
+  hrProfile        HRProfile       @relation(fields: [hrProfileId], references: [id])
+  
+  schoolName       String          // 학교명
+  schoolRegion     String          // 학교 소재 지역
+  employmentType   TeacherType     // 기간제/시간강사
+  
+  // 채용 조건
+  startDate        DateTime        // 근무 시작일
+  endDate          DateTime        // 근무 종료일
+  qualificationType QualificationType? // 필요 자격 유형
+  qualificationSubject String?     // 필요 과목
+  
+  // 상세 정보
+  gradeLevel       String?         // 학년
+  isHomeroom       Boolean         @default(false) // 담임 여부
+  duties           String?         @db.Text  // 업무 내용
+  memo             String?         @db.Text  // 요청 메모
+  
+  // 상태
+  postingStatus    PostingStatus   @default(OPEN)
+  
+  // 관계
+  matchRequests    MatchRequest[]
+  applications     Application[]
+  
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+  closedAt         DateTime?
+  
+  @@index([postingStatus, schoolRegion])
+  @@index([employmentType])
+  @@map("job_postings")
+}
+
+enum PostingStatus {
+  OPEN              // 모집중
+  CLOSED            // 모집마감
+  FILLED            // 채용완료
+  CANCELLED         // 취소됨
+}
+
+// ─────────────────────────────────────
+// 구인공고 지원 (교사 → 구인공고)
+// ─────────────────────────────────────
+model Application {
+  id               String          @id @default(cuid())
+  
+  teacherProfileId String
+  teacherProfile   TeacherProfile  @relation(fields: [teacherProfileId], references: [id])
+  
+  jobPostingId     String
+  jobPosting       JobPosting      @relation(fields: [jobPostingId], references: [id])
+  
+  status           MatchStatus     @default(PENDING)
+  coverLetter      String?         @db.Text  // 지원 메시지
+  
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+  
+  @@unique([teacherProfileId, jobPostingId])
+  @@map("applications")
+}
+
+// ─────────────────────────────────────
+// 채용 계약
+// ─────────────────────────────────────
+model Contract {
+  id               String          @id @default(cuid())
+  
+  teacherProfileId String
+  teacherProfile   TeacherProfile  @relation(fields: [teacherProfileId], references: [id])
+  
+  hrProfileId      String
+  hrProfile        HRProfile       @relation("HRContracts", fields: [hrProfileId], references: [id])
+  
+  matchRequest     MatchRequest?
+  
+  schoolName       String
+  employmentType   TeacherType
+  startDate        DateTime
+  endDate          DateTime
+  
+  status           ContractStatus  @default(ACTIVE)
+  
+  // 채용 안내 메시지
+  welcomeMessage   String?         @db.Text
+  requiredDocs     String?         @db.Text  // 필요 서류 안내
+  reportDate       DateTime?       // 출근일
+  
+  // 해지 관련
+  terminatedAt     DateTime?
+  terminationReason String?        @db.Text
+  terminatedBy     String?         // 해지 요청자
+  
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+  
+  @@index([teacherProfileId, status])
+  @@index([endDate])
+  @@map("contracts")
+}
+
+enum ContractStatus {
+  ACTIVE            // 계약 진행중
+  COMPLETED         // 계약 만료 (정상 종료)
+  TERMINATED        // 중도 해지
+}
+
+// ─────────────────────────────────────
+// 예약 (찜)
+// ─────────────────────────────────────
+model Reservation {
+  id               String            @id @default(cuid())
+  
+  teacherProfileId String
+  teacherProfile   TeacherProfile    @relation("TeacherReservations", fields: [teacherProfileId], references: [id])
+  
+  hrProfileId      String
+  hrProfile        HRProfile         @relation("HRReservations", fields: [hrProfileId], references: [id])
+  
+  status           ReservationStatus @default(PENDING)
+  message          String?           @db.Text
+  
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  
+  @@unique([teacherProfileId, hrProfileId])
+  @@map("reservations")
+}
+
+enum ReservationStatus {
+  PENDING           // 예약 요청 대기
+  ACCEPTED          // 예약 수락 (연락처 공개)
+  REJECTED          // 예약 거절
+  CANCELLED         // 예약 취소
+  CONVERTED         // 실제 채용 요청으로 전환됨
+}
+
+// ─────────────────────────────────────
+// 알림
+// ─────────────────────────────────────
+model Notification {
+  id          String           @id @default(cuid())
+  userId      String
+  user        User             @relation(fields: [userId], references: [id])
+  
+  type        NotificationType
+  title       String
+  message     String           @db.Text
+  
+  isRead      Boolean          @default(false)
+  readAt      DateTime?
+  
+  createdAt   DateTime         @default(now())
+  
+  @@index([userId, isRead, createdAt(sort: Desc)])
+  @@map("notifications")
+}
+
+enum NotificationType {
+  MATCH_REQUEST           // 채용 요청 수신
+  MATCH_ACCEPTED          // 요청 수락됨
+  MATCH_REJECTED          // 요청 거절됨
+  INTERVIEW_SCHEDULED     // 면접 일정 확정
+  HIRED                   // 채용 확정
+  NOT_HIRED               // 미채용 안내
+  CONTRACT_TERMINATED     // 계약 해지
+  CONTRACT_EXPIRING_SOON  // 계약 만료 임박 (7일/3일/1일 전)
+  RESERVATION_REQUEST     // 예약 요청 수신
+  RESERVATION_ACCEPTED    // 예약 수락됨
+  JOB_POSTING_NEW         // 새 구인공고 (관심 지역)
+  APPLICATION_RECEIVED    // 구인공고에 지원 접수
+  HR_ACCOUNT_APPROVED     // 인사담당자 계정 승인
+  HR_ACCOUNT_REJECTED     // 인사담당자 계정 반려
+  SYSTEM_NOTICE           // 시스템 공지
+}
+
+// ─────────────────────────────────────
+// 인증번호 관리
+// ─────────────────────────────────────
+model VerificationCode {
+  id          String    @id @default(cuid())
+  code        String    @unique
+  isUsed      Boolean   @default(false)
+  usedBy      String?
+  issuedBy    String    // 발급한 교육청 관리자
+  
+  expiresAt   DateTime
+  createdAt   DateTime  @default(now())
+  usedAt      DateTime?
+  
+  @@index([code, isUsed])
+  @@map("verification_codes")
+}
+
+// ─────────────────────────────────────
+// 활동 로그 (감사 추적)
+// ─────────────────────────────────────
+model ActivityLog {
+  id          String    @id @default(cuid())
+  userId      String
+  action      String    // 수행한 행동
+  entityType  String    // 대상 엔티티 타입
+  entityId    String    // 대상 엔티티 ID
+  ipAddress   String?
+  userAgent   String?
+  
+  createdAt   DateTime  @default(now())
+  
+  @@index([userId, createdAt(sort: Desc)])
+  @@index([entityType, entityId])
+  @@map("activity_logs")
+}
