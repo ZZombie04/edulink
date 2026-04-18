@@ -46,7 +46,6 @@ export interface JobPost {
   contactName: string;
   applicants: number;
   views: number;
-  image: string;
 }
 
 export const gyeonggiRegions = [
@@ -209,8 +208,6 @@ export const jobPosts: JobPost[] = [
     contactName: "홍수진 교무부장",
     applicants: 5,
     views: 128,
-    image:
-      "https://images.unsplash.com/photo-1509062522246-3755977927d7?auto=format&fit=crop&w=1200&q=80",
   },
   {
     id: "2",
@@ -235,19 +232,13 @@ export const jobPosts: JobPost[] = [
       "학생 상담 경험 우대",
       "주 3일 이상 출근 가능",
     ],
-    benefits: [
-      "주차 지원",
-      "수업 자료 공동 사용",
-      "방과후 운영비 별도 지급",
-    ],
+    benefits: ["주차 지원", "수업 자료 공동 사용", "방과후 운영비 별도 지급"],
     status: "closing-soon",
     postedAt: "2026-04-16",
     deadline: "2026-04-20",
     contactName: "김민석 연구부장",
     applicants: 12,
     views: 211,
-    image:
-      "https://images.unsplash.com/photo-1524178232363-1fb2b075b655?auto=format&fit=crop&w=1200&q=80",
   },
   {
     id: "3",
@@ -272,19 +263,13 @@ export const jobPosts: JobPost[] = [
       "담임 또는 학년부 경험 우대",
       "정규 학기 운영 가능",
     ],
-    benefits: [
-      "학년 업무 수당",
-      "진학부 자료 지원",
-      "교내 어학 프로그램 참여",
-    ],
+    benefits: ["학년 업무 수당", "진학부 자료 지원", "교내 어학 프로그램 참여"],
     status: "closed",
     postedAt: "2026-03-11",
     deadline: "2026-03-21",
     contactName: "이예진 인사담당",
     applicants: 19,
     views: 304,
-    image:
-      "https://images.unsplash.com/photo-1497486751825-1233686d5d80?auto=format&fit=crop&w=1200&q=80",
   },
 ];
 

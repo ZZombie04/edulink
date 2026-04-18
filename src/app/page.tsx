@@ -1,7 +1,16 @@
 import Link from "next/link";
-import { ArrowRight, Briefcase, Building2, Clock3, MapPin, Search, Users } from "lucide-react";
+import {
+  ArrowRight,
+  Briefcase,
+  Clock3,
+  MapPin,
+  Search,
+  Users,
+} from "lucide-react";
 
+import { BrandLockup } from "@/components/brand";
 import { CharacterAvatar } from "@/components/character-avatar";
+import { JobVisual } from "@/components/job-visual";
 import { featuredTeachers, jobPosts } from "@/lib/demo-data";
 
 function teacherStatusLabel(status: string) {
@@ -54,17 +63,17 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-surface text-ink">
-      <header className="sticky top-0 z-50 border-b border-white/20 bg-[rgba(7,18,43,0.72)] backdrop-blur">
+      <header className="sticky top-0 z-50 border-b border-white/12 bg-[rgba(7,18,43,0.82)] backdrop-blur">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6">
-          <Link href="/" className="flex items-center gap-3 text-white">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-white/12">
-              <Building2 className="h-5 w-5" />
-            </div>
-            <div className="text-lg font-bold tracking-tight">EduLink</div>
+          <Link href="/">
+            <BrandLockup textClassName="text-white" />
           </Link>
 
           <nav className="hidden items-center gap-6 text-sm font-medium text-white/75 md:flex">
-            <Link href="#candidate-pool" className="transition-colors hover:text-white">
+            <Link
+              href="#candidate-pool"
+              className="transition-colors hover:text-white"
+            >
               인재풀
             </Link>
             <Link href="#jobs" className="transition-colors hover:text-white">
@@ -91,45 +100,137 @@ export default function Home() {
       </header>
 
       <main>
-        <section className="relative min-h-[68vh] overflow-hidden">
-          <img
-            alt="학교 교실"
-            className="absolute inset-0 h-full w-full object-cover"
-            src="https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?auto=format&fit=crop&w=1600&q=80"
-          />
-          <div className="absolute inset-0 bg-[linear-gradient(115deg,rgba(7,18,43,0.92),rgba(0,88,190,0.72),rgba(0,110,47,0.42))]" />
+        <section className="relative overflow-hidden bg-[linear-gradient(140deg,#071b3a,#0a4da4,#18907c)]">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.18),transparent_30%),radial-gradient(circle_at_bottom_right,rgba(255,255,255,0.12),transparent_34%)]" />
 
-          <div className="relative mx-auto flex min-h-[68vh] max-w-7xl flex-col justify-center px-4 pb-20 pt-20 sm:px-6">
-            <div className="max-w-3xl">
-              <h1 className="text-4xl font-bold leading-tight text-white sm:text-5xl lg:text-6xl">
-                경기도 학교 교원 채용
-              </h1>
+          <div className="relative mx-auto max-w-7xl px-4 pb-16 pt-16 sm:px-6 sm:pb-20 sm:pt-20">
+            <div className="grid gap-10 lg:grid-cols-[1.02fr_0.98fr] lg:items-center">
+              <div className="max-w-3xl">
+                <h1 className="text-4xl font-bold leading-tight text-white sm:text-5xl lg:text-6xl">
+                  경기도 학교 교원 채용
+                </h1>
+                <p className="mt-5 max-w-2xl text-base leading-7 text-white sm:text-lg">
+                  인재풀과 채용 공고를 같은 흐름 안에서 확인할 수 있도록
+                  정리했습니다.
+                </p>
 
-              <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-                <Link
-                  href="/pool"
-                  className="inline-flex items-center justify-center gap-2 rounded-lg bg-white px-5 py-3 text-sm font-semibold text-primary-700 transition-transform hover:-translate-y-px"
-                >
-                  <Search className="h-4 w-4" />
-                  인재풀 보기
-                </Link>
-                <Link
-                  href="/jobs"
-                  className="inline-flex items-center justify-center gap-2 rounded-lg border border-white/25 bg-white/10 px-5 py-3 text-sm font-semibold text-white backdrop-blur transition-colors hover:bg-white/16"
-                >
-                  <Briefcase className="h-4 w-4" />
-                  채용 공고 보기
-                </Link>
+                <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+                  <Link
+                    href="/pool"
+                    className="inline-flex items-center justify-center gap-2 rounded-lg bg-white px-5 py-3 text-sm font-semibold text-primary-700 transition-transform hover:-translate-y-px"
+                  >
+                    <Search className="h-4 w-4" />
+                    인재풀 보기
+                  </Link>
+                  <Link
+                    href="/jobs"
+                    className="inline-flex items-center justify-center gap-2 rounded-lg border border-white/25 bg-white/10 px-5 py-3 text-sm font-semibold text-white backdrop-blur transition-colors hover:bg-white/16"
+                  >
+                    <Briefcase className="h-4 w-4" />
+                    채용 공고 보기
+                  </Link>
+                </div>
+
+                <div className="mt-8 grid gap-3 sm:grid-cols-3">
+                  {[
+                    ["열린 공고", `${openJobs.length}건`],
+                    ["공개 인재", `${featuredTeachers.length}명`],
+                    ["즉시 검토", "183명"],
+                  ].map(([label, value]) => (
+                    <div
+                      key={label}
+                      className="rounded-[20px] border border-white/12 bg-white/10 px-4 py-4 backdrop-blur-sm"
+                    >
+                      <div className="text-sm font-semibold text-white">
+                        {label}
+                      </div>
+                      <div className="mt-2 text-2xl font-bold text-white">
+                        {value}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="grid gap-4">
+                <JobVisual
+                  className="min-h-[340px]"
+                  employmentType={openJobs[0].employmentType}
+                  gradeLevel={openJobs[0].gradeLevel}
+                  id={openJobs[0].id}
+                  qualificationSubject={openJobs[0].qualificationSubject}
+                  qualificationType={openJobs[0].qualificationType}
+                  schoolName={openJobs[0].schoolName}
+                  schoolRegion={openJobs[0].schoolRegion}
+                  variant="hero"
+                />
+
+                <div className="grid gap-4 md:grid-cols-[0.9fr_1.1fr]">
+                  <div className="rounded-[26px] border border-white/12 bg-white/10 p-5 backdrop-blur-sm">
+                    <div className="text-xs font-semibold uppercase tracking-[0.16em] text-white">
+                      Teacher
+                    </div>
+                    <div className="mt-4 flex items-center gap-3">
+                      <CharacterAvatar
+                        className="h-16 w-16 rounded-[18px]"
+                        presetId={featuredTeachers[0].avatarPreset}
+                        size={64}
+                      />
+                      <div>
+                        <div className="text-lg font-bold text-white">
+                          {featuredTeachers[0].name}
+                        </div>
+                        <div className="text-sm text-white">
+                          {featuredTeachers[0].qualification}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="mt-4 flex flex-wrap gap-2">
+                      {featuredTeachers[0].preferredRegions.map((region) => (
+                        <span
+                          key={region}
+                          className="rounded-full bg-white/12 px-3 py-2 text-xs font-semibold text-white"
+                        >
+                          {region}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    {[
+                      ["채용 공고", "실시간 상태"],
+                      ["인재풀", "조건 필터"],
+                      ["교사 가입", "캐릭터 등록"],
+                      ["학교 가입", "승인 흐름"],
+                    ].map(([title, detail]) => (
+                      <div
+                        key={title}
+                        className="rounded-[22px] border border-white/12 bg-white/10 px-4 py-4 backdrop-blur-sm"
+                      >
+                        <div className="text-sm font-semibold text-white">
+                          {title}
+                        </div>
+                        <div className="mt-1 text-xs text-white">{detail}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
             </div>
           </div>
         </section>
 
-        <section className="relative z-10 -mt-10 px-4 sm:px-6" id="candidate-pool">
+        <section
+          className="relative z-10 -mt-8 px-4 sm:px-6"
+          id="candidate-pool"
+        >
           <div className="mx-auto max-w-7xl">
             <div className="panel-surface p-6 sm:p-8">
               <div className="flex items-center justify-between gap-4">
-                <h2 className="text-3xl font-bold tracking-tight text-ink">인재풀</h2>
+                <h2 className="text-3xl font-bold tracking-tight text-ink">
+                  인재풀
+                </h2>
                 <Link
                   href="/pool"
                   className="inline-flex items-center gap-2 text-sm font-semibold text-primary-700"
@@ -156,23 +257,36 @@ export default function Home() {
                             size={56}
                           />
                           <div>
-                            <div className="text-lg font-bold text-ink">{teacher.name}</div>
-                            <div className="text-sm text-ink-soft">{teacher.qualification}</div>
+                            <div className="text-lg font-bold text-ink">
+                              {teacher.name}
+                            </div>
+                            <div className="text-sm text-ink-soft">
+                              {teacher.qualification}
+                            </div>
                           </div>
                         </div>
-                        <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${status.className}`}>
+                        <span
+                          className={`rounded-full px-2.5 py-1 text-xs font-semibold ${status.className}`}
+                        >
                           {status.label}
                         </span>
                       </div>
 
                       <div className="mt-4 grid gap-3 text-sm text-ink-soft">
-                        <div className="rounded-lg bg-surface-panel px-3 py-2">{teacher.experience}</div>
-                        <div className="rounded-lg bg-surface-panel px-3 py-2">{teacher.residence}</div>
+                        <div className="rounded-lg bg-surface-panel px-3 py-2">
+                          {teacher.experience}
+                        </div>
+                        <div className="rounded-lg bg-surface-panel px-3 py-2">
+                          {teacher.residence}
+                        </div>
                       </div>
 
                       <div className="mt-4 flex flex-wrap gap-2 text-xs font-medium text-ink-muted">
                         {teacher.preferredRegions.map((region) => (
-                          <span key={region} className="rounded-full bg-surface-panel px-2.5 py-1">
+                          <span
+                            key={region}
+                            className="rounded-full bg-surface-panel px-2.5 py-1"
+                          >
                             {region}
                           </span>
                         ))}
@@ -187,7 +301,9 @@ export default function Home() {
 
         <section className="mx-auto max-w-7xl px-4 py-20 sm:px-6" id="jobs">
           <div className="flex items-center justify-between gap-4">
-            <h2 className="text-3xl font-bold tracking-tight text-ink">채용 공고</h2>
+            <h2 className="text-3xl font-bold tracking-tight text-ink">
+              채용 공고
+            </h2>
             <Link
               href="/jobs"
               className="inline-flex items-center gap-2 text-sm font-semibold text-primary-700"
@@ -204,14 +320,28 @@ export default function Home() {
               return (
                 <article
                   key={job.id}
-                  className="panel-surface overflow-hidden transition-transform hover:-translate-y-1"
+                  className="panel-surface overflow-hidden p-5 transition-transform hover:-translate-y-1"
                 >
-                  <img alt={job.schoolName} className="h-52 w-full object-cover" src={job.image} />
-                  <div className="p-6">
-                    <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${status.className}`}>
+                  <JobVisual
+                    className="min-h-[248px]"
+                    employmentType={job.employmentType}
+                    gradeLevel={job.gradeLevel}
+                    id={job.id}
+                    qualificationSubject={job.qualificationSubject}
+                    qualificationType={job.qualificationType}
+                    schoolName={job.schoolName}
+                    schoolRegion={job.schoolRegion}
+                  />
+
+                  <div className="mt-5">
+                    <span
+                      className={`rounded-full px-2.5 py-1 text-xs font-semibold ${status.className}`}
+                    >
                       {status.label}
                     </span>
-                    <h3 className="mt-4 text-xl font-bold text-ink">{job.schoolName}</h3>
+                    <p className="mt-4 text-sm leading-6 text-ink-soft">
+                      {job.summary}
+                    </p>
 
                     <div className="mt-5 space-y-3 text-sm text-ink-soft">
                       <div className="flex items-center gap-2">

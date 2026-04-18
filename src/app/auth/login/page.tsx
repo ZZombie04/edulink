@@ -3,7 +3,9 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { AlertCircle, ArrowRight, Building2, LockKeyhole, Mail } from "lucide-react";
+import { AlertCircle, ArrowRight, LockKeyhole, Mail } from "lucide-react";
+
+import { AuthShell } from "@/components/auth-shell";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -35,116 +37,97 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-surface text-ink">
-      <div className="grid min-h-screen lg:grid-cols-[1.05fr_0.95fr]">
-        <section className="relative hidden overflow-hidden lg:block">
-          <img
-            alt="학교 복도에서 회의하는 교사들"
-            className="absolute inset-0 h-full w-full object-cover"
-            src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=1400&q=80"
-          />
-          <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(7,18,43,0.88),rgba(0,88,190,0.76),rgba(0,110,47,0.42))]" />
-          <div className="relative flex h-full flex-col justify-between p-10 text-white">
-            <Link href="/" className="flex items-center gap-3">
-              <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-white/12">
-                <Building2 className="h-5 w-5" />
+    <AuthShell title="로그인" variant="login">
+      <div className="mx-auto flex min-h-[calc(100vh-5rem)] max-w-md items-center">
+        <div className="panel-surface w-full p-8">
+          <div className="text-3xl font-bold text-ink">로그인</div>
+
+          {error ? (
+            <div className="mt-6 rounded-lg bg-[var(--danger-soft)] px-4 py-3 text-sm text-[#9c2f24]">
+              <div className="flex items-center gap-2">
+                <AlertCircle className="h-4 w-4" />
+                {error}
               </div>
-              <div className="text-lg font-bold tracking-tight">EduLink</div>
-            </Link>
+            </div>
+          ) : null}
 
-            <div className="text-5xl font-bold leading-tight">로그인</div>
-          </div>
-        </section>
-
-        <section className="flex items-center justify-center px-4 py-10 sm:px-6">
-          <div className="w-full max-w-md">
-            <Link href="/" className="mb-8 flex items-center gap-3 lg:hidden">
-              <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-primary-50 text-primary-700">
-                <Building2 className="h-5 w-5" />
+          <form className="mt-6 space-y-4" onSubmit={handleLogin}>
+            <label className="block">
+              <div className="mb-2 text-sm font-semibold text-ink">이메일</div>
+              <div className="relative">
+                <Mail className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-muted" />
+                <input
+                  className="input-surface pl-11"
+                  placeholder="name@school.go.kr"
+                  type="email"
+                  value={email}
+                  onChange={(event) => setEmail(event.target.value)}
+                />
               </div>
-              <div className="text-lg font-bold tracking-tight">EduLink</div>
-            </Link>
+            </label>
 
-            <div className="panel-surface p-8">
+            <label className="block">
+              <div className="mb-2 text-sm font-semibold text-ink">
+                비밀번호
+              </div>
+              <div className="relative">
+                <LockKeyhole className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-muted" />
+                <input
+                  className="input-surface pl-11"
+                  placeholder="비밀번호 입력"
+                  type="password"
+                  value={password}
+                  onChange={(event) => setPassword(event.target.value)}
+                />
+              </div>
+            </label>
+
+            <button
+              type="submit"
+              className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-[linear-gradient(135deg,#0058be,#2170e4)] px-4 py-3 text-sm font-semibold text-white shadow-soft"
+              disabled={loading}
+            >
+              {loading ? "로그인 중..." : "로그인"}
+              {!loading ? <ArrowRight className="h-4 w-4" /> : null}
+            </button>
+          </form>
+
+          <div className="mt-6 rounded-lg bg-surface-subtle p-4 text-sm text-ink-soft">
+            <div className="font-semibold text-ink">데모 로그인 예시</div>
+            <div className="mt-3 space-y-2">
               <div>
-                <div className="text-3xl font-bold text-ink">로그인</div>
+                <span className="font-semibold text-ink">
+                  teacher@email.com
+                </span>{" "}
+                → 교사 대시보드
               </div>
-
-              {error ? (
-                <div className="mt-6 rounded-lg bg-[var(--danger-soft)] px-4 py-3 text-sm text-[#9c2f24]">
-                  <div className="flex items-center gap-2">
-                    <AlertCircle className="h-4 w-4" />
-                    {error}
-                  </div>
-                </div>
-              ) : null}
-
-              <form className="mt-6 space-y-4" onSubmit={handleLogin}>
-                <label className="block">
-                  <div className="mb-2 text-sm font-semibold text-ink">이메일</div>
-                  <div className="relative">
-                    <Mail className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-muted" />
-                    <input
-                      className="input-surface pl-11"
-                      placeholder="name@school.go.kr"
-                      type="email"
-                      value={email}
-                      onChange={(event) => setEmail(event.target.value)}
-                    />
-                  </div>
-                </label>
-
-                <label className="block">
-                  <div className="mb-2 text-sm font-semibold text-ink">비밀번호</div>
-                  <div className="relative">
-                    <LockKeyhole className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-muted" />
-                    <input
-                      className="input-surface pl-11"
-                      placeholder="비밀번호 입력"
-                      type="password"
-                      value={password}
-                      onChange={(event) => setPassword(event.target.value)}
-                    />
-                  </div>
-                </label>
-
-                <button
-                  type="submit"
-                  className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-[linear-gradient(135deg,#0058be,#2170e4)] px-4 py-3 text-sm font-semibold text-white shadow-soft"
-                  disabled={loading}
-                >
-                  {loading ? "로그인 중..." : "로그인"}
-                  {!loading ? <ArrowRight className="h-4 w-4" /> : null}
-                </button>
-              </form>
-
-              <div className="mt-6 rounded-lg bg-surface-subtle p-4 text-sm text-ink-soft">
-                <div className="font-semibold text-ink">데모 로그인 예시</div>
-                <div className="mt-3 space-y-2">
-                  <div>`teacher@email.com` → 교사 대시보드</div>
-                  <div>`hr@school.go.kr` → 학교 담당자 대시보드</div>
-                  <div>`admin@edulink.kr` → 관리자 대시보드</div>
-                </div>
+              <div>
+                <span className="font-semibold text-ink">hr@school.go.kr</span>{" "}
+                → 학교 담당자 대시보드
               </div>
-
-              <div className="mt-6 grid gap-3 sm:grid-cols-2">
-                <Link
-                  href="/auth/register/teacher"
-                  className="inline-flex items-center justify-center rounded-lg border border-outline px-4 py-3 text-sm font-semibold text-ink-soft"
-                >
-                  교사 가입
-                </Link>
-                <Link
-                  href="/auth/register/hr"
-                  className="inline-flex items-center justify-center rounded-lg border border-outline px-4 py-3 text-sm font-semibold text-ink-soft"
-                >
-                  학교 가입
-                </Link>
+              <div>
+                <span className="font-semibold text-ink">admin@edulink.kr</span>{" "}
+                → 관리자 대시보드
               </div>
             </div>
           </div>
-        </section>
+
+          <div className="mt-6 grid gap-3 sm:grid-cols-2">
+            <Link
+              href="/auth/register/teacher"
+              className="inline-flex items-center justify-center rounded-lg border border-outline px-4 py-3 text-sm font-semibold text-ink-soft"
+            >
+              교사 가입
+            </Link>
+            <Link
+              href="/auth/register/hr"
+              className="inline-flex items-center justify-center rounded-lg border border-outline px-4 py-3 text-sm font-semibold text-ink-soft"
+            >
+              학교 가입
+            </Link>
+          </div>
+        </div>
       </div>
-    </div>
+    </AuthShell>
   );
 }

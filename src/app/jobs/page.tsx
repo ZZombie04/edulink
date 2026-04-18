@@ -11,6 +11,8 @@ import {
   Search,
 } from "lucide-react";
 
+import { BrandLockup } from "@/components/brand";
+import { JobVisual } from "@/components/job-visual";
 import { gyeonggiRegions, jobPosts } from "@/lib/demo-data";
 
 const employmentTypes = ["기간제 교사", "시간강사"] as const;
@@ -38,7 +40,11 @@ function jobStatusLabel(status: string) {
 
 export default function JobsPage() {
   const [query, setQuery] = useState("");
-  const [regionFilters, setRegionFilters] = useState<string[]>(["수원", "화성", "용인"]);
+  const [regionFilters, setRegionFilters] = useState<string[]>([
+    "수원",
+    "화성",
+    "용인",
+  ]);
   const [employmentFilters, setEmploymentFilters] = useState<string[]>([
     "기간제 교사",
     "시간강사",
@@ -68,7 +74,11 @@ export default function JobsPage() {
     });
   }, [employmentFilters, qualificationFilters, query, regionFilters]);
 
-  const toggleFilter = (value: string, current: string[], setter: (next: string[]) => void) => {
+  const toggleFilter = (
+    value: string,
+    current: string[],
+    setter: (next: string[]) => void,
+  ) => {
     if (current.includes(value)) {
       setter(current.filter((item) => item !== value));
       return;
@@ -81,11 +91,8 @@ export default function JobsPage() {
     <div className="min-h-screen bg-surface text-ink">
       <header className="sticky top-0 z-50 border-b border-outline bg-white/90 backdrop-blur">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6">
-          <Link href="/" className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary-50 text-primary-700">
-              <Building2 className="h-5 w-5" />
-            </div>
-            <div className="text-lg font-bold tracking-tight">EduLink</div>
+          <Link href="/">
+            <BrandLockup />
           </Link>
 
           <div className="flex items-center gap-2">
@@ -105,30 +112,47 @@ export default function JobsPage() {
         </div>
       </header>
 
-      <section className="relative overflow-hidden">
-        <img
-          alt="학교 외관"
-          className="absolute inset-0 h-full w-full object-cover"
-          src="https://images.unsplash.com/photo-1541339907198-e08756dedf3f?auto=format&fit=crop&w=1600&q=80"
-        />
-        <div className="absolute inset-0 bg-[linear-gradient(115deg,rgba(7,18,43,0.88),rgba(0,88,190,0.70))]" />
-        <div className="relative mx-auto max-w-7xl px-4 py-20 sm:px-6">
-          <span className="kicker text-white/85 before:bg-white">채용 공고</span>
-          <h1 className="mt-5 max-w-3xl text-4xl font-bold leading-tight text-white sm:text-5xl">
-            지금 바로 지원 가능한
-            <br />
-            학교 채용 공고를 모았습니다.
-          </h1>
+      <section className="relative overflow-hidden bg-[linear-gradient(145deg,#071b3a,#0b4fa6,#18907c)]">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.18),transparent_30%),radial-gradient(circle_at_bottom_right,rgba(255,255,255,0.14),transparent_34%)]" />
+        <div className="relative mx-auto max-w-7xl px-4 py-16 sm:px-6 sm:py-20">
+          <div className="grid gap-8 lg:grid-cols-[0.95fr_1.05fr] lg:items-center">
+            <div>
+              <span className="kicker text-white/85 before:bg-white">
+                채용 공고
+              </span>
+              <h1 className="mt-5 max-w-3xl text-4xl font-bold leading-tight text-white sm:text-5xl">
+                지금 바로 확인할 수 있는
+                <br />
+                학교 채용 공고
+              </h1>
 
-          <div className="mt-8 max-w-2xl">
-            <div className="relative">
-              <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-white/62" />
-              <input
-                className="w-full rounded-lg border border-white/18 bg-white/12 py-4 pl-11 pr-4 text-sm text-white placeholder:text-white/58 backdrop-blur outline-none transition focus:border-white/36"
-                placeholder="학교명, 지역, 자격으로 검색"
-                value={query}
-                onChange={(event) => setQuery(event.target.value)}
-              />
+              <div className="mt-8 max-w-2xl">
+                <div className="relative">
+                  <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-white/62" />
+                  <input
+                    className="w-full rounded-lg border border-white/18 bg-white/12 py-4 pl-11 pr-4 text-sm text-white placeholder:text-white/58 backdrop-blur outline-none transition focus:border-white/36"
+                    placeholder="학교명, 지역, 자격으로 검색"
+                    value={query}
+                    onChange={(event) => setQuery(event.target.value)}
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="grid gap-4 md:grid-cols-2">
+              {jobPosts.slice(0, 2).map((job) => (
+                <JobVisual
+                  key={job.id}
+                  className="min-h-[255px]"
+                  employmentType={job.employmentType}
+                  gradeLevel={job.gradeLevel}
+                  id={job.id}
+                  qualificationSubject={job.qualificationSubject}
+                  qualificationType={job.qualificationType}
+                  schoolName={job.schoolName}
+                  schoolRegion={job.schoolRegion}
+                />
+              ))}
             </div>
           </div>
         </div>
@@ -168,7 +192,9 @@ export default function JobsPage() {
                           ? "bg-primary-50 text-primary-700"
                           : "bg-white text-ink-soft"
                       }`}
-                      onClick={() => toggleFilter(region, regionFilters, setRegionFilters)}
+                      onClick={() =>
+                        toggleFilter(region, regionFilters, setRegionFilters)
+                      }
                     >
                       {region}
                     </button>
@@ -189,7 +215,11 @@ export default function JobsPage() {
                           : "bg-white text-ink-soft"
                       }`}
                       onClick={() =>
-                        toggleFilter(type, employmentFilters, setEmploymentFilters)
+                        toggleFilter(
+                          type,
+                          employmentFilters,
+                          setEmploymentFilters,
+                        )
                       }
                     >
                       {type}
@@ -211,7 +241,11 @@ export default function JobsPage() {
                           : "bg-white text-ink-soft"
                       }`}
                       onClick={() =>
-                        toggleFilter(type, qualificationFilters, setQualificationFilters)
+                        toggleFilter(
+                          type,
+                          qualificationFilters,
+                          setQualificationFilters,
+                        )
                       }
                     >
                       {type}
@@ -226,13 +260,15 @@ export default function JobsPage() {
             <div className="panel-surface p-5">
               <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                 <div>
-                  <div className="text-2xl font-bold text-ink">열린 채용 공고</div>
+                  <div className="text-2xl font-bold text-ink">
+                    열린 채용 공고
+                  </div>
                   <div className="mt-1 text-sm text-ink-soft">
                     조건에 맞는 공고 {filteredJobs.length}건
                   </div>
                 </div>
                 <div className="rounded-full bg-surface-subtle px-4 py-2 text-sm font-semibold text-primary-700">
-                  마감 임박 공고가 우선 노출됩니다
+                  마감 임박 공고 우선
                 </div>
               </div>
             </div>
@@ -243,22 +279,32 @@ export default function JobsPage() {
               return (
                 <article
                   key={job.id}
-                  className="panel-surface overflow-hidden transition-transform hover:-translate-y-1"
+                  className="panel-surface overflow-hidden p-5 transition-transform hover:-translate-y-1"
                 >
-                  <div className="grid gap-0 md:grid-cols-[240px_minmax(0,1fr)]">
-                    <img
-                      alt={job.schoolName}
-                      className="h-full min-h-[220px] w-full object-cover"
-                      src={job.image}
+                  <div className="grid gap-5 xl:grid-cols-[320px_minmax(0,1fr)] xl:items-center">
+                    <JobVisual
+                      className="min-h-[260px]"
+                      employmentType={job.employmentType}
+                      gradeLevel={job.gradeLevel}
+                      id={job.id}
+                      qualificationSubject={job.qualificationSubject}
+                      qualificationType={job.qualificationType}
+                      schoolName={job.schoolName}
+                      schoolRegion={job.schoolRegion}
                     />
-                    <div className="p-6">
-                      <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${status.className}`}>
+
+                    <div>
+                      <span
+                        className={`rounded-full px-2.5 py-1 text-xs font-semibold ${status.className}`}
+                      >
                         {status.label}
                       </span>
                       <h2 className="mt-4 text-2xl font-bold text-ink">
                         {job.schoolName}
                       </h2>
-                      <p className="mt-2 text-sm leading-6 text-ink-soft">{job.summary}</p>
+                      <p className="mt-2 text-sm leading-6 text-ink-soft">
+                        {job.summary}
+                      </p>
 
                       <div className="mt-5 grid gap-3 text-sm text-ink-soft sm:grid-cols-2">
                         <div className="rounded-lg bg-surface-subtle px-3 py-2">
@@ -283,14 +329,17 @@ export default function JobsPage() {
                           <div className="flex items-center gap-2">
                             <Briefcase className="h-4 w-4 text-primary-600" />
                             {job.employmentType} · {job.qualificationType}
-                            {job.qualificationSubject ? ` ${job.qualificationSubject}` : ""}
+                            {job.qualificationSubject
+                              ? ` ${job.qualificationSubject}`
+                              : ""}
                           </div>
                         </div>
                       </div>
 
                       <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                         <div className="text-sm text-ink-soft">
-                          지원자 {job.applicants}명 · 조회 {job.views} · 마감 {job.deadline}
+                          지원자 {job.applicants}명 · 조회 {job.views} · 마감{" "}
+                          {job.deadline}
                         </div>
                         <Link
                           href={`/jobs/${job.id}`}

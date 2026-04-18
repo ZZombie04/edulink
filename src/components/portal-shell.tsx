@@ -1,7 +1,8 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
-import { Bell, BookOpen, type LucideIcon } from "lucide-react";
+import { Bell, type LucideIcon } from "lucide-react";
 
+import { BrandLockup, BrandMark } from "@/components/brand";
 import { CharacterAvatar } from "@/components/character-avatar";
 import type { AvatarPresetId } from "@/lib/avatar-presets";
 import { cn } from "@/lib/utils";
@@ -40,7 +41,13 @@ function UserAvatar({
   avatarPreset?: AvatarPresetId;
 }) {
   if (avatarPreset) {
-    return <CharacterAvatar className="h-11 w-11 rounded-lg" presetId={avatarPreset} size={44} />;
+    return (
+      <CharacterAvatar
+        className="h-11 w-11 rounded-lg"
+        presetId={avatarPreset}
+        size={44}
+      />
+    );
   }
 
   return (
@@ -61,11 +68,8 @@ export function PortalShell({
   return (
     <div className="min-h-screen bg-surface text-ink">
       <aside className="fixed inset-y-0 left-0 hidden w-72 flex-col border-r border-outline bg-[linear-gradient(180deg,rgba(255,255,255,0.98),rgba(242,243,253,0.94))] px-6 py-6 lg:flex">
-        <Link href="/" className="flex items-center gap-3">
-          <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-primary-50 text-primary-700 shadow-panel">
-            <BookOpen className="h-5 w-5" />
-          </div>
-          <div className="text-lg font-bold tracking-tight text-ink">EduLink</div>
+        <Link href="/">
+          <BrandLockup />
         </Link>
 
         {primaryAction ? (
@@ -73,7 +77,9 @@ export function PortalShell({
             className="mt-8 inline-flex items-center justify-center gap-2 rounded-lg bg-[linear-gradient(135deg,#0058be,#2170e4)] px-4 py-3 text-sm font-semibold text-white shadow-soft transition-transform hover:-translate-y-px"
             href={primaryAction.href}
           >
-            {primaryAction.icon ? <primaryAction.icon className="h-4 w-4" /> : null}
+            {primaryAction.icon ? (
+              <primaryAction.icon className="h-4 w-4" />
+            ) : null}
             {primaryAction.label}
           </Link>
         ) : null}
@@ -86,7 +92,7 @@ export function PortalShell({
                 "flex items-center justify-between rounded-lg px-4 py-3 text-sm font-medium transition-colors",
                 item.active
                   ? "bg-white text-primary-700 shadow-panel"
-                  : "text-ink-soft hover:bg-white/80 hover:text-ink"
+                  : "text-ink-soft hover:bg-white/80 hover:text-ink",
               )}
               href={item.href}
             >
@@ -111,10 +117,10 @@ export function PortalShell({
           <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6">
             <div className="flex items-center gap-3">
               <Link className="flex items-center gap-2 lg:hidden" href="/">
-                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary-50 text-primary-700">
-                  <BookOpen className="h-4 w-4" />
-                </div>
-                <span className="font-bold tracking-tight text-ink">EduLink</span>
+                <BrandMark className="h-9 w-9" />
+                <span className="font-bold tracking-tight text-ink">
+                  EduLink
+                </span>
               </Link>
               {sectionLabel ? (
                 <span className="hidden text-sm font-semibold text-ink-soft sm:inline-flex">
@@ -139,7 +145,9 @@ export function PortalShell({
               <div className="hidden items-center gap-3 rounded-lg border border-outline bg-white px-3 py-2 sm:flex">
                 <UserAvatar avatarPreset={user.avatarPreset} name={user.name} />
                 <div>
-                  <div className="text-sm font-semibold text-ink">{user.name}</div>
+                  <div className="text-sm font-semibold text-ink">
+                    {user.name}
+                  </div>
                   <div className="text-xs text-ink-muted">
                     {[user.role, user.detail].filter(Boolean).join(" / ")}
                   </div>
@@ -158,7 +166,7 @@ export function PortalShell({
                   "inline-flex shrink-0 items-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium",
                   item.active
                     ? "border-primary-200 bg-primary-50 text-primary-700"
-                    : "border-outline bg-white text-ink-soft"
+                    : "border-outline bg-white text-ink-soft",
                 )}
                 href={item.href}
               >

@@ -10,11 +10,17 @@ import {
 } from "lucide-react";
 
 import { CharacterAvatar } from "@/components/character-avatar";
+import { JobVisual } from "@/components/job-visual";
 import { PortalShell } from "@/components/portal-shell";
 import { featuredTeachers, hrMatchRequests, jobPosts } from "@/lib/demo-data";
 
 const navItems = [
-  { href: "/hr/dashboard", label: "대시보드", icon: LayoutDashboard, active: true },
+  {
+    href: "/hr/dashboard",
+    label: "대시보드",
+    icon: LayoutDashboard,
+    active: true,
+  },
   { href: "/pool", label: "인재풀", icon: Search },
   { href: "/jobs", label: "채용 공고", icon: Briefcase },
   { href: "/admin/dashboard", label: "운영 지표", icon: BarChart3 },
@@ -49,7 +55,9 @@ export default function HRDashboardPage() {
       <section className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
         <div className="self-start rounded-lg bg-[linear-gradient(135deg,#0058be,#2170e4)] p-6 text-white shadow-soft">
           <div className="flex min-h-[176px] flex-col justify-between">
-            <div className="text-3xl font-bold tracking-tight sm:text-4xl">학교 채용 운영</div>
+            <div className="text-3xl font-bold tracking-tight sm:text-4xl">
+              학교 채용 운영
+            </div>
 
             <div className="flex flex-col gap-3 sm:flex-row">
               <Link
@@ -71,14 +79,19 @@ export default function HRDashboardPage() {
         </div>
 
         <div className="panel-surface p-6">
-          <div className="text-sm font-semibold text-ink-soft">오늘의 운영 메모</div>
+          <div className="text-sm font-semibold text-ink-soft">
+            오늘의 운영 메모
+          </div>
           <div className="mt-5 space-y-3">
             {[
               "면접 진행중인 후보 2명에게 응답 확인 필요",
               "정인초 3학년 담임 공고 마감까지 5일",
               "새로 공개된 후보 4명이 조건과 잘 맞습니다",
             ].map((note) => (
-              <div key={note} className="rounded-lg bg-surface-subtle px-4 py-3 text-sm text-ink-soft">
+              <div
+                key={note}
+                className="rounded-lg bg-surface-subtle px-4 py-3 text-sm text-ink-soft"
+              >
                 {note}
               </div>
             ))}
@@ -107,9 +120,14 @@ export default function HRDashboardPage() {
         <div className="panel-surface p-6">
           <div className="flex items-center justify-between">
             <div>
-              <div className="text-xl font-bold text-ink">최근 보낸 매칭 요청</div>
+              <div className="text-xl font-bold text-ink">
+                최근 보낸 매칭 요청
+              </div>
             </div>
-            <Link href="/pool" className="text-sm font-semibold text-primary-700">
+            <Link
+              href="/pool"
+              className="text-sm font-semibold text-primary-700"
+            >
               더 보기
             </Link>
           </div>
@@ -124,14 +142,14 @@ export default function HRDashboardPage() {
                   <div>
                     <span
                       className={`rounded-full px-2.5 py-1 text-xs font-semibold ${requestTone(
-                        request.status
+                        request.status,
                       )}`}
                     >
                       {request.status === "accepted"
                         ? "응답 수락"
                         : request.status === "rejected"
-                        ? "응답 거절"
-                        : "응답 대기"}
+                          ? "응답 거절"
+                          : "응답 대기"}
                     </span>
                     <div className="mt-3 text-xl font-bold text-ink">
                       {request.teacherName}
@@ -150,9 +168,14 @@ export default function HRDashboardPage() {
         <div className="panel-surface p-6">
           <div className="flex items-center justify-between">
             <div>
-              <div className="text-xl font-bold text-ink">운영 중인 채용 공고</div>
+              <div className="text-xl font-bold text-ink">
+                운영 중인 채용 공고
+              </div>
             </div>
-            <Link href="/jobs" className="text-sm font-semibold text-primary-700">
+            <Link
+              href="/jobs"
+              className="text-sm font-semibold text-primary-700"
+            >
               전체 공고
             </Link>
           </div>
@@ -164,13 +187,21 @@ export default function HRDashboardPage() {
                 className="rounded-lg border border-outline bg-surface p-5"
               >
                 <div className="flex gap-4">
-                  <img
-                    alt={job.schoolName}
-                    className="h-20 w-20 rounded-lg object-cover"
-                    src={job.image}
+                  <JobVisual
+                    className="h-20 w-20 shrink-0"
+                    employmentType={job.employmentType}
+                    gradeLevel={job.gradeLevel}
+                    id={job.id}
+                    qualificationSubject={job.qualificationSubject}
+                    qualificationType={job.qualificationType}
+                    schoolName={job.schoolName}
+                    schoolRegion={job.schoolRegion}
+                    variant="mini"
                   />
                   <div className="flex-1">
-                    <div className="text-lg font-bold text-ink">{job.schoolName}</div>
+                    <div className="text-lg font-bold text-ink">
+                      {job.schoolName}
+                    </div>
                     <div className="mt-1 text-sm text-ink-soft">
                       {job.gradeLevel} · {job.employmentType}
                     </div>
@@ -190,7 +221,10 @@ export default function HRDashboardPage() {
       <section className="mt-8 panel-surface p-6">
         <div className="flex items-center justify-between">
           <div className="text-xl font-bold text-ink">추천 후보</div>
-          <Link href="/pool" className="inline-flex items-center gap-2 text-sm font-semibold text-primary-700">
+          <Link
+            href="/pool"
+            className="inline-flex items-center gap-2 text-sm font-semibold text-primary-700"
+          >
             전체 보기
             <ArrowRight className="h-4 w-4" />
           </Link>
@@ -210,8 +244,12 @@ export default function HRDashboardPage() {
                 />
                 <div className="min-w-0 flex-1">
                   <div className="font-semibold text-ink">{teacher.name}</div>
-                  <div className="mt-1 text-sm text-ink-soft">{teacher.qualification}</div>
-                  <div className="mt-1 text-sm text-ink-muted">{teacher.residence}</div>
+                  <div className="mt-1 text-sm text-ink-soft">
+                    {teacher.qualification}
+                  </div>
+                  <div className="mt-1 text-sm text-ink-muted">
+                    {teacher.residence}
+                  </div>
                 </div>
               </div>
               <div className="mt-4 flex flex-wrap gap-2">
