@@ -1,18 +1,17 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import {
-  BarChart3,
   Bell,
   Briefcase,
   Clock3,
+  Home,
   LayoutDashboard,
   MapPin,
-  Search,
   ShieldCheck,
-  Star,
-  User,
+  Sparkles,
+  UserRound,
 } from "lucide-react";
 
 import { CharacterAvatar } from "@/components/character-avatar";
@@ -20,10 +19,9 @@ import { PortalShell } from "@/components/portal-shell";
 import { featuredTeachers, teacherMatchRequests } from "@/lib/demo-data";
 
 const navItems = [
-  { href: "/teacher/dashboard", label: "대시보드", icon: LayoutDashboard, active: true },
+  { href: "/teacher/dashboard", label: "내 홈", icon: LayoutDashboard, active: true },
+  { href: "/", label: "메인", icon: Home },
   { href: "/jobs", label: "채용 공고", icon: Briefcase },
-  { href: "/pool", label: "인재풀", icon: Search },
-  { href: "/admin/dashboard", label: "운영 지표", icon: BarChart3 },
 ];
 
 function requestTone(status: string) {
@@ -39,14 +37,26 @@ function requestTone(status: string) {
 
 export default function TeacherDashboardPage() {
   const teacher = featuredTeachers[0];
-  const [availability, setAvailability] = useState<"seeking" | "paused">("seeking");
+  const [availability, setAvailability] = useState<"seeking" | "paused">(
+    teacher.status === "paused" ? "paused" : "seeking",
+  );
+
+  const pendingRequests = useMemo(
+    () => teacherMatchRequests.filter((request) => request.status === "pending"),
+    [],
+  );
+
+  const processedRequests = useMemo(
+    () => teacherMatchRequests.filter((request) => request.status !== "pending"),
+    [],
+  );
 
   return (
     <PortalShell
       navItems={navItems}
-      noticeCount={2}
-      primaryAction={{ href: "/jobs", label: "새 공고 보기", icon: Briefcase }}
-      sectionLabel="교사 대시보드"
+      noticeCount={pendingRequests.length}
+      primaryAction={{ href: "/jobs", label: "채용 공고 보기", icon: Briefcase }}
+      sectionLabel="교사 홈"
       user={{
         name: teacher.name,
         role: "등록 교사",
@@ -56,8 +66,37 @@ export default function TeacherDashboardPage() {
     >
       <section className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
         <div className="self-start rounded-lg bg-[linear-gradient(135deg,#0058be,#2170e4)] p-6 text-white shadow-soft">
-          <div className="flex min-h-[176px] flex-col justify-end">
-            <div className="text-3xl font-bold tracking-tight sm:text-4xl">교사 대시보드</div>
+          <div className="flex min-h-[176px] flex-col justify-between">
+            <div>
+              <div className="inline-flex items-center gap-2 rounded-full bg-white/12 px-3 py-2 text-sm font-semibold text-white/90">
+                <Sparkles className="h-4 w-4" />
+                내 홈
+              </div>
+              <div className="mt-5 text-3xl font-bold tracking-tight sm:text-4xl">
+                {teacher.name} 선생님
+              </div>
+              <div className="mt-3 text-sm leading-6 text-white/82">
+                받은 제안과 현재 노출 상태, 희망 근무 조건을 한 화면에서 바로
+                확인할 수 있습니다.
+              </div>
+            </div>
+
+            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+              <Link
+                href="/jobs"
+                className="inline-flex items-center justify-center gap-2 rounded-lg bg-white px-5 py-3 text-sm font-semibold text-primary-700"
+              >
+                <Briefcase className="h-4 w-4" />
+                채용 공고 보기
+              </Link>
+              <Link
+                href="/"
+                className="inline-flex items-center justify-center gap-2 rounded-lg border border-white/18 bg-white/10 px-5 py-3 text-sm font-semibold text-white"
+              >
+                <Home className="h-4 w-4" />
+                메인으로
+              </Link>
+            </div>
           </div>
         </div>
 
@@ -74,11 +113,14 @@ export default function TeacherDashboardPage() {
               onClick={() => setAvailability("seeking")}
             >
               <div>
-                <div className="font-semibold">구직중</div>
-                <div className="mt-1 text-sm">학교에서 인재풀을 볼 수 있는 상태입니다.</div>
+                <div className="font-semibold">채용 제안 가능</div>
+                <div className="mt-1 text-sm">
+                  학교에서 프로필을 확인하고 제안을 보낼 수 있는 상태입니다.
+                </div>
               </div>
               <ShieldCheck className="h-5 w-5" />
             </button>
+
             <button
               type="button"
               className={`flex w-full items-center justify-between rounded-lg px-4 py-4 text-left ${
@@ -89,8 +131,10 @@ export default function TeacherDashboardPage() {
               onClick={() => setAvailability("paused")}
             >
               <div>
-                <div className="font-semibold">휴식중</div>
-                <div className="mt-1 text-sm">새 요청은 잠시 멈추고 프로필만 보관합니다.</div>
+                <div className="font-semibold">노출 일시중지</div>
+                <div className="mt-1 text-sm">
+                  새 제안은 잠시 멈추고 프로필만 보관합니다.
+                </div>
               </div>
               <Clock3 className="h-5 w-5" />
             </button>
@@ -100,10 +144,10 @@ export default function TeacherDashboardPage() {
 
       <section className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {[
-          { label: "프로필 조회", value: "12회", Icon: User },
-          { label: "받은 제안", value: "3건", Icon: Bell },
-          { label: "관심 학교", value: "5곳", Icon: Star },
-          { label: "지금 지원 가능 공고", value: "18건", Icon: Briefcase },
+          { label: "프로필 조회", value: `${teacher.portfolioViews}회`, Icon: UserRound },
+          { label: "받은 제안", value: `${teacherMatchRequests.length}건`, Icon: Bell },
+          { label: "희망 지역", value: `${teacher.preferredRegions.length}곳`, Icon: MapPin },
+          { label: "지원 가능한 공고", value: "18건", Icon: Briefcase },
         ].map((item) => (
           <div key={item.label} className="panel-surface p-5">
             <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-primary-50 text-primary-700">
@@ -118,9 +162,7 @@ export default function TeacherDashboardPage() {
       <section className="mt-8 grid gap-6 xl:grid-cols-[1fr_0.95fr]">
         <div className="panel-surface p-6">
           <div className="flex items-center justify-between">
-            <div>
-              <div className="text-xl font-bold text-ink">받은 매칭 요청</div>
-            </div>
+            <div className="text-xl font-bold text-ink">최근 받은 제안</div>
             <Link href="/jobs" className="text-sm font-semibold text-primary-700">
               공고 보기
             </Link>
@@ -136,26 +178,27 @@ export default function TeacherDashboardPage() {
                   <div>
                     <span
                       className={`rounded-full px-2.5 py-1 text-xs font-semibold ${requestTone(
-                        request.status
+                        request.status,
                       )}`}
                     >
                       {request.status === "accepted"
-                        ? "응답 수락"
+                        ? "응답 완료"
                         : request.status === "rejected"
-                        ? "응답 거절"
-                        : "응답 대기"}
+                          ? "검토 종료"
+                          : "응답 대기"}
                     </span>
                     <div className="mt-3 text-xl font-bold text-ink">
                       {request.schoolName}
                     </div>
                     <div className="mt-1 text-sm text-ink-soft">
-                      {request.position} · {request.period}
+                      {request.position} / {request.period}
                     </div>
                     <div className="mt-2 inline-flex items-center gap-2 text-sm text-ink-muted">
                       <MapPin className="h-4 w-4 text-primary-600" />
                       {request.region}
                     </div>
                   </div>
+
                   <div className="flex gap-2">
                     {request.status === "pending" ? (
                       <>
@@ -163,13 +206,13 @@ export default function TeacherDashboardPage() {
                           type="button"
                           className="rounded-lg bg-[linear-gradient(135deg,#0058be,#2170e4)] px-4 py-3 text-sm font-semibold text-white shadow-soft"
                         >
-                          수락
+                          검토하기
                         </button>
                         <button
                           type="button"
                           className="rounded-lg border border-outline px-4 py-3 text-sm font-semibold text-ink-soft"
                         >
-                          보류
+                          보관
                         </button>
                       </>
                     ) : (
@@ -184,7 +227,8 @@ export default function TeacherDashboardPage() {
 
         <div className="space-y-6">
           <div className="panel-surface p-6">
-            <div className="text-xl font-bold text-ink">내 프로필 요약</div>
+            <div className="text-xl font-bold text-ink">내 프로필</div>
+
             <div className="mt-6 flex items-center gap-4">
               <CharacterAvatar
                 className="h-20 w-20 rounded-lg"
@@ -194,14 +238,16 @@ export default function TeacherDashboardPage() {
               <div>
                 <div className="text-2xl font-bold text-ink">{teacher.name}</div>
                 <div className="mt-1 text-sm text-ink-soft">
-                  {teacher.qualification} · {teacher.residence}
+                  {teacher.qualification} / {teacher.residence}
                 </div>
                 <div className="mt-2 text-sm font-medium text-primary-700">
                   경력 {teacher.experience}
                 </div>
               </div>
             </div>
+
             <p className="mt-5 text-sm leading-6 text-ink-soft">{teacher.summary}</p>
+
             <div className="mt-5 flex flex-wrap gap-2">
               {teacher.preferredRegions.map((region) => (
                 <span
@@ -215,9 +261,10 @@ export default function TeacherDashboardPage() {
           </div>
 
           <div className="panel-surface p-6">
-            <div className="text-xl font-bold text-ink">희망 근무</div>
+            <div className="text-xl font-bold text-ink">근무 조건</div>
+
             <div className="mt-5">
-              <div className="text-sm font-semibold text-ink">근무 형태</div>
+              <div className="text-sm font-semibold text-ink">희망 형태</div>
               <div className="mt-3 flex flex-wrap gap-2">
                 {teacher.preferredTypes.map((type) => (
                   <span
@@ -229,16 +276,17 @@ export default function TeacherDashboardPage() {
                 ))}
               </div>
             </div>
+
             <div className="mt-5">
-              <div className="text-sm font-semibold text-ink">희망 지역</div>
-              <div className="mt-3 flex flex-wrap gap-2">
-                {teacher.preferredRegions.map((region) => (
-                  <span
-                    key={`preferred-${region}`}
-                    className="rounded-full bg-surface-subtle px-3 py-2 text-xs font-medium text-ink-soft"
+              <div className="text-sm font-semibold text-ink">처리 완료 제안</div>
+              <div className="mt-3 grid gap-3">
+                {processedRequests.map((request) => (
+                  <div
+                    key={request.id}
+                    className="rounded-lg bg-surface-subtle px-4 py-3 text-sm text-ink-soft"
                   >
-                    {region}
-                  </span>
+                    {request.schoolName} / {request.position}
+                  </div>
                 ))}
               </div>
             </div>

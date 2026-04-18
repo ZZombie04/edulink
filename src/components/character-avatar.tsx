@@ -416,6 +416,8 @@ export function CharacterAvatar({
         <ellipse cx="86" cy="61" rx="4.5" ry="7" fill={preset.skin} />
 
         <HairShape hair={preset.hair} shine={preset.hairShine} style={preset.hairStyle} />
+        <ellipse cx="60" cy="61" rx="18.5" ry="21.5" fill={preset.skin} />
+        <ellipse cx="60" cy="64" rx="16" ry="15.5" fill={preset.skinShadow} opacity="0.07" />
 
         <path d="M47 65c1.2 2 3.3 3 6.2 3 2.9 0 5-1 6.2-3" fill="none" opacity="0.28" stroke="#d89787" strokeLinecap="round" strokeWidth="2" />
         <path d="M60 58c-.7 3.4-.6 5.4 2.1 6.4" fill="none" stroke="#d3927f" strokeLinecap="round" strokeWidth="1.8" />

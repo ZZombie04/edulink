@@ -10,7 +10,7 @@ type DemoAccount = DemoSession & {
 
 export const DEMO_ACCOUNTS: DemoAccount[] = [
   {
-    avatarPreset: "teacher-f-rose",
+    avatarPreset: "teacher-f-mint",
     detail: "초등 2급 정교사",
     label: "교사",
     email: "teacher@email.com",

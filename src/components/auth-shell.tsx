@@ -133,7 +133,7 @@ function AuthShowcase({
       <div className="space-y-4">
         <div className="rounded-[24px] border border-white/12 bg-white/10 p-5 backdrop-blur-sm">
           <div className="text-xs font-semibold uppercase tracking-[0.18em] text-white/66">
-            Teacher
+            교사
           </div>
           <div className="mt-4 flex items-center gap-3">
             <CharacterAvatar
@@ -164,10 +164,10 @@ function AuthShowcase({
 
         <div className="grid grid-cols-2 gap-3">
           {[
-            ["인재풀", "빠른 탐색"],
+            ["교사 인력풀", "교사 검색"],
             ["채용 공고", "조건 확인"],
-            ["승인 운영", "계정 관리"],
-            ["매칭 요청", "즉시 제안"],
+            ["학교 가입", "계정 신청"],
+            ["매칭 요청", "제안 전달"],
           ].map(([title, detail]) => (
             <div
               key={title}

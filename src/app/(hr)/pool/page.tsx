@@ -3,7 +3,6 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import {
-  BarChart3,
   Briefcase,
   LayoutDashboard,
   MapPin,
@@ -18,10 +17,9 @@ import { PortalShell } from "@/components/portal-shell";
 import { featuredTeachers, type TeacherStatus } from "@/lib/demo-data";
 
 const navItems = [
-  { href: "/hr/dashboard", label: "대시보드", icon: LayoutDashboard },
-  { href: "/pool", label: "인재풀", icon: Search, active: true },
+  { href: "/hr/dashboard", label: "채용 운영", icon: LayoutDashboard },
+  { href: "/pool", label: "교사 인력풀", icon: Search, active: true },
   { href: "/jobs", label: "채용 공고", icon: Briefcase },
-  { href: "/admin/dashboard", label: "운영 지표", icon: BarChart3 },
 ];
 
 const qualificationOptions = ["초등", "중등", "특수"] as const;
@@ -31,22 +29,22 @@ function statusTone(status: TeacherStatus) {
   switch (status) {
     case "seeking":
       return {
-        label: "구직중",
+        label: "채용 제안 가능",
         className: "bg-secondary-50 text-secondary-700",
       };
     case "interviewing":
       return {
-        label: "면접 진행",
+        label: "면접 진행 중",
         className: "bg-[var(--warning-soft)] text-[#9a6a00]",
       };
     case "employed":
       return {
-        label: "근무 예정",
+        label: "근무 중",
         className: "bg-primary-50 text-primary-700",
       };
     default:
       return {
-        label: "휴식중",
+        label: "노출 일시중지",
         className: "bg-surface-panel text-ink-soft",
       };
   }
@@ -80,10 +78,10 @@ export default function HCPoolPage() {
 
       const matchesStatus = statusFilters.includes(teacher.status);
       const matchesQualification = qualificationFilters.includes(
-        teacher.qualificationCategory
+        teacher.qualificationCategory,
       );
       const matchesWorkType = teacher.preferredTypes.some((type) =>
-        workTypeFilters.includes(type)
+        workTypeFilters.includes(type),
       );
 
       return (
@@ -92,7 +90,11 @@ export default function HCPoolPage() {
     });
   }, [query, qualificationFilters, statusFilters, workTypeFilters]);
 
-  const toggleFilter = (value: string, current: string[], setter: (next: string[]) => void) => {
+  const toggleFilter = (
+    value: string,
+    current: string[],
+    setter: (next: string[]) => void,
+  ) => {
     if (current.includes(value)) {
       setter(current.filter((item) => item !== value));
       return;
@@ -105,18 +107,25 @@ export default function HCPoolPage() {
     <PortalShell
       navItems={navItems}
       noticeCount={3}
-      primaryAction={{ href: "/jobs", label: "새 채용 공고 확인", icon: Sparkles }}
-      sectionLabel="인재풀 운영"
+      primaryAction={{ href: "/jobs", label: "채용 공고 확인", icon: Sparkles }}
+      sectionLabel="교사 인력풀 운영"
       user={{
         name: "홍수진",
         role: "인사담당",
-        detail: "정인초등학교",
+        detail: "성진초등학교",
       }}
     >
       <section className="grid gap-6 xl:grid-cols-[1.35fr_0.65fr]">
         <div className="self-start rounded-lg bg-[linear-gradient(135deg,#0058be,#2170e4)] p-6 text-white shadow-soft">
           <div className="flex min-h-[170px] flex-col justify-between">
-            <div className="text-3xl font-bold tracking-tight sm:text-4xl">인재풀</div>
+            <div>
+              <div className="inline-flex rounded-full bg-white/12 px-3 py-2 text-sm font-semibold text-white/90">
+                기간제·시간강사
+              </div>
+              <div className="mt-5 text-3xl font-bold tracking-tight sm:text-4xl">
+                교사 인력풀
+              </div>
+            </div>
             <div className="text-sm font-medium text-white/82">
               현재 표시 {filteredTeachers.length}명
             </div>
@@ -124,11 +133,13 @@ export default function HCPoolPage() {
         </div>
 
         <div className="panel-surface p-6">
-          <div className="text-sm font-semibold text-ink-soft">오늘의 인재풀 스냅샷</div>
+          <div className="text-sm font-semibold text-ink-soft">
+            오늘의 교사 인력풀 현황
+          </div>
           <div className="mt-5 grid gap-4 sm:grid-cols-3 xl:grid-cols-1">
             {[
-              ["즉시 검토 가능", "183명"],
-              ["면접 진행중", "27명"],
+              ["연락 가능한 교사", "183명"],
+              ["면접 진행 중", "27명"],
               ["예약 제안 가능", "9명"],
             ].map(([label, value]) => (
               <div key={label} className="rounded-lg bg-surface-subtle p-4">
@@ -143,7 +154,7 @@ export default function HCPoolPage() {
       <section className="mt-8 grid gap-6 lg:grid-cols-[280px_minmax(0,1fr)]">
         <aside className="panel-muted h-fit p-5 lg:sticky lg:top-24">
           <div className="flex items-center justify-between">
-              <div className="text-sm font-bold uppercase tracking-[0.16em] text-ink-soft">
+            <div className="text-sm font-bold uppercase tracking-[0.16em] text-ink-soft">
               필터
             </div>
             <button
@@ -162,14 +173,14 @@ export default function HCPoolPage() {
 
           <div className="mt-6 space-y-6">
             <div>
-              <div className="text-sm font-semibold text-ink">구직 상태</div>
+              <div className="text-sm font-semibold text-ink">노출 상태</div>
               <div className="mt-3 flex flex-wrap gap-2">
                 {(
                   [
-                    ["seeking", "구직중"],
-                    ["interviewing", "면접 진행"],
-                    ["employed", "근무 예정"],
-                    ["paused", "휴식중"],
+                    ["seeking", "채용 제안 가능"],
+                    ["interviewing", "면접 진행 중"],
+                    ["employed", "근무 중"],
+                    ["paused", "노출 일시중지"],
                   ] as const
                 ).map(([key, label]) => (
                   <button
@@ -184,7 +195,7 @@ export default function HCPoolPage() {
                       toggleFilter(
                         key,
                         statusFilters,
-                        (next) => setStatusFilters(next as TeacherStatus[])
+                        (next) => setStatusFilters(next as TeacherStatus[]),
                       )
                     }
                   >
@@ -210,7 +221,7 @@ export default function HCPoolPage() {
                       toggleFilter(
                         option,
                         qualificationFilters,
-                        setQualificationFilters
+                        setQualificationFilters,
                       )
                     }
                   >
@@ -248,8 +259,10 @@ export default function HCPoolPage() {
           <div className="panel-surface p-5">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
               <div>
-                <div className="text-2xl font-bold text-ink">인재 검색</div>
-                <div className="mt-1 text-sm text-ink-soft">검색 결과 {filteredTeachers.length}명</div>
+                <div className="text-2xl font-bold text-ink">교사 검색</div>
+                <div className="mt-1 text-sm text-ink-soft">
+                  검색 결과 {filteredTeachers.length}명
+                </div>
               </div>
 
               <div className="relative w-full max-w-md">
@@ -279,14 +292,20 @@ export default function HCPoolPage() {
                       presetId={teacher.avatarPreset}
                       size={80}
                     />
+
                     <div className="flex-1">
                       <div className="flex flex-wrap items-center gap-2">
-                        <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${status.className}`}>
+                        <span
+                          className={`rounded-full px-2.5 py-1 text-xs font-semibold ${status.className}`}
+                        >
                           {status.label}
                         </span>
                         {teacher.reservation ? (
                           <span className="rounded-full bg-[var(--tertiary-soft)] px-2.5 py-1 text-xs font-semibold text-[var(--tertiary-solid)]">
-                            예약 제안 가능 {teacher.reservationCount ? `${teacher.reservationCount}건` : ""}
+                            예약 제안 가능
+                            {teacher.reservationCount
+                              ? ` ${teacher.reservationCount}건`
+                              : ""}
                           </span>
                         ) : null}
                       </div>
@@ -294,16 +313,18 @@ export default function HCPoolPage() {
                       <div className="mt-3 flex flex-wrap items-end gap-3">
                         <h2 className="text-2xl font-bold text-ink">{teacher.name}</h2>
                         <span className="text-sm text-ink-muted">
-                          {teacher.age}세 · {teacher.birthYear}년생
+                          {teacher.age}세 / {teacher.birthYear}년생
                         </span>
                       </div>
 
                       <div className="mt-2 text-sm font-semibold text-primary-700">
                         {teacher.qualification}
-                        {teacher.subject ? ` · ${teacher.subject}` : ""}
+                        {teacher.subject ? ` / ${teacher.subject}` : ""}
                       </div>
 
-                      <p className="mt-3 text-sm leading-6 text-ink-soft">{teacher.summary}</p>
+                      <p className="mt-3 text-sm leading-6 text-ink-soft">
+                        {teacher.summary}
+                      </p>
 
                       <div className="mt-4 grid gap-3 text-sm text-ink-soft md:grid-cols-2 xl:grid-cols-4">
                         <div className="rounded-lg bg-surface-subtle px-3 py-2">
@@ -313,10 +334,10 @@ export default function HCPoolPage() {
                           거주지 {teacher.residence}
                         </div>
                         <div className="rounded-lg bg-surface-subtle px-3 py-2">
-                          선호 {teacher.preferredTypes.join(", ")}
+                          희망 {teacher.preferredTypes.join(", ")}
                         </div>
                         <div className="rounded-lg bg-surface-subtle px-3 py-2">
-                          조회 {teacher.portfolioViews}
+                          조회 {teacher.portfolioViews}회
                         </div>
                       </div>
 
@@ -340,7 +361,7 @@ export default function HCPoolPage() {
                       className="inline-flex flex-1 items-center justify-center gap-2 rounded-lg border border-outline px-4 py-3 text-sm font-semibold text-primary-700 transition-colors hover:bg-primary-50 xl:min-w-[180px]"
                     >
                       <Star className="h-4 w-4" />
-                      관심 인재 등록
+                      관심 등록
                     </button>
                     <Link
                       href="/hr/dashboard"

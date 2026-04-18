@@ -107,7 +107,7 @@ export const featuredTeachers: TeacherProfile[] = [
     name: "박서영",
     age: 28,
     birthYear: 1998,
-    avatarPreset: "teacher-f-rose",
+    avatarPreset: "teacher-f-mint",
     qualification: "초등 2급 정교사",
     qualificationCategory: "초등",
     experience: "2년 6개월",

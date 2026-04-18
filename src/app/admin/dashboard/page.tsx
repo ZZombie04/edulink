@@ -1,12 +1,4 @@
-import {
-  BarChart3,
-  Briefcase,
-  LayoutDashboard,
-  Search,
-  ShieldCheck,
-  TrendingUp,
-  Users,
-} from "lucide-react";
+import { Briefcase, Home, LayoutDashboard, ShieldCheck, TrendingUp, Users } from "lucide-react";
 
 import { PortalShell } from "@/components/portal-shell";
 import { getViewerRoleFromServerCookie } from "@/lib/demo-session-server";
@@ -20,9 +12,8 @@ const navItems = [
     icon: LayoutDashboard,
     active: true,
   },
-  { href: "/pool", label: "인재풀", icon: Search },
-  { href: "/jobs", label: "공고 관리", icon: Briefcase },
-  { href: "/hr/dashboard", label: "학교 운영", icon: BarChart3 },
+  { href: "/jobs", label: "채용 공고", icon: Briefcase },
+  { href: "/", label: "메인", icon: Home },
 ];
 
 function userTone(status: string) {
@@ -44,7 +35,7 @@ export default async function AdminDashboardPage() {
       navItems={navItems}
       noticeCount={adminApprovals.length}
       primaryAction={{
-        href: "/hr/dashboard",
+        href: "/admin/dashboard",
         label: "승인 대기 확인",
         icon: ShieldCheck,
       }}
@@ -52,7 +43,7 @@ export default async function AdminDashboardPage() {
       user={{
         name: "관리자",
         role: "시스템 운영",
-        detail: "승인 및 지표 관리",
+        detail: "승인 및 운영 관리",
       }}
     >
       <section className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
@@ -69,8 +60,8 @@ export default async function AdminDashboardPage() {
           <div className="mt-5 space-y-3">
             {[
               `${adminApprovals.length}건의 학교 계정이 승인 대기 중입니다.`,
-              "이번 주 신규 교사 가입은 전주 대비 18% 늘었습니다.",
-              "마감 임박 공고가 3건 있어 운영 검토가 필요합니다.",
+              "이번 주 교사 가입 수가 지난주 대비 18% 증가했습니다.",
+              "마감 임박 공고 3건에 대한 운영 확인이 필요합니다.",
             ].map((note) => (
               <div
                 key={note}
@@ -119,7 +110,7 @@ export default async function AdminDashboardPage() {
                       {approval.email}
                     </div>
                     <div className="mt-3 text-sm text-ink-muted">
-                      {approval.schoolName} · {approval.schoolRegion} ·{" "}
+                      {approval.schoolName} / {approval.schoolRegion} /{" "}
                       {approval.position}
                     </div>
                   </div>
@@ -162,8 +153,7 @@ export default async function AdminDashboardPage() {
                       : user.name}
                   </div>
                   <div className="mt-1 text-sm text-ink-soft">
-                    {user.role === "teacher" ? "교사" : "학교 담당자"} ·{" "}
-                    {user.email}
+                    {user.role === "teacher" ? "교사" : "학교 담당자"} / {user.email}
                   </div>
                 </div>
                 <div className="text-right">
@@ -174,7 +164,7 @@ export default async function AdminDashboardPage() {
                       ? "활성"
                       : user.status === "pending"
                         ? "승인 대기"
-                        : "휴면"}
+                        : "비활성"}
                   </span>
                   <div className="mt-2 text-sm text-ink-muted">
                     {user.joinedAt}

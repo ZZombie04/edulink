@@ -245,8 +245,8 @@ export const avatarPresets = [
     backgroundFrom: "#f7e6db",
     backgroundTo: "#f0d8cb",
     glow: "#fff8f3",
-    skin: "#c98a62",
-    skinShadow: "#ab6d49",
+    skin: "#efc5a1",
+    skinShadow: "#d79f74",
     hair: "#2f231f",
     hairShine: "#5a463f",
     outerwear: "#7f4d3f",
@@ -305,8 +305,8 @@ export const avatarPresets = [
     backgroundFrom: "#ecf5d7",
     backgroundTo: "#deeac5",
     glow: "#fbfff2",
-    skin: "#d7a37d",
-    skinShadow: "#bc8561",
+    skin: "#efc6a3",
+    skinShadow: "#d8a072",
     hair: "#39412c",
     hairShine: "#68754f",
     outerwear: "#6f8750",
@@ -324,7 +324,7 @@ export const avatarPresets = [
 export type AvatarPreset = (typeof avatarPresets)[number];
 export type AvatarPresetId = AvatarPreset["id"];
 
-export const defaultAvatarPreset: AvatarPresetId = avatarPresets[0].id;
+export const defaultAvatarPreset: AvatarPresetId = "teacher-f-mint";
 
 export function getAvatarPreset(presetId?: AvatarPresetId) {
   if (!presetId) {

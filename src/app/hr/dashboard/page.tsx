@@ -1,11 +1,11 @@
 import Link from "next/link";
 import {
   ArrowRight,
-  BarChart3,
   Briefcase,
   LayoutDashboard,
   Search,
   Send,
+  ShieldCheck,
   Users,
 } from "lucide-react";
 
@@ -19,13 +19,12 @@ import { getTeacherDisplayName } from "@/lib/privacy";
 const navItems = [
   {
     href: "/hr/dashboard",
-    label: "대시보드",
+    label: "채용 운영",
     icon: LayoutDashboard,
     active: true,
   },
-  { href: "/pool", label: "인재풀", icon: Search },
+  { href: "/pool", label: "교사 인력풀", icon: Search },
   { href: "/jobs", label: "채용 공고", icon: Briefcase },
-  { href: "/admin/dashboard", label: "운영 지표", icon: BarChart3 },
 ];
 
 function requestTone(status: string) {
@@ -47,19 +46,24 @@ export default async function HRDashboardPage() {
     <PortalShell
       navItems={navItems}
       noticeCount={4}
-      primaryAction={{ href: "/pool", label: "인재풀 다시 탐색", icon: Search }}
+      primaryAction={{ href: "/pool", label: "교사 인력풀 보기", icon: Search }}
       sectionLabel="학교 채용 운영"
       user={{
         name: "홍수진",
         role: "인사담당",
-        detail: "정인초등학교",
+        detail: "성진초등학교",
       }}
     >
       <section className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
         <div className="self-start rounded-lg bg-[linear-gradient(135deg,#0058be,#2170e4)] p-6 text-white shadow-soft">
           <div className="flex min-h-[176px] flex-col justify-between">
-            <div className="text-3xl font-bold tracking-tight sm:text-4xl">
-              학교 채용 운영
+            <div>
+              <div className="inline-flex rounded-full bg-white/12 px-3 py-2 text-sm font-semibold text-white/90">
+                채용 운영
+              </div>
+              <div className="mt-5 text-3xl font-bold tracking-tight sm:text-4xl">
+                학교 채용 관리
+              </div>
             </div>
 
             <div className="flex flex-col gap-3 sm:flex-row">
@@ -68,28 +72,26 @@ export default async function HRDashboardPage() {
                 className="inline-flex items-center justify-center gap-2 rounded-lg bg-white px-5 py-3 text-sm font-semibold text-primary-700"
               >
                 <Search className="h-4 w-4" />
-                후보 다시 보기
+                교사 인력풀 보기
               </Link>
               <Link
                 href="/jobs"
                 className="inline-flex items-center justify-center gap-2 rounded-lg border border-white/18 bg-white/10 px-5 py-3 text-sm font-semibold text-white"
               >
                 <Briefcase className="h-4 w-4" />
-                공고 관리 이동
+                채용 공고 관리
               </Link>
             </div>
           </div>
         </div>
 
         <div className="panel-surface p-6">
-          <div className="text-sm font-semibold text-ink-soft">
-            오늘의 운영 메모
-          </div>
+          <div className="text-sm font-semibold text-ink-soft">운영 메모</div>
           <div className="mt-5 space-y-3">
             {[
-              "면접 진행중인 후보 2명에게 응답 확인 필요",
-              "정인초 3학년 담임 공고 마감까지 5일",
-              "새로 공개된 후보 4명이 조건과 잘 맞습니다",
+              "면접 진행 중인 후보 2명에 대한 응답 확인이 필요합니다.",
+              "성진초 3학년 담임 공고는 마감까지 5일 남았습니다.",
+              "조건에 맞는 신규 등록 교사 4명이 오늘 추가되었습니다.",
             ].map((note) => (
               <div
                 key={note}
@@ -107,7 +109,7 @@ export default async function HRDashboardPage() {
           { label: "보낸 요청", value: "8건", Icon: Users },
           { label: "응답 대기", value: "3건", Icon: Send },
           { label: "진행 중 공고", value: "2건", Icon: Briefcase },
-          { label: "오늘 신규 후보", value: "4명", Icon: Search },
+          { label: "신규 등록 교사", value: "4명", Icon: ShieldCheck },
         ].map((item) => (
           <div key={item.label} className="panel-surface p-5">
             <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-primary-50 text-primary-700">
@@ -122,16 +124,9 @@ export default async function HRDashboardPage() {
       <section className="mt-8 grid gap-6 xl:grid-cols-[1fr_1fr]">
         <div className="panel-surface p-6">
           <div className="flex items-center justify-between">
-            <div>
-              <div className="text-xl font-bold text-ink">
-                최근 보낸 매칭 요청
-              </div>
-            </div>
-            <Link
-              href="/pool"
-              className="text-sm font-semibold text-primary-700"
-            >
-              더 보기
+            <div className="text-xl font-bold text-ink">최근 보낸 매칭 요청</div>
+            <Link href="/pool" className="text-sm font-semibold text-primary-700">
+              교사 인력풀
             </Link>
           </div>
 
@@ -149,16 +144,16 @@ export default async function HRDashboardPage() {
                       )}`}
                     >
                       {request.status === "accepted"
-                        ? "응답 수락"
+                        ? "응답 완료"
                         : request.status === "rejected"
-                          ? "응답 거절"
+                          ? "검토 종료"
                           : "응답 대기"}
                     </span>
                     <div className="mt-3 text-xl font-bold text-ink">
                       {getTeacherDisplayName(request.teacherName, viewerRole)}
                     </div>
                     <div className="mt-1 text-sm text-ink-soft">
-                      {request.qualification} · {request.position}
+                      {request.qualification} / {request.position}
                     </div>
                   </div>
                   <div className="text-sm text-ink-muted">{request.sentAt}</div>
@@ -170,15 +165,8 @@ export default async function HRDashboardPage() {
 
         <div className="panel-surface p-6">
           <div className="flex items-center justify-between">
-            <div>
-              <div className="text-xl font-bold text-ink">
-                운영 중인 채용 공고
-              </div>
-            </div>
-            <Link
-              href="/jobs"
-              className="text-sm font-semibold text-primary-700"
-            >
+            <div className="text-xl font-bold text-ink">진행 중인 채용 공고</div>
+            <Link href="/jobs" className="text-sm font-semibold text-primary-700">
               전체 공고
             </Link>
           </div>
@@ -202,11 +190,9 @@ export default async function HRDashboardPage() {
                     variant="mini"
                   />
                   <div className="flex-1">
-                    <div className="text-lg font-bold text-ink">
-                      {job.schoolName}
-                    </div>
+                    <div className="text-lg font-bold text-ink">{job.schoolName}</div>
                     <div className="mt-1 text-sm text-ink-soft">
-                      {job.gradeLevel} · {job.employmentType}
+                      {job.gradeLevel} / {job.employmentType}
                     </div>
                     <div className="mt-3 flex flex-wrap gap-3 text-sm text-ink-muted">
                       <span>지원자 {job.applicants}명</span>
@@ -223,7 +209,7 @@ export default async function HRDashboardPage() {
 
       <section className="mt-8 panel-surface p-6">
         <div className="flex items-center justify-between">
-          <div className="text-xl font-bold text-ink">추천 후보</div>
+          <div className="text-xl font-bold text-ink">추천 교사</div>
           <Link
             href="/pool"
             className="inline-flex items-center gap-2 text-sm font-semibold text-primary-700"
@@ -270,13 +256,6 @@ export default async function HRDashboardPage() {
                   </span>
                 ))}
               </div>
-              <Link
-                href="/pool"
-                className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-primary-700"
-              >
-                후보 보기
-                <ArrowRight className="h-4 w-4" />
-              </Link>
             </div>
           ))}
         </div>
