@@ -1,264 +1,319 @@
 "use client";
 
-import { useState } from "react";
-import { Search, MapPin, Building, ChevronDown, Calendar, ArrowRight, Briefcase } from "lucide-react";
-import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { useMemo, useState } from "react";
 import Link from "next/link";
+import {
+  ArrowRight,
+  Briefcase,
+  Building2,
+  CalendarDays,
+  MapPin,
+  Search,
+} from "lucide-react";
 
-interface Job {
-  id: number;
-  schoolName: string;
-  schoolRegion: string;
-  employmentType: string;
-  startDate: string;
-  endDate: string;
-  qualificationType: string;
-  qualificationSubject?: string;
-  gradeLevel: string;
-  isHomeroom: boolean;
-  duties: string;
-  status: string;
+import { gyeonggiRegions, jobPosts } from "@/lib/demo-data";
+
+const employmentTypes = ["기간제 교사", "시간강사"] as const;
+const qualificationTypes = ["초등", "중등", "특수"] as const;
+
+function jobStatusLabel(status: string) {
+  switch (status) {
+    case "open":
+      return {
+        label: "지금 지원 가능",
+        className: "bg-secondary-50 text-secondary-700",
+      };
+    case "closing-soon":
+      return {
+        label: "마감 임박",
+        className: "bg-[var(--warning-soft)] text-[#9a6a00]",
+      };
+    default:
+      return {
+        label: "모집 마감",
+        className: "bg-surface-panel text-ink-soft",
+      };
+  }
 }
 
 export default function JobsPage() {
-  const [searchQuery, setSearchQuery] = useState("");
+  const [query, setQuery] = useState("");
+  const [regionFilters, setRegionFilters] = useState<string[]>(["수원", "화성", "용인"]);
+  const [employmentFilters, setEmploymentFilters] = useState<string[]>([
+    "기간제 교사",
+    "시간강사",
+  ]);
+  const [qualificationFilters, setQualificationFilters] = useState<string[]>([
+    "초등",
+    "중등",
+  ]);
 
-  const jobs: Job[] = [
-    {
-      id: 1,
-      schoolName: "○○초등학교",
-      schoolRegion: "수원시",
-      employmentType: "기간제교사",
-      startDate: "2026-05-01",
-      endDate: "2026-08-31",
-      qualificationType: "초등",
-      gradeLevel: "3학년",
-      isHomeroom: true,
-      duties: "3학년 2반 담임교사 (출산휴가 대체)\n국어, 수학, 사회 교과 지도\n학급 경영 및 생활지도",
-      status: "OPEN"
-    },
-    {
-      id: 2,
-      schoolName: "△△중학교",
-      schoolRegion: "화성시",
-      employmentType: "시간강사",
-      startDate: "2026-04-20",
-      endDate: "2026-05-10",
-      qualificationType: "중등",
-      qualificationSubject: "수학",
-      gradeLevel: "1학년",
-      isHomeroom: false,
-      duties: "1학년 수학 교과 지도 (주 14시간)\n방과후 학교 지도 1시간 포함",
-      status: "OPEN"
-    },
-    {
-      id: 3,
-      schoolName: "□□고등학교",
-      schoolRegion: "용인시",
-      employmentType: "기간제교사",
-      startDate: "2026-03-01",
-      endDate: "2027-02-28",
-      qualificationType: "중등",
-      qualificationSubject: "영어",
-      gradeLevel: "2학년",
-      isHomeroom: true,
-      duties: "2학년 담임 및 영어 교과 지도",
-      status: "CLOSED"
+  const filteredJobs = useMemo(() => {
+    const lowered = query.trim().toLowerCase();
+
+    return jobPosts.filter((job) => {
+      const matchesQuery =
+        lowered.length === 0 ||
+        [job.schoolName, job.summary, job.gradeLevel, job.qualificationType]
+          .join(" ")
+          .toLowerCase()
+          .includes(lowered);
+
+      return (
+        matchesQuery &&
+        regionFilters.includes(job.schoolRegion) &&
+        employmentFilters.includes(job.employmentType) &&
+        qualificationFilters.includes(job.qualificationType)
+      );
+    });
+  }, [employmentFilters, qualificationFilters, query, regionFilters]);
+
+  const toggleFilter = (value: string, current: string[], setter: (next: string[]) => void) => {
+    if (current.includes(value)) {
+      setter(current.filter((item) => item !== value));
+      return;
     }
-  ];
 
-  const getJobTitle = (job: Job) => {
-    const subject = job.qualificationSubject ? `(${job.qualificationSubject})` : "";
-    return `[${job.employmentType}] ${job.gradeLevel} ${job.qualificationType} ${subject} 선생님 모십니다.`;
+    setter([...current, value]);
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col pb-20">
-      <header className="w-full bg-white border-b sticky top-0 z-30 shadow-sm">
-        <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-            <Link href="/" className="font-bold text-lg bg-clip-text text-transparent bg-gradient-to-r from-primary-600 to-primary-900 flex items-center gap-2">
-                <Briefcase className="text-primary-500 w-5 h-5"/> 에듀커넥트 구인게시판
+    <div className="min-h-screen bg-surface text-ink">
+      <header className="sticky top-0 z-50 border-b border-outline bg-white/90 backdrop-blur">
+        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6">
+          <Link href="/" className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary-50 text-primary-700">
+              <Building2 className="h-5 w-5" />
+            </div>
+            <div>
+              <div className="text-lg font-bold tracking-tight">EduLink</div>
+              <div className="text-xs text-ink-muted">학교 교원 매칭 플랫폼</div>
+            </div>
+          </Link>
+
+          <div className="flex items-center gap-2">
+            <Link
+              href="/auth/login"
+              className="hidden rounded-lg border border-outline px-4 py-2 text-sm font-semibold text-ink-soft sm:inline-flex"
+            >
+              로그인
             </Link>
-           <div className="flex items-center gap-4">
-             <Link href="/auth/login">
-               <Button variant="ghost" className="text-gray-600">로그인</Button>
-             </Link>
-             <Link href="/auth/register/hr">
-               <Button className="bg-secondary-600 hover:bg-secondary-700 text-white">공고 등록하기</Button>
-             </Link>
-           </div>
+            <Link
+              href="/auth/register/hr"
+              className="inline-flex items-center gap-2 rounded-lg bg-[linear-gradient(135deg,#0058be,#2170e4)] px-4 py-2 text-sm font-semibold text-white shadow-soft"
+            >
+              학교 가입
+            </Link>
+          </div>
         </div>
       </header>
 
-      <div className="bg-gradient-to-br from-primary-900 via-primary-800 to-primary-700 text-white py-16">
-          <div className="container mx-auto px-4 text-center">
-              <h2 className="text-3xl md:text-4xl font-bold mb-4">내게 딱 맞는 학교를 찾아보세요</h2>
-              <p className="text-primary-200 mb-8 max-w-2xl mx-auto">
-                 수원, 화성, 용인 등 경기도 전 지역의 기간제 교사 및 시간 강사 구인 공고를 한눈에 확인하고 지원할 수 있습니다.
-              </p>
-              <div className="max-w-2xl mx-auto relative flex gap-2">
-                 <div className="relative flex-grow">
-                    <Search className="absolute left-4 top-3 h-5 w-5 text-gray-400" />
-                    <Input
-                      className="pl-12 h-12 rounded-full text-md border-transparent focus-visible:ring-primary-400 text-gray-900 shadow-lg"
-                      placeholder="학교명, 지역, 과목 검색"
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                    />
-                 </div>
-                 <Button className="h-12 rounded-full px-8 bg-secondary-500 hover:bg-secondary-600 shadow-lg text-white font-bold">검색</Button>
-              </div>
+      <section className="relative overflow-hidden">
+        <img
+          alt="학교 외관"
+          className="absolute inset-0 h-full w-full object-cover"
+          src="https://images.unsplash.com/photo-1541339907198-e08756dedf3f?auto=format&fit=crop&w=1600&q=80"
+        />
+        <div className="absolute inset-0 bg-[linear-gradient(115deg,rgba(7,18,43,0.88),rgba(0,88,190,0.70))]" />
+        <div className="relative mx-auto max-w-7xl px-4 py-20 sm:px-6">
+          <span className="kicker text-white/85 before:bg-white">채용 공고</span>
+          <h1 className="mt-5 max-w-3xl text-4xl font-bold leading-tight text-white sm:text-5xl">
+            지금 바로 지원 가능한
+            <br />
+            학교 채용 공고를 모았습니다.
+          </h1>
+          <p className="mt-5 max-w-2xl text-base leading-7 text-white/78">
+            지역, 자격, 고용 형태 기준으로 공고를 빠르게 좁혀볼 수 있습니다. 마감
+            임박 공고가 먼저 눈에 들어오도록 정보 밀도를 다시 설계했습니다.
+          </p>
+
+          <div className="mt-8 max-w-2xl">
+            <div className="relative">
+              <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-white/62" />
+              <input
+                className="w-full rounded-lg border border-white/18 bg-white/12 py-4 pl-11 pr-4 text-sm text-white placeholder:text-white/58 backdrop-blur outline-none transition focus:border-white/36"
+                placeholder="학교명, 지역, 자격으로 검색"
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+              />
+            </div>
           </div>
-      </div>
-
-      <main className="container mx-auto px-4 py-12 flex flex-col lg:flex-row gap-8 items-start">
-        {/* Filters Sidebar */}
-        <div className="w-full lg:w-64 flex-shrink-0 bg-white rounded-xl shadow-sm border border-gray-100 p-6 sticky top-24">
-            <h3 className="font-bold text-gray-900 mb-6 flex justify-between items-center">
-                필터
-                <span className="text-xs text-primary-600 cursor-pointer font-normal hover:underline">초기화</span>
-            </h3>
-
-            <div className="space-y-6">
-                <div>
-                    <h4 className="font-medium text-sm text-gray-700 mb-3">근무 지역</h4>
-                    <div className="space-y-2">
-                        <label className="flex items-center gap-2 cursor-pointer">
-                            <input type="checkbox" className="rounded text-primary-600 focus:ring-primary-500" defaultChecked />
-                            <span className="text-sm text-gray-600">수원시</span>
-                        </label>
-                        <label className="flex items-center gap-2 cursor-pointer">
-                            <input type="checkbox" className="rounded text-primary-600 focus:ring-primary-500" defaultChecked />
-                            <span className="text-sm text-gray-600">화성시</span>
-                        </label>
-                        <label className="flex items-center gap-2 cursor-pointer">
-                            <input type="checkbox" className="rounded text-primary-600 focus:ring-primary-500" />
-                            <span className="text-sm text-gray-600">용인시</span>
-                        </label>
-                        <label className="flex items-center gap-2 cursor-pointer">
-                            <input type="checkbox" className="rounded text-primary-600 focus:ring-primary-500" />
-                            <span className="text-sm text-gray-600">성남시</span>
-                        </label>
-                        <div className="text-primary-600 text-xs mt-2 cursor-pointer hover:underline">더보기 +</div>
-                    </div>
-                </div>
-                
-                <hr className="border-gray-100" />
-
-                <div>
-                    <h4 className="font-medium text-sm text-gray-700 mb-3">모집 구분</h4>
-                    <div className="space-y-2">
-                        <label className="flex items-center gap-2 cursor-pointer">
-                            <input type="checkbox" className="rounded text-primary-600 focus:ring-primary-500" defaultChecked />
-                            <span className="text-sm text-gray-600">기간제교사</span>
-                        </label>
-                        <label className="flex items-center gap-2 cursor-pointer">
-                            <input type="checkbox" className="rounded text-primary-600 focus:ring-primary-500" defaultChecked />
-                            <span className="text-sm text-gray-600">시간강사</span>
-                        </label>
-                    </div>
-                </div>
-
-                <hr className="border-gray-100" />
-                
-                <div>
-                    <h4 className="font-medium text-sm text-gray-700 mb-3">자격 요건</h4>
-                    <div className="space-y-2">
-                        <label className="flex items-center gap-2 cursor-pointer">
-                            <input type="checkbox" className="rounded text-primary-600 focus:ring-primary-500" defaultChecked />
-                            <span className="text-sm text-gray-600">초등</span>
-                        </label>
-                        <label className="flex items-center gap-2 cursor-pointer">
-                            <input type="checkbox" className="rounded text-primary-600 focus:ring-primary-500" />
-                            <span className="text-sm text-gray-600">중등</span>
-                        </label>
-                        <label className="flex items-center gap-2 cursor-pointer">
-                            <input type="checkbox" className="rounded text-primary-600 focus:ring-primary-500" />
-                            <span className="text-sm text-gray-600">특수</span>
-                        </label>
-                    </div>
-                </div>
-            </div>
         </div>
+      </section>
 
-        {/* Job List */}
-        <div className="flex-grow flex flex-col gap-4 w-full">
-            <div className="flex justify-between items-center mb-2">
-                <h3 className="text-lg font-bold text-gray-900">신규 채용 공고 <span className="text-primary-600 ml-1">42</span></h3>
-                <div className="flex items-center gap-2">
-                    <span className="text-sm text-gray-500">정렬:</span>
-                    <button className="text-sm font-medium text-gray-700 flex items-center hover:text-black">
-                        최신등록순 <ChevronDown size={14} className="ml-1" />
-                    </button>
-                </div>
+      <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
+        <section className="grid gap-6 lg:grid-cols-[280px_minmax(0,1fr)]">
+          <aside className="panel-muted h-fit p-5 lg:sticky lg:top-24">
+            <div className="flex items-center justify-between">
+              <div className="text-sm font-bold uppercase tracking-[0.16em] text-ink-soft">
+                필터
+              </div>
+              <button
+                type="button"
+                className="text-xs font-semibold text-primary-700"
+                onClick={() => {
+                  setQuery("");
+                  setRegionFilters(["수원", "화성", "용인"]);
+                  setEmploymentFilters(["기간제 교사", "시간강사"]);
+                  setQualificationFilters(["초등", "중등"]);
+                }}
+              >
+                초기화
+              </button>
             </div>
 
-            {jobs.map((job) => {
-              const isClosed = job.status === "CLOSED";
-              return (
-               <Card key={job.id} className={`border overflow-hidden transition-all duration-200 hover:shadow-lg hover:border-primary-200 ${isClosed ? "opacity-60 bg-gray-50" : "bg-white"}`}>
-                  <div className="flex flex-col sm:flex-row">
-                      <div className="flex-grow p-6">
-                           <div className="flex items-center gap-2 mb-3 flex-wrap">
-                               {job.status === "OPEN" ? (
-                                   <Badge className="bg-primary-50 text-primary-700 border-primary-200 hover:bg-primary-100">모집중</Badge>
-                               ) : (
-                                   <Badge variant="secondary" className="bg-gray-200 text-gray-600 hover:bg-gray-300 border-transparent">모집마감</Badge>
-                               )}
-                               <span className="text-sm text-gray-500 flex items-center gap-1 font-medium">
-                                   <MapPin size={14} /> {job.schoolRegion}
-                               </span>
-                               <span className="text-sm text-gray-500 flex items-center gap-1 font-medium">
-                                   <Building size={14} /> {job.schoolName}
-                               </span>
-                           </div>
+            <div className="mt-6 space-y-6">
+              <div>
+                <div className="text-sm font-semibold text-ink">지역</div>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {gyeonggiRegions.slice(0, 8).map((region) => (
+                    <button
+                      key={region}
+                      type="button"
+                      className={`rounded-full px-3 py-2 text-sm font-medium ${
+                        regionFilters.includes(region)
+                          ? "bg-primary-50 text-primary-700"
+                          : "bg-white text-ink-soft"
+                      }`}
+                      onClick={() => toggleFilter(region, regionFilters, setRegionFilters)}
+                    >
+                      {region}
+                    </button>
+                  ))}
+                </div>
+              </div>
 
-                           <Link href={"/jobs/" + job.id} className="block group">
-                               <h4 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-primary-600 transition-colors">
-                                   {getJobTitle(job)}
-                               </h4>
-                           </Link>
+              <div>
+                <div className="text-sm font-semibold text-ink">고용 형태</div>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {employmentTypes.map((type) => (
+                    <button
+                      key={type}
+                      type="button"
+                      className={`rounded-full px-3 py-2 text-sm font-medium ${
+                        employmentFilters.includes(type)
+                          ? "bg-primary-50 text-primary-700"
+                          : "bg-white text-ink-soft"
+                      }`}
+                      onClick={() =>
+                        toggleFilter(type, employmentFilters, setEmploymentFilters)
+                      }
+                    >
+                      {type}
+                    </button>
+                  ))}
+                </div>
+              </div>
 
-                           <div className="flex flex-wrap gap-4 mt-4 text-sm text-gray-600">
-                               <div className="flex items-center gap-1.5 bg-gray-50 px-3 py-1.5 rounded-md">
-                                   <Calendar size={15} className="text-gray-400" />
-                                   {job.startDate} ~ {job.endDate}
-                               </div>
-                               <div className="flex items-center gap-1.5 bg-gray-50 px-3 py-1.5 rounded-md">
-                                   <Briefcase size={15} className="text-gray-400" />
-                                   {job.isHomeroom ? "담임 업무 포함" : "교과 전담"}
-                               </div>
-                           </div>
-                           
-                           <div className="mt-4 text-sm text-gray-600 line-clamp-2 border-t border-gray-50 pt-4 whitespace-pre-line">
-                               {job.duties}
-                           </div>
-                      </div>
-                      
-                      <div className="sm:w-48 bg-gray-50 border-t sm:border-t-0 sm:border-l border-gray-100 p-6 flex flex-col justify-center items-center gap-3 shrink-0">
-                          <Button 
-                             className={`w-full rounded-full font-bold shadow-md ${job.status === "OPEN" ? "bg-primary-600 hover:bg-primary-700 text-white" : ""}`}
-                             variant={job.status === "OPEN" ? "default" : "secondary"}
-                             disabled={isClosed}
-                          >
-                              {job.status === "OPEN" ? "지원하기" : "마감됨"}
-                          </Button>
-                          <Button variant="outline" className="w-full rounded-full border-gray-300 text-gray-700 hover:bg-white hover:text-primary-600 hover:border-primary-300">
-                              상세보기 <ArrowRight size={14} className="ml-1" />
-                          </Button>
-                      </div>
+              <div>
+                <div className="text-sm font-semibold text-ink">자격 유형</div>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {qualificationTypes.map((type) => (
+                    <button
+                      key={type}
+                      type="button"
+                      className={`rounded-full px-3 py-2 text-sm font-medium ${
+                        qualificationFilters.includes(type)
+                          ? "bg-primary-50 text-primary-700"
+                          : "bg-white text-ink-soft"
+                      }`}
+                      onClick={() =>
+                        toggleFilter(type, qualificationFilters, setQualificationFilters)
+                      }
+                    >
+                      {type}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </aside>
+
+          <div className="space-y-4">
+            <div className="panel-surface p-5">
+              <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                <div>
+                  <div className="text-2xl font-bold text-ink">열린 채용 공고</div>
+                  <div className="mt-1 text-sm text-ink-soft">
+                    조건에 맞는 공고 {filteredJobs.length}건
                   </div>
-               </Card>
+                </div>
+                <div className="rounded-full bg-surface-subtle px-4 py-2 text-sm font-semibold text-primary-700">
+                  마감 임박 공고가 우선 노출됩니다
+                </div>
+              </div>
+            </div>
+
+            {filteredJobs.map((job) => {
+              const status = jobStatusLabel(job.status);
+
+              return (
+                <article
+                  key={job.id}
+                  className="panel-surface overflow-hidden transition-transform hover:-translate-y-1"
+                >
+                  <div className="grid gap-0 md:grid-cols-[240px_minmax(0,1fr)]">
+                    <img
+                      alt={job.schoolName}
+                      className="h-full min-h-[220px] w-full object-cover"
+                      src={job.image}
+                    />
+                    <div className="p-6">
+                      <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${status.className}`}>
+                        {status.label}
+                      </span>
+                      <h2 className="mt-4 text-2xl font-bold text-ink">
+                        {job.schoolName}
+                      </h2>
+                      <p className="mt-2 text-sm leading-6 text-ink-soft">{job.summary}</p>
+
+                      <div className="mt-5 grid gap-3 text-sm text-ink-soft sm:grid-cols-2">
+                        <div className="rounded-lg bg-surface-subtle px-3 py-2">
+                          <div className="flex items-center gap-2">
+                            <MapPin className="h-4 w-4 text-primary-600" />
+                            {job.schoolRegion}
+                          </div>
+                        </div>
+                        <div className="rounded-lg bg-surface-subtle px-3 py-2">
+                          <div className="flex items-center gap-2">
+                            <Building2 className="h-4 w-4 text-primary-600" />
+                            {job.gradeLevel}
+                          </div>
+                        </div>
+                        <div className="rounded-lg bg-surface-subtle px-3 py-2">
+                          <div className="flex items-center gap-2">
+                            <CalendarDays className="h-4 w-4 text-primary-600" />
+                            {job.startDate} - {job.endDate}
+                          </div>
+                        </div>
+                        <div className="rounded-lg bg-surface-subtle px-3 py-2">
+                          <div className="flex items-center gap-2">
+                            <Briefcase className="h-4 w-4 text-primary-600" />
+                            {job.employmentType} · {job.qualificationType}
+                            {job.qualificationSubject ? ` ${job.qualificationSubject}` : ""}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                        <div className="text-sm text-ink-soft">
+                          지원자 {job.applicants}명 · 조회 {job.views} · 마감 {job.deadline}
+                        </div>
+                        <Link
+                          href={`/jobs/${job.id}`}
+                          className="inline-flex items-center gap-2 text-sm font-semibold text-primary-700"
+                        >
+                          상세 보기
+                          <ArrowRight className="h-4 w-4" />
+                        </Link>
+                      </div>
+                    </div>
+                  </div>
+                </article>
               );
             })}
-
-            <div className="mt-8 flex justify-center pb-8">
-                <Button variant="outline" className="px-8 font-medium rounded-full border-gray-200 text-gray-700 shadow-sm hover:shadow">더 보기</Button>
-            </div>
-        </div>
+          </div>
+        </section>
       </main>
     </div>
   );

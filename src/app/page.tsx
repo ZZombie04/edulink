@@ -1,232 +1,391 @@
-"use client";
-
-import { motion } from "framer-motion";
 import Link from "next/link";
-import { BookOpen, Clock, Users, ShieldCheck, Search, Building2 } from "lucide-react";
+import {
+  ArrowRight,
+  Briefcase,
+  Building2,
+  Clock3,
+  MapPin,
+  Search,
+  Sparkles,
+  Users,
+} from "lucide-react";
+
+import { featuredTeachers, jobPosts } from "@/lib/demo-data";
+
+function teacherStatusLabel(status: string) {
+  switch (status) {
+    case "seeking":
+      return {
+        label: "구직중",
+        className: "bg-secondary-50 text-secondary-700",
+      };
+    case "interviewing":
+      return {
+        label: "면접 진행",
+        className: "bg-[var(--warning-soft)] text-[#9a6a00]",
+      };
+    case "employed":
+      return {
+        label: "근무 예정",
+        className: "bg-primary-50 text-primary-700",
+      };
+    default:
+      return {
+        label: "휴식중",
+        className: "bg-surface-panel text-ink-soft",
+      };
+  }
+}
+
+function jobStatusLabel(status: string) {
+  switch (status) {
+    case "open":
+      return {
+        label: "지금 지원 가능",
+        className: "bg-secondary-50 text-secondary-700",
+      };
+    case "closing-soon":
+      return {
+        label: "마감 임박",
+        className: "bg-[var(--warning-soft)] text-[#9a6a00]",
+      };
+    default:
+      return {
+        label: "모집 마감",
+        className: "bg-surface-panel text-ink-soft",
+      };
+  }
+}
 
 export default function Home() {
+  const openJobs = jobPosts.filter((job) => job.status !== "closed");
+
   return (
-    <div className="flex flex-col min-h-screen bg-gradient-to-b from-primary-50 to-white overflow-hidden">
-      {/* Navbar */}
-      <header className="sticky top-0 z-50 w-full backdrop-blur-xl bg-white/70 border-b border-primary-100">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="bg-gradient-to-br from-primary-500 to-secondary-500 text-white p-1.5 rounded-lg">
-              <BookOpen size={24} />
+    <div className="min-h-screen bg-surface text-ink">
+      <header className="sticky top-0 z-50 border-b border-white/20 bg-[rgba(7,18,43,0.72)] backdrop-blur">
+        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6">
+          <Link href="/" className="flex items-center gap-3 text-white">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-white/12">
+              <Building2 className="h-5 w-5" />
             </div>
-            <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary-600 to-primary-900 tracking-tight">
-              에듀커넥트
-            </span>
-          </div>
-          <nav className="hidden md:flex gap-8 text-sm font-medium text-gray-600">
-            <Link href="#features" className="hover:text-primary-600 transition-colors">기능 소개</Link>
-            <Link href="/pool" className="hover:text-primary-600 transition-colors">인력풀</Link>
-            <Link href="/jobs" className="hover:text-primary-600 transition-colors">구인게시판</Link>
+            <div>
+              <div className="text-lg font-bold tracking-tight">EduLink</div>
+              <div className="text-xs text-white/65">학교 교원 매칭 플랫폼</div>
+            </div>
+          </Link>
+
+          <nav className="hidden items-center gap-6 text-sm font-medium text-white/75 md:flex">
+            <Link href="#candidate-pool" className="transition-colors hover:text-white">
+              인재풀
+            </Link>
+            <Link href="#jobs" className="transition-colors hover:text-white">
+              채용 공고
+            </Link>
+            <Link href="#overview" className="transition-colors hover:text-white">
+              운영 개요
+            </Link>
           </nav>
-          <div className="flex gap-3">
-            <Link href="/auth/login" className="text-sm font-medium text-gray-600 hover:text-primary-600 px-4 py-2 transition-colors">
+
+          <div className="flex items-center gap-2">
+            <Link
+              href="/auth/login"
+              className="hidden rounded-lg border border-white/20 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-white/10 sm:inline-flex"
+            >
               로그인
             </Link>
-            <Link href="/auth/register/teacher" className="text-sm font-medium bg-primary-600 text-white px-5 py-2 rounded-full hover:bg-primary-700 hover:shadow-md hover:shadow-primary-500/20 transition-all">
-              교사 가입
-            </Link>
-            <Link href="/auth/register/hr" className="hidden sm:inline-flex text-sm font-medium bg-secondary-600 text-white px-5 py-2 rounded-full hover:bg-secondary-700 hover:shadow-md hover:shadow-secondary-500/20 transition-all">
-              인사담당자 가입
+            <Link
+              href="/auth/register/hr"
+              className="inline-flex items-center gap-2 rounded-lg bg-white px-4 py-2 text-sm font-semibold text-primary-700 transition-transform hover:-translate-y-px"
+            >
+              학교로 시작하기
+              <ArrowRight className="h-4 w-4" />
             </Link>
           </div>
         </div>
       </header>
 
-      <main className="flex-grow">
-        {/* Hero Section */}
-        <section className="relative pt-20 pb-32 lg:pt-36 lg:pb-40 overflow-hidden">
-          {/* Background decorations */}
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[500px] bg-gradient-to-tr from-primary-200/30 to-secondary-200/20 blur-3xl -z-10 rounded-full opacity-50 animate-pulse-slow"></div>
-          
-          <div className="container mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
-              className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary-100 text-primary-700 text-sm font-medium mb-8 border border-primary-200"
-            >
-              <span className="flex h-2 w-2 rounded-full bg-primary-500 animate-ping absolute"></span>
-              <span className="flex h-2 w-2 rounded-full bg-primary-600 relative"></span>
-              경기도교육청 공식 인증 매칭 플랫폼
-            </motion.div>
-            
-            <motion.h1 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.1 }}
-              className="text-4xl md:text-6xl lg:text-7xl font-extrabold tracking-tight text-gray-900 mb-6 leading-tight"
-            >
-              교육의 공백을 채우는 <br className="hidden sm:block" />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary-600 to-secondary-500">
-                가장 빠른 연결고리
+      <main>
+        <section className="relative min-h-[76vh] overflow-hidden">
+          <img
+            alt="교실에서 학생과 교사가 함께 있는 장면"
+            className="absolute inset-0 h-full w-full object-cover"
+            src="https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?auto=format&fit=crop&w=1600&q=80"
+          />
+          <div className="absolute inset-0 bg-[linear-gradient(115deg,rgba(7,18,43,0.92),rgba(0,88,190,0.72),rgba(0,110,47,0.42))]" />
+
+          <div className="relative mx-auto flex min-h-[76vh] max-w-7xl flex-col justify-center px-4 pb-24 pt-20 sm:px-6">
+            <div className="max-w-3xl">
+              <span className="kicker text-white/85 before:bg-white" id="overview">
+                경기권 학교 채용 허브
               </span>
-            </motion.h1>
-            
-            <motion.p 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-              className="text-lg md:text-xl text-gray-700 mb-10 max-w-3xl mx-auto leading-relaxed"
-            >
-              기간제교사와 시간강사, 그리고 학교 인사담당자를 위한 양방향 매칭 서비스입니다.
-              복잡한 절차 없이 클릭 몇 번으로 최적의 교육 인재를 만나보세요.
-            </motion.p>
-            
-            <motion.div 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.3 }}
-              className="flex flex-col sm:flex-row gap-4 justify-center items-center"
-            >
-              <Link href="/auth/register/hr" className="w-full sm:w-auto flex items-center justify-center gap-2 bg-gradient-to-r from-primary-600 to-primary-500 text-white px-8 py-4 rounded-full text-lg font-semibold shadow-lg shadow-primary-500/30 hover:scale-105 transition-transform">
-                <Building2 size={20} />
-                학교 담당자로 시작하기
-              </Link>
-              <Link href="/auth/register/teacher" className="w-full sm:w-auto flex items-center justify-center gap-2 bg-white text-gray-800 border border-gray-300 px-8 py-4 rounded-full text-lg font-semibold hover:bg-gray-50 hover:border-gray-400 transition-colors shadow-md">
-                <Users size={20} className="text-secondary-600" />
-                구직 교사로 이력 등록
-              </Link>
-            </motion.div>
-          </div>
-
-          {/* Interactive Platform Mockup */}
-          <motion.div 
-            initial={{ opacity: 0, y: 40 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.5 }}
-            className="mt-20 flex justify-center px-4"
-          >
-            <div className="relative w-full max-w-5xl rounded-2xl md:rounded-[2rem] border border-white/40 bg-white/40 backdrop-blur-3xl shadow-2xl overflow-hidden">
-              <div className="h-12 bg-gray-100/50 border-b border-gray-200/50 flex items-center px-6 gap-2">
-                <div className="w-3 h-3 rounded-full bg-red-400"></div>
-                <div className="w-3 h-3 rounded-full bg-amber-400"></div>
-                <div className="w-3 h-3 rounded-full bg-green-400"></div>
-                <div className="ml-4 h-6 w-64 bg-white rounded flex items-center px-3 text-xs text-gray-400 line-clamp-1">educonnect.kr</div>
-              </div>
-              <div className="p-8 grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="col-span-1 md:col-span-2 space-y-4">
-                  <div className="h-8 w-48 bg-gray-200 rounded-md animate-pulse"></div>
-                  <div className="flex gap-4">
-                    <div className="h-10 w-24 bg-primary-100 rounded-full"></div>
-                    <div className="h-10 w-24 bg-gray-100 rounded-full"></div>
-                    <div className="h-10 w-24 bg-gray-100 rounded-full"></div>
-                  </div>
-                  <div className="space-y-3 pt-4">
-                    {[1, 2, 3].map((i) => (
-                      <div key={i} className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm flex justify-between items-center hover:-translate-y-1 transition-transform cursor-pointer">
-                        <div className="flex items-center gap-4">
-                          <div className="w-12 h-12 bg-gray-100 rounded-full flex justify-center items-center font-bold text-gray-400">사진</div>
-                          <div>
-                            <div className="h-5 w-24 bg-gray-200 rounded mb-2"></div>
-                            <div className="h-4 w-40 bg-gray-100 rounded"></div>
-                          </div>
-                        </div>
-                        <div className="flex gap-2">
-                           <div className="h-6 w-16 bg-green-100 rounded-full"></div>
-                           <div className="h-8 w-8 bg-blue-50 rounded-full flex items-center justify-center text-blue-500">→</div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-                <div className="hidden md:block col-span-1 bg-gradient-to-b from-primary-50 to-white rounded-xl border border-primary-100 p-6">
-                    <div className="h-40 w-full bg-white rounded-xl shadow-sm border border-gray-100 mb-4 p-4 flex flex-col justify-between">
-                       <div className="h-4 w-20 bg-gray-200 rounded"></div>
-                       <div className="h-12 w-12 bg-primary-500 rounded-full self-end"></div>
-                    </div>
-                     <div className="h-20 w-full bg-white rounded-xl shadow-sm border border-gray-100 p-4"></div>
-                </div>
-              </div>
-            </div>
-          </motion.div>
-        </section>
-
-        {/* Features Matrix */}
-        <section id="features" className="py-24 bg-white relative">
-          <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center mb-16">
-              <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">채용 혁신, 지금 시작됩니다</h2>
-              <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-                에듀커넥트가 교원 수급의 오랜 고민을 해결합니다.
+              <h1 className="mt-6 text-4xl font-bold leading-tight text-white sm:text-5xl lg:text-6xl">
+                학교가 필요한 교사를
+                <br />
+                더 빠르고 선명하게 연결합니다.
+              </h1>
+              <p className="mt-6 max-w-2xl text-base leading-7 text-white/78 sm:text-lg">
+                인재풀 탐색, 공고 등록, 매칭 요청, 승인 운영까지 한 흐름으로 이어지는
+                교원 채용 포털입니다. 오늘 바로 확인 가능한 후보와 공고를 같은 화면에서
+                이어보세요.
               </p>
+
+              <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+                <Link
+                  href="/pool"
+                  className="inline-flex items-center justify-center gap-2 rounded-lg bg-white px-5 py-3 text-sm font-semibold text-primary-700 transition-transform hover:-translate-y-px"
+                >
+                  <Search className="h-4 w-4" />
+                  인재풀 바로 보기
+                </Link>
+                <Link
+                  href="/jobs"
+                  className="inline-flex items-center justify-center gap-2 rounded-lg border border-white/25 bg-white/10 px-5 py-3 text-sm font-semibold text-white backdrop-blur transition-colors hover:bg-white/16"
+                >
+                  <Briefcase className="h-4 w-4" />
+                  채용 공고 둘러보기
+                </Link>
+              </div>
             </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+
+            <div className="mt-14 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
               {[
-                { 
-                  icon: <Search className="text-primary-500 w-8 h-8" />,
-                  title: "양방향 매칭 시스템",
-                  desc: "인력풀 직접 검색부터 구인공고를 통한 지원까지. 학교의 상황에 맞는 채용 방식을 선택하세요."
+                {
+                  label: "활성 인재풀",
+                  value: "247명",
+                  detail: "오늘 18건 업데이트",
                 },
-                { 
-                  icon: <Clock className="text-secondary-500 w-8 h-8" />,
-                  title: "실시간 상태 업데이트",
-                  desc: "구직중, 재직중, 구직중지 등 교사의 현재 상태가 실시간으로 표시되어 불필요한 연락을 줄입니다."
+                {
+                  label: "진행 중 공고",
+                  value: "18건",
+                  detail: "학교별 빠른 응답 체계",
                 },
-                { 
-                  icon: <ShieldCheck className="text-emerald-500 w-8 h-8" />,
-                  title: "안전한 개인정보 보호",
-                  desc: "인증된 인사담당자만 접근 가능하며, 상세 프로필과 연락처는 수락 후에만 안전하게 공개됩니다."
-                }
-              ].map((f, idx) => (
-                <div key={idx} className="group p-8 rounded-2xl border border-gray-100 hover:border-primary-200 hover:shadow-xl hover:shadow-primary-100/50 bg-white transition-all bg-gradient-to-b hover:from-white hover:to-primary-50/50">
-                  <div className="w-14 h-14 bg-gray-50 group-hover:bg-primary-50 rounded-xl flex items-center justify-center mb-6 transition-colors">
-                    {f.icon}
-                  </div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-3">{f.title}</h3>
-                  <p className="text-gray-600 leading-relaxed">{f.desc}</p>
+                {
+                  label: "평균 매칭 리드타임",
+                  value: "2.3일",
+                  detail: "전주 대비 0.4일 단축",
+                },
+                {
+                  label: "지금 검토 중 요청",
+                  value: "9건",
+                  detail: "인사담당 승인 대기 포함",
+                },
+              ].map((item) => (
+                <div
+                  key={item.label}
+                  className="rounded-lg border border-white/18 bg-white/10 p-5 text-white backdrop-blur"
+                >
+                  <div className="text-sm font-medium text-white/72">{item.label}</div>
+                  <div className="mt-2 text-3xl font-bold">{item.value}</div>
+                  <div className="mt-2 text-sm text-white/65">{item.detail}</div>
                 </div>
               ))}
             </div>
           </div>
         </section>
-      </main>
 
-      <footer className="bg-gray-900 text-gray-400 py-12 border-t border-gray-800">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 gap-8 md:grid-cols-4">
-            <div className="col-span-1 md:col-span-2">
-              <span className="text-xl font-bold text-white tracking-tight mb-4 block">에듀커넥트</span>
-              <p className="text-sm text-gray-400 max-w-sm mb-6">
-                경기도교육청 소속 학교의 효율적인 교원 수급을 돕기 위해 개발된 공식 인력풀 매칭 플랫폼입니다.
-              </p>
-              <div className="flex space-x-4">
-                {/* Social links placeholder */}
-                <div className="w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center hover:bg-primary-500 transition-colors cursor-pointer"></div>
-                <div className="w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center hover:bg-primary-500 transition-colors cursor-pointer"></div>
+        <section className="relative z-10 -mt-10 px-4 sm:px-6" id="candidate-pool">
+          <div className="mx-auto grid max-w-7xl gap-6 xl:grid-cols-[1.3fr_0.7fr]">
+            <div className="panel-surface p-6 sm:p-8">
+              <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+                <div>
+                  <span className="kicker text-primary-700">추천 인재</span>
+                  <h2 className="mt-4 text-3xl font-bold tracking-tight text-ink">
+                    지금 바로 검토할 수 있는 후보
+                  </h2>
+                  <div className="section-rule mt-4" />
+                </div>
+                <Link
+                  href="/pool"
+                  className="inline-flex items-center gap-2 text-sm font-semibold text-primary-700"
+                >
+                  전체 인재풀 보기
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
+              </div>
+
+              <div className="mt-8 grid gap-4 lg:grid-cols-3">
+                {featuredTeachers.slice(0, 3).map((teacher) => {
+                  const status = teacherStatusLabel(teacher.status);
+
+                  return (
+                    <article
+                      key={teacher.id}
+                      className="rounded-lg border border-outline bg-surface p-5 transition-transform hover:-translate-y-1"
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex items-center gap-3">
+                          <img
+                            alt={teacher.name}
+                            className="h-14 w-14 rounded-lg object-cover"
+                            src={teacher.avatar}
+                          />
+                          <div>
+                            <div className="text-lg font-bold text-ink">{teacher.name}</div>
+                            <div className="text-sm text-ink-soft">
+                              {teacher.age}세 · {teacher.qualification}
+                            </div>
+                          </div>
+                        </div>
+                        <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${status.className}`}>
+                          {status.label}
+                        </span>
+                      </div>
+
+                      <p className="mt-4 text-sm leading-6 text-ink-soft">{teacher.summary}</p>
+
+                      <div className="mt-4 flex flex-wrap gap-2 text-xs font-medium text-ink-muted">
+                        {teacher.preferredRegions.map((region) => (
+                          <span
+                            key={region}
+                            className="rounded-full bg-surface-panel px-2.5 py-1"
+                          >
+                            {region}
+                          </span>
+                        ))}
+                      </div>
+
+                      <div className="mt-5 flex items-center justify-between text-sm text-ink-soft">
+                        <span>{teacher.experience}</span>
+                        <span>프로필 조회 {teacher.portfolioViews}</span>
+                      </div>
+                    </article>
+                  );
+                })}
               </div>
             </div>
-            
-            <div>
-              <h4 className="text-white font-semibold mb-4">서비스</h4>
-              <ul className="space-y-2 text-sm">
-                <li><Link href="/pool" className="hover:text-white transition-colors">인력풀 스카웃</Link></li>
-                <li><Link href="/jobs" className="hover:text-white transition-colors">구인게시판</Link></li>
-                <li><Link href="/auth/register/hr" className="hover:text-white transition-colors">학교 등록안내</Link></li>
-              </ul>
-            </div>
-            
-            <div>
-              <h4 className="text-white font-semibold mb-4">고객지원</h4>
-              <ul className="space-y-2 text-sm">
-                <li><Link href="/faq" className="hover:text-white transition-colors">자주 묻는 질문</Link></li>
-                <li><Link href="/privacy" className="hover:text-white transition-colors">개인정보처리방침</Link></li>
-                <li><Link href="/terms" className="hover:text-white transition-colors">이용약관</Link></li>
-              </ul>
+
+            <div className="panel-surface overflow-hidden">
+              <img
+                alt="학교 복도 풍경"
+                className="h-52 w-full object-cover"
+                src="https://images.unsplash.com/photo-1513258496099-48168024aec0?auto=format&fit=crop&w=1200&q=80"
+              />
+              <div className="p-6">
+                <span className="kicker text-secondary-700 before:bg-[var(--secondary-solid)]">
+                  운영 흐름
+                </span>
+                <div className="mt-4 space-y-4">
+                  {[
+                    ["인재 탐색", "지역, 자격, 근무 형태별로 조건을 조합해 후보를 압축합니다."],
+                    ["빠른 요청", "관심 후보에게 바로 매칭 요청을 보내고 응답 상태를 추적합니다."],
+                    ["승인 관리", "학교 승인과 공고 운영을 같은 톤으로 이어서 정리합니다."],
+                  ].map(([title, detail]) => (
+                    <div key={title} className="rounded-lg bg-surface-subtle p-4">
+                      <div className="text-sm font-semibold text-ink">{title}</div>
+                      <div className="mt-1 text-sm leading-6 text-ink-soft">{detail}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
-          
-          <div className="border-t border-gray-800 mt-12 pt-8 flex flex-col md:flex-row justify-between items-center text-xs">
-            <p>© 2026 Gyeonggido Office of Education. All rights reserved.</p>
-            <p className="mt-2 md:mt-0">Powered by Next.js & Vercel / Railway</p>
+        </section>
+
+        <section className="mx-auto max-w-7xl px-4 py-20 sm:px-6" id="jobs">
+          <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+            <div>
+              <span className="kicker text-primary-700">열린 채용</span>
+              <h2 className="mt-4 text-3xl font-bold tracking-tight text-ink">
+                학교가 지금 찾고 있는 자리
+              </h2>
+              <div className="section-rule mt-4" />
+            </div>
+            <Link
+              href="/jobs"
+              className="inline-flex items-center gap-2 text-sm font-semibold text-primary-700"
+            >
+              전체 공고 보기
+              <ArrowRight className="h-4 w-4" />
+            </Link>
           </div>
-        </div>
-      </footer>
+
+          <div className="mt-8 grid gap-5 lg:grid-cols-3">
+            {openJobs.map((job) => {
+              const status = jobStatusLabel(job.status);
+
+              return (
+                <article
+                  key={job.id}
+                  className="panel-surface overflow-hidden transition-transform hover:-translate-y-1"
+                >
+                  <img
+                    alt={job.schoolName}
+                    className="h-52 w-full object-cover"
+                    src={job.image}
+                  />
+                  <div className="p-6">
+                    <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${status.className}`}>
+                      {status.label}
+                    </span>
+                    <h3 className="mt-4 text-xl font-bold text-ink">
+                      {job.schoolName}
+                    </h3>
+                    <p className="mt-2 text-sm leading-6 text-ink-soft">{job.summary}</p>
+
+                    <div className="mt-5 space-y-3 text-sm text-ink-soft">
+                      <div className="flex items-center gap-2">
+                        <MapPin className="h-4 w-4 text-primary-600" />
+                        {job.schoolRegion} · {job.gradeLevel}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Clock3 className="h-4 w-4 text-primary-600" />
+                        {job.startDate} - {job.endDate}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Users className="h-4 w-4 text-primary-600" />
+                        지원자 {job.applicants}명 · 조회 {job.views}
+                      </div>
+                    </div>
+
+                    <Link
+                      href={`/jobs/${job.id}`}
+                      className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-primary-700"
+                    >
+                      상세 보기
+                      <ArrowRight className="h-4 w-4" />
+                    </Link>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+        </section>
+
+        <section className="border-t border-outline bg-surface-subtle">
+          <div className="mx-auto grid max-w-7xl gap-6 px-4 py-16 sm:grid-cols-2 sm:px-6 lg:grid-cols-4">
+            {[
+              {
+                title: "학교 인사담당",
+                detail: "공고 등록부터 승인 추적까지 한 흐름으로 관리합니다.",
+                Icon: Building2,
+              },
+              {
+                title: "구직 교사",
+                detail: "근무 가능 지역과 형태를 빠르게 공개하고 제안을 받습니다.",
+                Icon: Users,
+              },
+              {
+                title: "검색 중심 UX",
+                detail: "조건을 좁힐수록 결과가 자연스럽게 정리되도록 구성했습니다.",
+                Icon: Search,
+              },
+              {
+                title: "빠른 액션",
+                detail: "중요한 버튼과 상태를 한눈에 보이게 정리했습니다.",
+                Icon: Sparkles,
+              },
+            ].map((item) => (
+              <div key={item.title} className="rounded-lg bg-white p-6 shadow-panel">
+                <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-primary-50 text-primary-700">
+                  <item.Icon className="h-5 w-5" />
+                </div>
+                <div className="mt-4 text-lg font-bold text-ink">{item.title}</div>
+                <div className="mt-2 text-sm leading-6 text-ink-soft">{item.detail}</div>
+              </div>
+            ))}
+          </div>
+        </section>
+      </main>
     </div>
   );
 }

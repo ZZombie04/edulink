@@ -1,12 +1,13 @@
-import type { Config } from "tailwindcss"
+import type { Config } from "tailwindcss";
+import defaultTheme from "tailwindcss/defaultTheme";
 
 const config = {
   darkMode: ["class"],
   content: [
-    './pages/**/*.{ts,tsx}',
-    './components/**/*.{ts,tsx}',
-    './app/**/*.{ts,tsx}',
-    './src/**/*.{ts,tsx}',
+    "./pages/**/*.{ts,tsx}",
+    "./components/**/*.{ts,tsx}",
+    "./app/**/*.{ts,tsx}",
+    "./src/**/*.{ts,tsx}",
   ],
   prefix: "",
   theme: {
@@ -24,35 +25,60 @@ const config = {
         ring: "hsl(var(--ring))",
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
+        surface: {
+          DEFAULT: "var(--surface)",
+          subtle: "var(--surface-subtle)",
+          panel: "var(--surface-panel)",
+          strong: "var(--surface-panel-strong)",
+          contrast: "var(--surface-contrast)",
+        },
+        ink: {
+          DEFAULT: "var(--ink)",
+          soft: "var(--ink-soft)",
+          muted: "var(--ink-muted)",
+        },
+        outline: {
+          DEFAULT: "var(--outline)",
+          strong: "var(--outline-strong)",
+        },
         primary: {
           DEFAULT: "hsl(var(--primary))",
           foreground: "hsl(var(--primary-foreground))",
-          50: "var(--primary-50)",
-          100: "var(--primary-100)",
-          200: "var(--primary-200)",
-          300: "var(--primary-300)",
-          400: "var(--primary-400)",
-          500: "var(--primary-500)",
-          600: "var(--primary-600)",
-          700: "var(--primary-700)",
-          800: "var(--primary-800)",
-          900: "var(--primary-900)",
+          50: "var(--primary-soft)",
+          100: "var(--primary-soft)",
+          200: "#bfd2ff",
+          300: "#8db2ff",
+          400: "#4f88f2",
+          500: "var(--primary-solid)",
+          600: "var(--primary-strong)",
+          700: "#004395",
+          800: "#00336f",
+          900: "#001a42",
+          soft: "var(--primary-soft)",
+          strong: "var(--primary-strong)",
         },
         secondary: {
           DEFAULT: "hsl(var(--secondary))",
           foreground: "hsl(var(--secondary-foreground))",
-          200: "var(--secondary-200)",
-          400: "var(--secondary-400)",
-          500: "var(--secondary-500)",
-          600: "var(--secondary-600)",
-          700: "var(--secondary-700)",
+          50: "var(--secondary-soft)",
+          100: "var(--secondary-soft)",
+          200: "#b8ffc8",
+          400: "#37cf68",
+          500: "var(--secondary-solid)",
+          600: "#007b35",
+          700: "#005321",
+          soft: "var(--secondary-soft)",
+        },
+        tertiary: {
+          DEFAULT: "var(--tertiary-solid)",
+          soft: "var(--tertiary-soft)",
         },
         status: {
-          seeking: "var(--seeking)",
-          interviewing: "var(--interviewing)",
-          employed: "var(--employed)",
-          notSeeking: "var(--not-seeking)",
-          reserved: "var(--reserved)",
+          seeking: "#28b268",
+          interviewing: "#f1b638",
+          employed: "#2170e4",
+          notSeeking: "#727785",
+          reserved: "#6b38d4",
         },
         destructive: {
           DEFAULT: "hsl(var(--destructive))",
@@ -80,6 +106,24 @@ const config = {
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
       },
+      boxShadow: {
+        soft: "var(--shadow-soft)",
+        panel: "var(--shadow-card)",
+      },
+      fontFamily: {
+        sans: [
+          "Pretendard Variable",
+          "Pretendard",
+          "system-ui",
+          ...defaultTheme.fontFamily.sans,
+        ],
+        heading: [
+          "Pretendard Variable",
+          "Pretendard",
+          "system-ui",
+          ...defaultTheme.fontFamily.sans,
+        ],
+      },
       keyframes: {
         "accordion-down": {
           from: { height: "0" },
@@ -97,6 +141,6 @@ const config = {
     },
   },
   plugins: [require("tailwindcss-animate")],
-} satisfies Config
+} satisfies Config;
 
-export default config
+export default config;

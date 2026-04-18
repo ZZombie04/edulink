@@ -1,338 +1,258 @@
-"use client";
-
-import { useState } from "react";
 import Link from "next/link";
 import {
-  BookOpen, Bell, Users,
-  Eye, Plus, ChevronRight, Building2, 
-  Search, TrendingUp, UserCheck, FileText, BarChart3
+  ArrowRight,
+  BarChart3,
+  Briefcase,
+  LayoutDashboard,
+  Search,
+  Send,
+  Users,
 } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+
+import { PortalShell } from "@/components/portal-shell";
+import { featuredTeachers, hrMatchRequests, jobPosts } from "@/lib/demo-data";
+
+const navItems = [
+  { href: "/hr/dashboard", label: "대시보드", icon: LayoutDashboard, active: true },
+  { href: "/pool", label: "인재풀", icon: Search },
+  { href: "/jobs", label: "채용 공고", icon: Briefcase },
+  { href: "/admin/dashboard", label: "운영 지표", icon: BarChart3 },
+];
+
+function requestTone(status: string) {
+  switch (status) {
+    case "accepted":
+      return "bg-secondary-50 text-secondary-700";
+    case "rejected":
+      return "bg-[var(--danger-soft)] text-[#9c2f24]";
+    default:
+      return "bg-[var(--warning-soft)] text-[#9a6a00]";
+  }
+}
 
 export default function HRDashboardPage() {
-  const [activeTab, setActiveTab] = useState<"overview" | "requests" | "postings">("overview");
-
-  const sentRequests = [
-    {
-      id: 1,
-      teacherName: "박○영",
-      qualification: "초등 2급 정교사",
-      status: "PENDING",
-      sentAt: "2시간 전",
-      position: "3학년 담임 (출산휴가 대체)",
-    },
-    {
-      id: 2,
-      teacherName: "이○준",
-      qualification: "중등(수학) 1급 정교사",
-      status: "ACCEPTED",
-      sentAt: "1일 전",
-      position: "1학년 수학 교과전담",
-    },
-    {
-      id: 3,
-      teacherName: "김○현",
-      qualification: "초등 1급 정교사",
-      status: "REJECTED",
-      sentAt: "3일 전",
-      position: "4학년 담임",
-    },
-  ];
-
-  const myPostings = [
-    {
-      id: 1,
-      title: "[기간제교사] 3학년 초등 선생님 모십니다.",
-      status: "OPEN",
-      applicants: 5,
-      views: 128,
-      createdAt: "3일 전",
-    },
-    {
-      id: 2,
-      title: "[시간강사] 1학년 수학 강사 모집",
-      status: "CLOSED",
-      applicants: 12,
-      views: 256,
-      createdAt: "1주 전",
-    },
-  ];
-
-  const getRequestBadge = (status: string) => {
-    switch (status) {
-      case "PENDING":
-        return <Badge className="bg-amber-100 text-amber-800 border-amber-200">⏳ 응답 대기</Badge>;
-      case "ACCEPTED":
-        return <Badge className="bg-green-100 text-green-800 border-green-200">✅ 수락됨</Badge>;
-      case "REJECTED":
-        return <Badge className="bg-red-100 text-red-800 border-red-200">❌ 거절됨</Badge>;
-      default:
-        return null;
-    }
-  };
-
-  const tabs = [
-    { key: "overview" as const, label: "대시보드", icon: <BarChart3 size={16} /> },
-    { key: "requests" as const, label: "요청 관리", icon: <Users size={16} /> },
-    { key: "postings" as const, label: "내 공고", icon: <FileText size={16} /> },
-  ];
+  const liveJobs = jobPosts.filter((job) => job.status !== "closed");
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Top Navigation */}
-      <header className="bg-white border-b sticky top-0 z-40 shadow-sm">
-        <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2">
-            <div className="bg-gradient-to-br from-secondary-500 to-primary-500 text-white p-1.5 rounded-lg">
-              <BookOpen size={20} />
-            </div>
-            <span className="font-bold text-lg text-gray-900">에듀커넥트</span>
-            <Badge className="bg-secondary-50 text-secondary-700 border-secondary-200 text-xs ml-1">인사담당자</Badge>
-          </Link>
-          <div className="flex items-center gap-4">
-            <button className="relative text-gray-400 hover:text-gray-600 transition-colors">
-              <Bell size={22} />
-              <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[10px] rounded-full flex items-center justify-center font-bold">1</span>
-            </button>
-            <div className="h-8 w-px bg-gray-200" />
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-secondary-100 rounded-full flex items-center justify-center">
-                <Building2 size={16} className="text-secondary-600" />
-              </div>
-              <div className="hidden sm:block">
-                <div className="text-sm font-medium text-gray-700">홍길동</div>
-                <div className="text-xs text-gray-400">○○초등학교</div>
-              </div>
-            </div>
+    <PortalShell
+      navItems={navItems}
+      noticeCount={4}
+      primaryAction={{ href: "/pool", label: "인재풀 다시 탐색", icon: Search }}
+      sectionLabel="학교 채용 운영"
+      user={{
+        name: "홍수진",
+        role: "인사담당",
+        detail: "정인초등학교",
+        avatar:
+          "https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&w=240&q=80",
+      }}
+    >
+      <section className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
+        <div className="rounded-lg bg-[linear-gradient(135deg,#0058be,#2170e4)] p-8 text-white shadow-soft">
+          <span className="kicker text-white/85 before:bg-white">학교 운영 대시보드</span>
+          <h1 className="mt-5 text-3xl font-bold tracking-tight sm:text-4xl">
+            오늘 처리해야 할
+            <br />
+            요청과 공고가 한 번에 보이게.
+          </h1>
+          <p className="mt-4 max-w-2xl text-sm leading-7 text-white/78 sm:text-base">
+            새 디자인은 요청 흐름, 공고 상태, 후보 반응을 한 화면에서 바로 이어보는 데
+            집중했습니다. 인재풀 탐색과 매칭 요청까지 이동 깊이를 줄였습니다.
+          </p>
+
+          <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+            <Link
+              href="/pool"
+              className="inline-flex items-center justify-center gap-2 rounded-lg bg-white px-5 py-3 text-sm font-semibold text-primary-700"
+            >
+              <Search className="h-4 w-4" />
+              후보 다시 보기
+            </Link>
+            <Link
+              href="/jobs"
+              className="inline-flex items-center justify-center gap-2 rounded-lg border border-white/18 bg-white/10 px-5 py-3 text-sm font-semibold text-white"
+            >
+              <Briefcase className="h-4 w-4" />
+              공고 관리 이동
+            </Link>
           </div>
         </div>
-      </header>
 
-      {/* Tab Navigation */}
-      <div className="bg-white border-b">
-        <div className="container mx-auto px-4">
-          <nav className="flex gap-1">
-            {tabs.map((tab) => (
-              <button
-                key={tab.key}
-                onClick={() => setActiveTab(tab.key)}
-                className={`flex items-center gap-2 px-5 py-3.5 text-sm font-medium border-b-2 transition-colors ${
-                  activeTab === tab.key
-                    ? "border-secondary-500 text-secondary-700"
-                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-200"
-                }`}
-              >
-                {tab.icon} {tab.label}
-              </button>
+        <div className="panel-surface p-6">
+          <div className="text-sm font-semibold text-ink-soft">오늘의 운영 메모</div>
+          <div className="mt-5 space-y-3">
+            {[
+              "면접 진행중인 후보 2명에게 응답 확인 필요",
+              "정인초 3학년 담임 공고 마감까지 5일",
+              "새로 공개된 후보 4명이 조건과 잘 맞습니다",
+            ].map((note) => (
+              <div key={note} className="rounded-lg bg-surface-subtle px-4 py-3 text-sm text-ink-soft">
+                {note}
+              </div>
             ))}
-          </nav>
+          </div>
         </div>
-      </div>
+      </section>
 
-      <main className="container mx-auto px-4 py-8 max-w-6xl">
-        {/* Overview Tab */}
-        {activeTab === "overview" && (
-          <div className="space-y-8">
-            {/* Welcome */}
-            <div className="bg-gradient-to-r from-secondary-600 via-secondary-500 to-primary-500 rounded-2xl p-6 md:p-8 text-white shadow-lg shadow-secondary-500/20">
-              <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                <div>
-                  <h1 className="text-2xl md:text-3xl font-bold mb-2">○○초등학교 인사관리 🏫</h1>
-                  <p className="text-secondary-100 text-sm md:text-base">매칭 요청 1건에 대한 응답이 대기중입니다.</p>
-                </div>
-                <div className="flex gap-2">
-                  <Link href="/pool">
-                    <Button className="bg-white/20 hover:bg-white/30 text-white border border-white/30 rounded-full px-5 backdrop-blur-sm">
-                      <Search size={16} className="mr-2" /> 인력풀 검색
-                    </Button>
-                  </Link>
-                  <Link href="/hr/postings/new">
-                    <Button className="bg-white text-secondary-700 hover:bg-white/90 rounded-full px-5 font-bold shadow-md">
-                      <Plus size={16} className="mr-2" /> 공고 등록
-                    </Button>
-                  </Link>
+      <section className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        {[
+          { label: "보낸 요청", value: "8건", Icon: Users },
+          { label: "응답 대기", value: "3건", Icon: Send },
+          { label: "진행 중 공고", value: "2건", Icon: Briefcase },
+          { label: "오늘 신규 후보", value: "4명", Icon: Search },
+        ].map((item) => (
+          <div key={item.label} className="panel-surface p-5">
+            <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-primary-50 text-primary-700">
+              <item.Icon className="h-5 w-5" />
+            </div>
+            <div className="mt-4 text-3xl font-bold text-ink">{item.value}</div>
+            <div className="mt-1 text-sm text-ink-soft">{item.label}</div>
+          </div>
+        ))}
+      </section>
+
+      <section className="mt-8 grid gap-6 xl:grid-cols-[1fr_1fr]">
+        <div className="panel-surface p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="text-xl font-bold text-ink">최근 보낸 매칭 요청</div>
+              <div className="mt-1 text-sm text-ink-soft">응답 상태를 바로 확인할 수 있습니다.</div>
+            </div>
+            <Link href="/pool" className="text-sm font-semibold text-primary-700">
+              더 보기
+            </Link>
+          </div>
+
+          <div className="mt-6 space-y-4">
+            {hrMatchRequests.map((request) => (
+              <div
+                key={request.id}
+                className="rounded-lg border border-outline bg-surface p-5"
+              >
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <span
+                      className={`rounded-full px-2.5 py-1 text-xs font-semibold ${requestTone(
+                        request.status
+                      )}`}
+                    >
+                      {request.status === "accepted"
+                        ? "응답 수락"
+                        : request.status === "rejected"
+                        ? "응답 거절"
+                        : "응답 대기"}
+                    </span>
+                    <div className="mt-3 text-xl font-bold text-ink">
+                      {request.teacherName}
+                    </div>
+                    <div className="mt-1 text-sm text-ink-soft">
+                      {request.qualification} · {request.position}
+                    </div>
+                  </div>
+                  <div className="text-sm text-ink-muted">{request.sentAt}</div>
                 </div>
               </div>
-            </div>
+            ))}
+          </div>
+        </div>
 
-            {/* Stats */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {[
-                { label: "보낸 요청", value: "8", icon: <Users size={20} />, color: "text-secondary-600", bg: "bg-secondary-50" },
-                { label: "수락률", value: "62%", icon: <TrendingUp size={20} />, color: "text-green-600", bg: "bg-green-50" },
-                { label: "등록 공고", value: "2", icon: <FileText size={20} />, color: "text-primary-600", bg: "bg-primary-50" },
-                { label: "총 지원자", value: "17", icon: <UserCheck size={20} />, color: "text-amber-600", bg: "bg-amber-50" },
-              ].map((stat, i) => (
-                <Card key={i} className="shadow-sm border-gray-100">
-                  <CardContent className="p-5">
-                    <div className={`w-10 h-10 ${stat.bg} rounded-xl flex items-center justify-center ${stat.color} mb-3`}>
-                      {stat.icon}
+        <div className="panel-surface p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="text-xl font-bold text-ink">운영 중인 채용 공고</div>
+              <div className="mt-1 text-sm text-ink-soft">학교별 공고 상태와 반응입니다.</div>
+            </div>
+            <Link href="/jobs" className="text-sm font-semibold text-primary-700">
+              전체 공고
+            </Link>
+          </div>
+
+          <div className="mt-6 space-y-4">
+            {liveJobs.map((job) => (
+              <div
+                key={job.id}
+                className="rounded-lg border border-outline bg-surface p-5"
+              >
+                <div className="flex gap-4">
+                  <img
+                    alt={job.schoolName}
+                    className="h-20 w-20 rounded-lg object-cover"
+                    src={job.image}
+                  />
+                  <div className="flex-1">
+                    <div className="text-lg font-bold text-ink">{job.schoolName}</div>
+                    <div className="mt-1 text-sm text-ink-soft">
+                      {job.gradeLevel} · {job.employmentType}
                     </div>
-                    <div className="text-2xl font-bold text-gray-900">{stat.value}</div>
-                    <div className="text-xs text-gray-500 font-medium">{stat.label}</div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-
-            {/* Recent Activity */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <Card className="shadow-sm border-gray-100">
-                <CardHeader className="pb-4">
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="text-lg">최근 매칭 요청</CardTitle>
-                    <Button variant="ghost" size="sm" className="text-secondary-600" onClick={() => setActiveTab("requests")}>
-                      전체 보기 <ChevronRight size={14} className="ml-1" />
-                    </Button>
+                    <div className="mt-3 flex flex-wrap gap-3 text-sm text-ink-muted">
+                      <span>지원자 {job.applicants}명</span>
+                      <span>조회 {job.views}</span>
+                      <span>마감 {job.deadline}</span>
+                    </div>
                   </div>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  {sentRequests.slice(0, 3).map((req) => (
-                    <div key={req.id} className="flex items-center justify-between p-3 rounded-xl hover:bg-gray-50 transition-colors">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center text-sm font-bold text-gray-400">
-                          {req.teacherName[0]}
-                        </div>
-                        <div>
-                          <div className="text-sm font-medium text-gray-900">{req.teacherName}</div>
-                          <div className="text-xs text-gray-500">{req.qualification}</div>
-                        </div>
-                      </div>
-                      {getRequestBadge(req.status)}
-                    </div>
-                  ))}
-                </CardContent>
-              </Card>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
 
-              <Card className="shadow-sm border-gray-100">
-                <CardHeader className="pb-4">
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="text-lg">내 구인 공고</CardTitle>
-                    <Button variant="ghost" size="sm" className="text-secondary-600" onClick={() => setActiveTab("postings")}>
-                      전체 보기 <ChevronRight size={14} className="ml-1" />
-                    </Button>
+      <section className="mt-8 grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
+        <div className="panel-surface p-6">
+          <div className="text-xl font-bold text-ink">추천 후보</div>
+          <div className="mt-1 text-sm text-ink-soft">
+            현재 공고 조건과 맞는 후보를 먼저 모았습니다.
+          </div>
+
+          <div className="mt-6 space-y-4">
+            {featuredTeachers.slice(0, 3).map((teacher) => (
+              <div
+                key={teacher.id}
+                className="flex items-center gap-4 rounded-lg border border-outline bg-surface p-4"
+              >
+                <img
+                  alt={teacher.name}
+                  className="h-14 w-14 rounded-lg object-cover"
+                  src={teacher.avatar}
+                />
+                <div className="flex-1">
+                  <div className="font-semibold text-ink">{teacher.name}</div>
+                  <div className="text-sm text-ink-soft">
+                    {teacher.qualification} · {teacher.residence}
                   </div>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  {myPostings.map((post) => (
-                    <div key={post.id} className="p-4 rounded-xl border border-gray-100 hover:border-secondary-200 transition-colors">
-                      <div className="flex items-center gap-2 mb-2">
-                        {post.status === "OPEN" ? (
-                          <Badge className="bg-green-50 text-green-700 border-green-200 text-xs">모집중</Badge>
-                        ) : (
-                          <Badge className="bg-gray-100 text-gray-600 border-gray-200 text-xs">마감</Badge>
-                        )}
-                        <span className="text-xs text-gray-400">{post.createdAt}</span>
-                      </div>
-                      <h4 className="text-sm font-medium text-gray-900 mb-2">{post.title}</h4>
-                      <div className="flex gap-4 text-xs text-gray-500">
-                        <span className="flex items-center gap-1"><Users size={12} /> 지원 {post.applicants}명</span>
-                        <span className="flex items-center gap-1"><Eye size={12} /> 조회 {post.views}</span>
-                      </div>
-                    </div>
-                  ))}
-                </CardContent>
-              </Card>
-            </div>
+                </div>
+                <Link
+                  href="/pool"
+                  className="inline-flex items-center gap-2 text-sm font-semibold text-primary-700"
+                >
+                  보기
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
+              </div>
+            ))}
           </div>
-        )}
+        </div>
 
-        {/* Requests Tab */}
-        {activeTab === "requests" && (
-          <div className="space-y-6">
-            <div className="flex items-center justify-between">
-              <h2 className="text-xl font-bold text-gray-900">보낸 매칭 요청</h2>
-              <Link href="/pool">
-                <Button className="bg-secondary-600 hover:bg-secondary-700 text-white rounded-full px-6">
-                  <Search size={16} className="mr-2" /> 인력풀 검색
-                </Button>
-              </Link>
-            </div>
-
-            <div className="space-y-4">
-              {sentRequests.map((req) => (
-                <Card key={req.id} className={`shadow-sm border-gray-100 overflow-hidden ${
-                  req.status === "ACCEPTED" ? "border-l-4 border-l-green-400" : ""
-                }`}>
-                  <CardContent className="p-6">
-                    <div className="flex flex-col sm:flex-row justify-between gap-4">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-2">
-                          {getRequestBadge(req.status)}
-                          <span className="text-xs text-gray-400">{req.sentAt}</span>
-                        </div>
-                        <h3 className="text-lg font-bold text-gray-900 mb-1">{req.teacherName}</h3>
-                        <p className="text-sm text-gray-600">{req.qualification}</p>
-                        <p className="text-sm text-secondary-700 font-medium mt-2">{req.position}</p>
-                      </div>
-                      <div className="flex sm:flex-col gap-2 sm:items-end shrink-0">
-                        {req.status === "ACCEPTED" && (
-                          <Button className="bg-secondary-600 hover:bg-secondary-700 text-white rounded-xl">
-                            연락처 확인
-                          </Button>
-                        )}
-                        <Button variant="outline" className="rounded-xl border-gray-200">
-                          <Eye size={16} className="mr-1" /> 프로필 보기
-                        </Button>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+        <div className="panel-surface p-6">
+          <div className="text-xl font-bold text-ink">학교 운영 리듬</div>
+          <div className="mt-1 text-sm text-ink-soft">
+            후보 발굴부터 요청까지 흐름을 짧게 유지하는 게 핵심입니다.
           </div>
-        )}
 
-        {/* Postings Tab */}
-        {activeTab === "postings" && (
-          <div className="space-y-6">
-            <div className="flex items-center justify-between">
-              <h2 className="text-xl font-bold text-gray-900">내 구인 공고</h2>
-              <Link href="/hr/postings/new">
-                <Button className="bg-secondary-600 hover:bg-secondary-700 text-white rounded-full px-6">
-                  <Plus size={16} className="mr-2" /> 새 공고 등록
-                </Button>
-              </Link>
-            </div>
-
-            <div className="space-y-4">
-              {myPostings.map((post) => (
-                <Card key={post.id} className="shadow-sm border-gray-100">
-                  <CardContent className="p-6">
-                    <div className="flex flex-col sm:flex-row justify-between gap-4">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-2">
-                          {post.status === "OPEN" ? (
-                            <Badge className="bg-green-50 text-green-700 border-green-200">모집중</Badge>
-                          ) : (
-                            <Badge className="bg-gray-100 text-gray-600 border-gray-200">마감</Badge>
-                          )}
-                          <span className="text-xs text-gray-400">{post.createdAt}</span>
-                        </div>
-                        <h3 className="text-lg font-bold text-gray-900 mb-2">{post.title}</h3>
-                        <div className="flex gap-4 text-sm text-gray-500">
-                          <span className="flex items-center gap-1"><Users size={14} /> 지원자 {post.applicants}명</span>
-                          <span className="flex items-center gap-1"><Eye size={14} /> 조회 {post.views}회</span>
-                        </div>
-                      </div>
-                      <div className="flex sm:flex-col gap-2 sm:items-end shrink-0">
-                        <Button variant="outline" className="rounded-xl border-gray-200">
-                          지원자 확인
-                        </Button>
-                        <Button variant="outline" className="rounded-xl border-gray-200 text-gray-500">
-                          수정
-                        </Button>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+          <div className="mt-6 grid gap-4 md:grid-cols-3">
+            {[
+              ["후보 압축", "조건에 맞는 후보를 먼저 묶어 액션 버튼 가까이에 둡니다."],
+              ["요청 발송", "관심 후보를 바로 요청 목록으로 연결합니다."],
+              ["응답 추적", "수락/거절/대기를 컬러로 바로 읽게 정리했습니다."],
+            ].map(([title, detail]) => (
+              <div key={title} className="rounded-lg bg-surface-subtle p-5">
+                <div className="text-base font-semibold text-ink">{title}</div>
+                <div className="mt-2 text-sm leading-6 text-ink-soft">{detail}</div>
+              </div>
+            ))}
           </div>
-        )}
-      </main>
-    </div>
+        </div>
+      </section>
+    </PortalShell>
   );
 }

@@ -1,203 +1,202 @@
-"use client";
-
 import Link from "next/link";
-import { ArrowLeft, MapPin, Building, Calendar, Briefcase, Share2, BookmarkPlus, ChevronRight, AlertCircle } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { notFound } from "next/navigation";
+import {
+  ArrowLeft,
+  Briefcase,
+  Building2,
+  CalendarDays,
+  CheckCircle2,
+  MapPin,
+} from "lucide-react";
 
-export default function JobDetailPage() {
-  const job = {
-    id: 1,
-    schoolName: "○○초등학교",
-    schoolRegion: "수원시",
-    schoolAddress: "경기도 수원시 팔달구 ○○로 123",
-    employmentType: "기간제교사",
-    startDate: "2026-05-01",
-    endDate: "2026-08-31",
-    qualificationType: "초등",
-    gradeLevel: "3학년",
-    isHomeroom: true,
-    duties: [
-      "3학년 2반 담임교사 (출산휴가 대체)",
-      "국어, 수학, 사회 교과 지도",
-      "학급 경영 및 생활지도",
-      "학교 행사 참여 및 업무 분장에 따른 업무 수행",
-    ],
-    requirements: [
-      "초등학교 2급 이상 정교사 자격증 소지자",
-      "교직 경력 1년 이상 우대",
-      "수원시 거주자 우대",
-    ],
-    benefits: [
-      "경기도교육청 기간제교사 보수 기준 적용",
-      "4대 보험 가입",
-      "학교 급식 제공",
-    ],
-    status: "OPEN",
-    postedAt: "2026-04-15",
-    deadline: "2026-04-25",
-    contactName: "홍○동 교무부장",
-    applicants: 5,
-    views: 128,
-  };
+import { jobPosts } from "@/lib/demo-data";
+
+function jobStatusLabel(status: string) {
+  switch (status) {
+    case "open":
+      return {
+        label: "지금 지원 가능",
+        className: "bg-secondary-50 text-secondary-700",
+      };
+    case "closing-soon":
+      return {
+        label: "마감 임박",
+        className: "bg-[var(--warning-soft)] text-[#9a6a00]",
+      };
+    default:
+      return {
+        label: "모집 마감",
+        className: "bg-surface-panel text-ink-soft",
+      };
+  }
+}
+
+export default function JobDetailPage({
+  params,
+}: {
+  params: { id: string };
+}) {
+  const job = jobPosts.find((item) => item.id === params.id);
+
+  if (!job) {
+    notFound();
+  }
+
+  const status = jobStatusLabel(job.status);
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-20">
-      {/* Header */}
-      <header className="w-full bg-white border-b sticky top-0 z-30 shadow-sm">
-        <div className="container mx-auto px-4 h-14 flex items-center justify-between">
-          <Link href="/jobs" className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors">
-            <ArrowLeft size={20} />
-            <span className="text-sm font-medium">목록으로</span>
+    <div className="min-h-screen bg-surface text-ink">
+      <header className="sticky top-0 z-50 border-b border-outline bg-white/90 backdrop-blur">
+        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6">
+          <Link
+            href="/jobs"
+            className="inline-flex items-center gap-2 text-sm font-semibold text-ink-soft"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            공고 목록으로
           </Link>
-          <div className="flex items-center gap-2">
-            <Button variant="ghost" size="sm" className="text-gray-500">
-              <Share2 size={16} className="mr-1" /> 공유
-            </Button>
-            <Button variant="ghost" size="sm" className="text-gray-500">
-              <BookmarkPlus size={16} className="mr-1" /> 저장
-            </Button>
-          </div>
+          <Link
+            href="/auth/login"
+            className="rounded-lg border border-outline px-4 py-2 text-sm font-semibold text-primary-700"
+          >
+            지원하기 전에 로그인
+          </Link>
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-8 max-w-4xl">
-        {/* Job Header Card */}
-        <Card className="shadow-md border-gray-100 overflow-hidden mb-6">
-          <div className="h-2 w-full bg-gradient-to-r from-primary-500 to-secondary-500" />
-          <CardContent className="p-6 md:p-8">
-            <div className="flex items-center gap-2 mb-4 flex-wrap">
-              <Badge className="bg-primary-50 text-primary-700 border-primary-200">모집중</Badge>
-              <Badge variant="outline" className="text-gray-600">{job.employmentType}</Badge>
-              {job.isHomeroom && <Badge variant="outline" className="text-amber-600 border-amber-200">담임</Badge>}
-            </div>
+      <section className="relative overflow-hidden">
+        <img
+          alt={job.schoolName}
+          className="absolute inset-0 h-full w-full object-cover"
+          src={job.image}
+        />
+        <div className="absolute inset-0 bg-[linear-gradient(115deg,rgba(7,18,43,0.86),rgba(0,88,190,0.72))]" />
+        <div className="relative mx-auto max-w-7xl px-4 py-20 sm:px-6">
+          <span className={`rounded-full px-3 py-1 text-xs font-semibold ${status.className}`}>
+            {status.label}
+          </span>
+          <h1 className="mt-5 max-w-3xl text-4xl font-bold leading-tight text-white sm:text-5xl">
+            {job.schoolName} · {job.gradeLevel}
+          </h1>
+          <p className="mt-5 max-w-2xl text-base leading-7 text-white/78">
+            {job.summary}
+          </p>
 
-            <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-4">
-              [{job.employmentType}] {job.gradeLevel} {job.qualificationType} 선생님 모십니다.
-            </h1>
-
-            <div className="flex flex-wrap gap-4 text-sm text-gray-600 mb-6">
-              <span className="flex items-center gap-1.5">
-                <Building size={16} className="text-gray-400" /> {job.schoolName}
-              </span>
-              <span className="flex items-center gap-1.5">
-                <MapPin size={16} className="text-gray-400" /> {job.schoolRegion}
-              </span>
-              <span className="flex items-center gap-1.5">
-                <Calendar size={16} className="text-gray-400" /> {job.startDate} ~ {job.endDate}
-              </span>
-            </div>
-
-            <div className="flex flex-col sm:flex-row gap-3">
-              <Button className="flex-1 sm:flex-none bg-primary-600 hover:bg-primary-700 text-white font-bold h-12 px-8 rounded-xl shadow-md shadow-primary-500/20">
-                지원하기
-              </Button>
-              <Button variant="outline" className="flex-1 sm:flex-none h-12 px-8 rounded-xl border-gray-200">
-                <BookmarkPlus size={16} className="mr-2" /> 관심 공고 저장
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Main Content */}
-          <div className="lg:col-span-2 space-y-6">
-            <Card className="shadow-sm border-gray-100">
-              <CardHeader>
-                <CardTitle className="text-lg">수행 업무</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ul className="space-y-3">
-                  {job.duties.map((d, i) => (
-                    <li key={i} className="flex items-start gap-3 text-gray-700">
-                      <div className="w-6 h-6 bg-primary-50 rounded flex items-center justify-center flex-shrink-0 mt-0.5">
-                        <ChevronRight size={14} className="text-primary-500" />
-                      </div>
-                      {d}
-                    </li>
-                  ))}
-                </ul>
-              </CardContent>
-            </Card>
-
-            <Card className="shadow-sm border-gray-100">
-              <CardHeader>
-                <CardTitle className="text-lg">자격 요건</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ul className="space-y-3">
-                  {job.requirements.map((r, i) => (
-                    <li key={i} className="flex items-start gap-3 text-gray-700">
-                      <div className="w-6 h-6 bg-amber-50 rounded flex items-center justify-center flex-shrink-0 mt-0.5">
-                        <AlertCircle size={14} className="text-amber-500" />
-                      </div>
-                      {r}
-                    </li>
-                  ))}
-                </ul>
-              </CardContent>
-            </Card>
-
-            <Card className="shadow-sm border-gray-100">
-              <CardHeader>
-                <CardTitle className="text-lg">처우 및 기타</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ul className="space-y-3">
-                  {job.benefits.map((b, i) => (
-                    <li key={i} className="flex items-start gap-3 text-gray-700">
-                      <div className="w-6 h-6 bg-green-50 rounded flex items-center justify-center flex-shrink-0 mt-0.5">
-                        <Briefcase size={14} className="text-green-500" />
-                      </div>
-                      {b}
-                    </li>
-                  ))}
-                </ul>
-              </CardContent>
-            </Card>
+          <div className="mt-8 flex flex-wrap gap-3 text-sm text-white/78">
+            <span className="rounded-full border border-white/18 bg-white/10 px-3 py-2">
+              {job.employmentType}
+            </span>
+            <span className="rounded-full border border-white/18 bg-white/10 px-3 py-2">
+              {job.qualificationType}
+              {job.qualificationSubject ? ` · ${job.qualificationSubject}` : ""}
+            </span>
+            <span className="rounded-full border border-white/18 bg-white/10 px-3 py-2">
+              마감 {job.deadline}
+            </span>
           </div>
+        </div>
+      </section>
 
-          {/* Sidebar */}
+      <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
+        <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
           <div className="space-y-6">
-            <Card className="shadow-sm border-gray-100 sticky top-20">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm text-gray-500 font-medium">공고 정보</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-gray-500">등록일</span>
-                  <span className="font-medium text-gray-900">{job.postedAt}</span>
+            <section className="panel-surface p-6">
+              <div className="text-lg font-bold text-ink">근무 핵심 정보</div>
+              <div className="mt-5 grid gap-3 sm:grid-cols-2">
+                <div className="rounded-lg bg-surface-subtle px-4 py-3 text-sm text-ink-soft">
+                  <div className="flex items-center gap-2">
+                    <MapPin className="h-4 w-4 text-primary-600" />
+                    {job.schoolRegion}
+                  </div>
                 </div>
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-gray-500">마감일</span>
-                  <span className="font-medium text-red-600">{job.deadline}</span>
+                <div className="rounded-lg bg-surface-subtle px-4 py-3 text-sm text-ink-soft">
+                  <div className="flex items-center gap-2">
+                    <CalendarDays className="h-4 w-4 text-primary-600" />
+                    {job.startDate} - {job.endDate}
+                  </div>
                 </div>
-                <hr className="border-gray-100" />
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-gray-500">지원자 수</span>
-                  <span className="font-medium text-gray-900">{job.applicants}명</span>
+                <div className="rounded-lg bg-surface-subtle px-4 py-3 text-sm text-ink-soft">
+                  <div className="flex items-center gap-2">
+                    <Building2 className="h-4 w-4 text-primary-600" />
+                    {job.schoolAddress}
+                  </div>
                 </div>
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-gray-500">조회수</span>
-                  <span className="font-medium text-gray-900">{job.views}회</span>
+                <div className="rounded-lg bg-surface-subtle px-4 py-3 text-sm text-ink-soft">
+                  <div className="flex items-center gap-2">
+                    <Briefcase className="h-4 w-4 text-primary-600" />
+                    {job.isHomeroom ? "담임 포함" : "교과 중심"} · {job.contactName}
+                  </div>
                 </div>
-                <hr className="border-gray-100" />
-                <div className="text-sm">
-                  <span className="text-gray-500 block mb-1">학교 주소</span>
-                  <span className="text-gray-900">{job.schoolAddress}</span>
-                </div>
-                <div className="text-sm">
-                  <span className="text-gray-500 block mb-1">담당자</span>
-                  <span className="text-gray-900">{job.contactName}</span>
-                </div>
+              </div>
+            </section>
 
-                <Button className="w-full bg-primary-600 hover:bg-primary-700 text-white font-bold h-11 rounded-xl shadow-md mt-4">
-                  지원하기
-                </Button>
-              </CardContent>
-            </Card>
+            <section className="panel-surface p-6">
+              <div className="text-lg font-bold text-ink">주요 업무</div>
+              <div className="mt-5 space-y-3">
+                {job.duties.map((duty) => (
+                  <div key={duty} className="flex gap-3 rounded-lg bg-surface-subtle px-4 py-3">
+                    <CheckCircle2 className="mt-0.5 h-4 w-4 text-secondary-600" />
+                    <div className="text-sm leading-6 text-ink-soft">{duty}</div>
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            <section className="panel-surface p-6">
+              <div className="text-lg font-bold text-ink">자격 및 우대</div>
+              <div className="mt-5 space-y-3">
+                {job.requirements.map((requirement) => (
+                  <div
+                    key={requirement}
+                    className="rounded-lg border border-outline bg-white px-4 py-3 text-sm leading-6 text-ink-soft"
+                  >
+                    {requirement}
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            <section className="panel-surface p-6">
+              <div className="text-lg font-bold text-ink">근무 지원 사항</div>
+              <div className="mt-5 space-y-3">
+                {job.benefits.map((benefit) => (
+                  <div
+                    key={benefit}
+                    className="rounded-lg border border-secondary-100 bg-secondary-50 px-4 py-3 text-sm leading-6 text-secondary-700"
+                  >
+                    {benefit}
+                  </div>
+                ))}
+              </div>
+            </section>
           </div>
+
+          <aside className="panel-surface h-fit p-6 lg:sticky lg:top-24">
+            <div className="text-sm font-semibold uppercase tracking-[0.16em] text-ink-soft">
+              빠른 요약
+            </div>
+            <div className="mt-5 space-y-4 text-sm text-ink-soft">
+              <div className="rounded-lg bg-surface-subtle px-4 py-3">
+                등록일 {job.postedAt}
+              </div>
+              <div className="rounded-lg bg-surface-subtle px-4 py-3">
+                마감일 {job.deadline}
+              </div>
+              <div className="rounded-lg bg-surface-subtle px-4 py-3">
+                지원자 {job.applicants}명 · 조회 {job.views}
+              </div>
+              <div className="rounded-lg bg-surface-subtle px-4 py-3">
+                담당자 {job.contactName}
+              </div>
+            </div>
+
+            <Link
+              href="/auth/login"
+              className="mt-6 inline-flex w-full items-center justify-center rounded-lg bg-[linear-gradient(135deg,#0058be,#2170e4)] px-4 py-3 text-sm font-semibold text-white shadow-soft"
+            >
+              로그인하고 지원하기
+            </Link>
+          </aside>
         </div>
       </main>
     </div>

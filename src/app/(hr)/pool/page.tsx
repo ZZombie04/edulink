@@ -1,236 +1,368 @@
 "use client";
 
-import { useState } from "react";
-import { Search, MapPin, Briefcase, ChevronDown, Check, Star, Filter } from "lucide-react";
-import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { useMemo, useState } from "react";
+import Link from "next/link";
+import {
+  BarChart3,
+  Briefcase,
+  LayoutDashboard,
+  MapPin,
+  Search,
+  Sparkles,
+  Star,
+  Users,
+} from "lucide-react";
+
+import { PortalShell } from "@/components/portal-shell";
+import { featuredTeachers, type TeacherStatus } from "@/lib/demo-data";
+
+const navItems = [
+  { href: "/hr/dashboard", label: "대시보드", icon: LayoutDashboard },
+  { href: "/pool", label: "인재풀", icon: Search, active: true },
+  { href: "/jobs", label: "채용 공고", icon: Briefcase },
+  { href: "/admin/dashboard", label: "운영 지표", icon: BarChart3 },
+];
+
+const qualificationOptions = ["초등", "중등", "특수"] as const;
+const workTypeOptions = ["기간제", "시간강사"] as const;
+
+function statusTone(status: TeacherStatus) {
+  switch (status) {
+    case "seeking":
+      return {
+        label: "구직중",
+        className: "bg-secondary-50 text-secondary-700",
+      };
+    case "interviewing":
+      return {
+        label: "면접 진행",
+        className: "bg-[var(--warning-soft)] text-[#9a6a00]",
+      };
+    case "employed":
+      return {
+        label: "근무 예정",
+        className: "bg-primary-50 text-primary-700",
+      };
+    default:
+      return {
+        label: "휴식중",
+        className: "bg-surface-panel text-ink-soft",
+      };
+  }
+}
 
 export default function HCPoolPage() {
-  const [searchQuery, setSearchQuery] = useState("");
-  
-  // Dummy data based on the spec
-  const teachers = [
-    {
-      id: 1,
-      name: "박○영",
-      age: 28,
-      birthYear: 1998,
-      qualification: "초등 2급 정교사",
-      experience: "2년 6개월",
-      residence: "수원시",
-      preferredRegions: ["수원시", "화성시", "용인시"],
-      preferredTypes: ["기간제", "시간강사"],
-      status: "SEEKING",
-      reservation: false
-    },
-    {
-      id: 2,
-      name: "이○준",
-      age: 45,
-      birthYear: 1981,
-      qualification: "중등(수학) 1급 정교사",
-      experience: "18년 2개월",
-      residence: "성남시",
-      preferredRegions: ["성남시", "수원시", "용인시", "광주시"],
-      preferredTypes: ["기간제"],
-      status: "INTERVIEWING",
-      interviewCount: 2,
-      reservation: false
-    },
-    {
-      id: 3,
-      name: "김○현",
-      age: 52,
-      birthYear: 1974,
-      qualification: "초등 1급 정교사",
-      experience: "25년 0개월",
-      residence: "고양시",
-      preferredRegions: ["고양시", "파주시"],
-      preferredTypes: ["기간제"],
-      status: "EMPLOYED",
-      employedUntil: "2026.08.31",
-      reservation: true,
-      reservationCount: 1
-    }
-  ];
+  const [query, setQuery] = useState("");
+  const [statusFilters, setStatusFilters] = useState<TeacherStatus[]>([
+    "seeking",
+    "interviewing",
+  ]);
+  const [qualificationFilters, setQualificationFilters] = useState<string[]>([
+    "초등",
+    "중등",
+  ]);
+  const [workTypeFilters, setWorkTypeFilters] = useState<string[]>([
+    "기간제",
+    "시간강사",
+  ]);
 
-  const getStatusBadge = (status: string, employedUntil?: string, interviewCount?: number) => {
-    switch (status) {
-      case "SEEKING":
-        return <Badge className="bg-seeking hover:bg-seeking/80 border-transparent text-white">🟢 구직중</Badge>;
-      case "INTERVIEWING":
-        return <Badge className="bg-interviewing hover:bg-interviewing/80 border-transparent text-white">🟡 면접진행중 {interviewCount ? `(${interviewCount}건)` : ''}</Badge>;
-      case "EMPLOYED":
-        return <Badge className="bg-employed hover:bg-employed/80 border-transparent text-white">🔵 재직중 (~{employedUntil})</Badge>;
-      case "NOT_SEEKING":
-        return <Badge className="bg-not-seeking hover:bg-not-seeking/80 border-transparent text-white">⚫ 구직중지</Badge>;
-      default:
-        return null;
+  const filteredTeachers = useMemo(() => {
+    const lowered = query.trim().toLowerCase();
+
+    return featuredTeachers.filter((teacher) => {
+      const matchesQuery =
+        lowered.length === 0 ||
+        [teacher.name, teacher.qualification, teacher.residence, teacher.summary]
+          .join(" ")
+          .toLowerCase()
+          .includes(lowered);
+
+      const matchesStatus = statusFilters.includes(teacher.status);
+      const matchesQualification = qualificationFilters.includes(
+        teacher.qualificationCategory
+      );
+      const matchesWorkType = teacher.preferredTypes.some((type) =>
+        workTypeFilters.includes(type)
+      );
+
+      return (
+        matchesQuery && matchesStatus && matchesQualification && matchesWorkType
+      );
+    });
+  }, [query, qualificationFilters, statusFilters, workTypeFilters]);
+
+  const toggleFilter = (value: string, current: string[], setter: (next: string[]) => void) => {
+    if (current.includes(value)) {
+      setter(current.filter((item) => item !== value));
+      return;
     }
+
+    setter([...current, value]);
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col items-center pb-20">
-      <header className="w-full bg-white border-b sticky top-0 z-30">
-        <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-           <h1 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-             <Briefcase className="text-primary-500" />
-             인력풀 검색
-           </h1>
-           <div className="flex items-center gap-4">
-             <span className="text-sm text-gray-500 font-medium">총 247명 등록</span>
-             <Button variant="outline" size="sm">로그아웃</Button>
-           </div>
+    <PortalShell
+      navItems={navItems}
+      noticeCount={3}
+      primaryAction={{ href: "/jobs", label: "새 채용 공고 확인", icon: Sparkles }}
+      sectionLabel="인재풀 운영"
+      user={{
+        name: "홍수진",
+        role: "인사담당",
+        detail: "정인초등학교",
+        avatar:
+          "https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&w=240&q=80",
+      }}
+    >
+      <section className="grid gap-6 xl:grid-cols-[1.35fr_0.65fr]">
+        <div className="rounded-lg bg-[linear-gradient(135deg,#0058be,#2170e4)] p-8 text-white shadow-soft">
+          <span className="kicker text-white/85 before:bg-white">인재풀</span>
+          <h1 className="mt-5 text-3xl font-bold tracking-tight sm:text-4xl">
+            채용 속도보다 먼저,
+            <br />
+            후보의 결을 읽는 인재풀.
+          </h1>
+          <p className="mt-4 max-w-2xl text-sm leading-7 text-white/78 sm:text-base">
+            지역과 자격, 근무 선호를 함께 묶어 바로 검토할 수 있게 정리했습니다. 빠른
+            액션 버튼과 상태 칩을 전면에 올려서 다음 행동이 눈에 띄게 바뀌었습니다.
+          </p>
         </div>
-      </header>
 
-      <main className="container mx-auto px-4 py-8 w-full max-w-6xl">
-        <Card className="mb-8 border-none shadow-md">
-          <CardHeader className="bg-white rounded-t-xl border-b pb-4">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-lg flex items-center gap-2"><Filter size={18} /> 상세 필터</CardTitle>
-              <Button variant="ghost" size="sm" className="text-gray-500">필터 초기화</Button>
+        <div className="panel-surface p-6">
+          <div className="text-sm font-semibold text-ink-soft">오늘의 인재풀 스냅샷</div>
+          <div className="mt-5 grid gap-4 sm:grid-cols-3 xl:grid-cols-1">
+            {[
+              ["즉시 검토 가능", "183명"],
+              ["면접 진행중", "27명"],
+              ["예약 제안 가능", "9명"],
+            ].map(([label, value]) => (
+              <div key={label} className="rounded-lg bg-surface-subtle p-4">
+                <div className="text-sm font-medium text-ink-soft">{label}</div>
+                <div className="mt-2 text-3xl font-bold text-ink">{value}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="mt-8 grid gap-6 lg:grid-cols-[280px_minmax(0,1fr)]">
+        <aside className="panel-muted h-fit p-5 lg:sticky lg:top-24">
+          <div className="flex items-center justify-between">
+              <div className="text-sm font-bold uppercase tracking-[0.16em] text-ink-soft">
+              필터
             </div>
-          </CardHeader>
-          <CardContent className="gap-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 p-6 bg-gray-50/50">
-             
-            <div className="space-y-2 lg:col-span-4">
-              <div className="relative">
-                <Search className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
-                <Input
-                  className="pl-10 h-12 text-md border-gray-300 focus-visible:ring-primary-500 w-full"
-                  placeholder="이름, 과목, 지역, 등급 등 키워드 검색"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
+            <button
+              type="button"
+              className="text-xs font-semibold text-primary-700"
+              onClick={() => {
+                setStatusFilters(["seeking", "interviewing"]);
+                setQualificationFilters(["초등", "중등"]);
+                setWorkTypeFilters(["기간제", "시간강사"]);
+                setQuery("");
+              }}
+            >
+              초기화
+            </button>
+          </div>
+
+          <div className="mt-6 space-y-6">
+            <div>
+              <div className="text-sm font-semibold text-ink">구직 상태</div>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {(
+                  [
+                    ["seeking", "구직중"],
+                    ["interviewing", "면접 진행"],
+                    ["employed", "근무 예정"],
+                    ["paused", "휴식중"],
+                  ] as const
+                ).map(([key, label]) => (
+                  <button
+                    key={key}
+                    type="button"
+                    className={`rounded-full px-3 py-2 text-sm font-medium ${
+                      statusFilters.includes(key)
+                        ? "bg-primary-50 text-primary-700"
+                        : "bg-white text-ink-soft"
+                    }`}
+                    onClick={() =>
+                      toggleFilter(
+                        key,
+                        statusFilters,
+                        (next) => setStatusFilters(next as TeacherStatus[])
+                      )
+                    }
+                  >
+                    {label}
+                  </button>
+                ))}
               </div>
             </div>
 
-            <div className="space-y-2 border rounded-lg p-4 bg-white shadow-sm">
-                <div className="font-semibold text-sm text-gray-800 mb-3">구직 상태</div>
-                <div className="flex flex-wrap gap-2 text-sm">
-                  <Badge variant="outline" className="bg-primary-50 border-primary-200 text-primary-700 cursor-pointer hover:bg-primary-100 flex gap-1"><Check size={14}/> 구직중</Badge>
-                  <Badge variant="outline" className="bg-primary-50 border-primary-200 text-primary-700 cursor-pointer hover:bg-primary-100 flex gap-1"><Check size={14}/> 면접진행중</Badge>
-                  <Badge variant="outline" className="cursor-pointer hover:bg-gray-100 bg-white">재직중</Badge>
-                  <Badge variant="outline" className="cursor-pointer hover:bg-gray-100 bg-white">구직중지</Badge>
-                </div>
+            <div>
+              <div className="text-sm font-semibold text-ink">자격 유형</div>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {qualificationOptions.map((option) => (
+                  <button
+                    key={option}
+                    type="button"
+                    className={`rounded-full px-3 py-2 text-sm font-medium ${
+                      qualificationFilters.includes(option)
+                        ? "bg-primary-50 text-primary-700"
+                        : "bg-white text-ink-soft"
+                    }`}
+                    onClick={() =>
+                      toggleFilter(
+                        option,
+                        qualificationFilters,
+                        setQualificationFilters
+                      )
+                    }
+                  >
+                    {option}
+                  </button>
+                ))}
+              </div>
             </div>
 
-            <div className="space-y-2 border rounded-lg p-4 bg-white shadow-sm">
-                <div className="font-semibold text-sm text-gray-800 mb-3">자격 유형</div>
-                <div className="flex flex-wrap gap-2 text-sm">
-                  <Badge variant="outline" className="bg-primary-50 border-primary-200 text-primary-700 cursor-pointer hover:bg-primary-100 flex gap-1"><Check size={14}/> 초등</Badge>
-                  <Badge variant="outline" className="cursor-pointer hover:bg-gray-100 bg-white">중등</Badge>
-                  <Badge variant="outline" className="cursor-pointer hover:bg-gray-100 bg-white">특수</Badge>
-                </div>
+            <div>
+              <div className="text-sm font-semibold text-ink">근무 형태</div>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {workTypeOptions.map((option) => (
+                  <button
+                    key={option}
+                    type="button"
+                    className={`rounded-full px-3 py-2 text-sm font-medium ${
+                      workTypeFilters.includes(option)
+                        ? "bg-primary-50 text-primary-700"
+                        : "bg-white text-ink-soft"
+                    }`}
+                    onClick={() =>
+                      toggleFilter(option, workTypeFilters, setWorkTypeFilters)
+                    }
+                  >
+                    {option}
+                  </button>
+                ))}
+              </div>
             </div>
-
-            <div className="space-y-2 border rounded-lg p-4 bg-white shadow-sm">
-                <div className="font-semibold text-sm text-gray-800 mb-3">근무 유형</div>
-                <div className="flex flex-wrap gap-2 text-sm">
-                  <Badge variant="outline" className="bg-primary-50 border-primary-200 text-primary-700 cursor-pointer hover:bg-primary-100 flex gap-1"><Check size={14}/> 기간제</Badge>
-                  <Badge variant="outline" className="bg-primary-50 border-primary-200 text-primary-700 cursor-pointer hover:bg-primary-100 flex gap-1"><Check size={14}/> 시간강사</Badge>
-                </div>
-            </div>
-
-            <div className="space-y-2 border rounded-lg p-4 bg-white shadow-sm">
-                <div className="font-semibold text-sm text-gray-800 mb-3">희망 지역</div>
-                <div className="flex flex-wrap gap-2 text-sm">
-                  <Badge variant="outline" className="bg-primary-50 border-primary-200 text-primary-700 cursor-pointer hover:bg-primary-100 flex gap-1"><Check size={14}/> 수원시</Badge>
-                  <Badge variant="outline" className="bg-primary-50 border-primary-200 text-primary-700 cursor-pointer hover:bg-primary-100 flex gap-1"><Check size={14}/> 화성시</Badge>
-                  <Badge variant="outline" className="cursor-pointer hover:bg-gray-100 bg-white items-center gap-1">지역추가 <ChevronDown size={14}/></Badge>
-                </div>
-            </div>
-            
-          </CardContent>
-        </Card>
-
-        <div className="flex justify-between items-center mb-6">
-          <div className="text-gray-600">검색 결과 <span className="font-bold text-gray-900">183</span>건</div>
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-gray-500">정렬:</span>
-            <Button variant="outline" size="sm" className="font-medium">경력순 <ChevronDown size={14} className="ml-1" /></Button>
           </div>
-        </div>
+        </aside>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {teachers.map((t) => (
-            <Card key={t.id} className="hover:-translate-y-1 hover:shadow-lg transition-all border-gray-200 overflow-hidden group bg-white">
-              <div className="h-2 w-full bg-gradient-to-r from-primary-400 to-secondary-400 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-              <CardContent className="p-6">
-                <div className="flex justify-between items-start mb-4">
-                  <div className="flex flex-col gap-2">
-                    {getStatusBadge(t.status, t.employedUntil, t.interviewCount)}
-                    {t.reservation && (
-                       <Badge variant="secondary" className="bg-reserved/10 text-reserved border-reserved/20 mt-1 w-fit">
-                         📌 예약 가능 {t.reservationCount ? `(${t.reservationCount}건 대기)` : ''}
-                       </Badge>
-                    )}
-                  </div>
-                  <Button variant="ghost" size="icon" className="text-gray-300 hover:text-amber-400 transition-colors">
-                    <Star size={24} />
-                  </Button>
+        <div className="space-y-4">
+          <div className="panel-surface p-5">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+              <div>
+                <div className="text-2xl font-bold text-ink">인재풀 탐색</div>
+                <div className="mt-1 text-sm text-ink-soft">
+                  검색 결과 {filteredTeachers.length}명 · 조건은 실시간으로 반영됩니다.
                 </div>
-                
-                <h3 className="text-xl font-bold text-gray-900 mb-1 flex items-end gap-3">
-                  {t.name}
-                  <span className="text-sm text-gray-500 font-normal">{t.age}세 ({t.birthYear}년생)</span>
-                </h3>
-                <p className="text-primary-700 font-medium mb-4">{t.qualification}</p>
-                
-                <div className="space-y-2 text-sm text-gray-600 mb-6">
-                  <div className="flex items-center gap-3">
-                    <div className="w-20 text-gray-400 text-xs">교직경력</div>
-                    <div className="font-medium text-gray-800">{t.experience}</div>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <div className="w-20 text-gray-400 text-xs">거주지</div>
-                    <div>{t.residence}</div>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <div className="w-20 text-gray-400 text-xs flex-shrink-0">희망지역</div>
-                    <div className="line-clamp-1">{t.preferredRegions.join(', ')}</div>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <div className="w-20 text-gray-400 text-xs">희망유형</div>
-                    <div>{t.preferredTypes.join(', ')}</div>
-                  </div>
-                </div>
-                
-                <div className="pt-4 border-t border-gray-100 flex gap-3">
-                  <Button variant="outline" className="flex-1 border-primary-200 text-primary-700 hover:bg-primary-50">
-                    <Star size={16} className="mr-2" /> 관심 등록
-                  </Button>
-                  {t.status !== 'EMPLOYED' ? (
-                     <Button className="flex-1 bg-primary-600 hover:bg-primary-700 text-white shadow-md shadow-primary-500/20">
-                       <Briefcase size={16} className="mr-2" /> 면접 요청
-                     </Button>
-                  ) : (
-                     <Button className="flex-1 bg-reserved hover:bg-reserved/90 text-white shadow-md shadow-reserved/20" disabled={!t.reservation}>
-                       <MapPin size={16} className="mr-2" /> 예약 요청
-                     </Button>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+              </div>
 
-        <div className="mt-12 flex justify-center pb-8">
-           <div className="flex items-center gap-2">
-             <Button variant="outline" size="icon" disabled>&lt;</Button>
-             <Button variant="default" className="bg-primary-600 hover:bg-primary-700 h-10 w-10">1</Button>
-             <Button variant="outline" className="h-10 w-10 hover:bg-gray-50">2</Button>
-             <Button variant="outline" className="h-10 w-10 hover:bg-gray-50">3</Button>
-             <Button variant="outline" className="h-10 w-10 hover:bg-gray-50">4</Button>
-             <span className="px-2 text-gray-400">...</span>
-             <Button variant="outline" className="h-10 w-10 hover:bg-gray-50">10</Button>
-             <Button variant="outline" size="icon" className="hover:bg-gray-50">&gt;</Button>
-           </div>
+              <div className="relative w-full max-w-md">
+                <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-muted" />
+                <input
+                  className="input-surface pl-11"
+                  placeholder="이름, 자격, 지역으로 검색"
+                  value={query}
+                  onChange={(event) => setQuery(event.target.value)}
+                />
+              </div>
+            </div>
+          </div>
+
+          {filteredTeachers.map((teacher) => {
+            const status = statusTone(teacher.status);
+
+            return (
+              <article
+                key={teacher.id}
+                className="panel-surface overflow-hidden p-6 transition-transform hover:-translate-y-1"
+              >
+                <div className="flex flex-col gap-6 xl:flex-row xl:items-center">
+                  <div className="flex flex-1 items-start gap-4">
+                    <img
+                      alt={teacher.name}
+                      className="h-20 w-20 rounded-lg object-cover"
+                      src={teacher.avatar}
+                    />
+                    <div className="flex-1">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${status.className}`}>
+                          {status.label}
+                        </span>
+                        {teacher.reservation ? (
+                          <span className="rounded-full bg-[var(--tertiary-soft)] px-2.5 py-1 text-xs font-semibold text-[var(--tertiary-solid)]">
+                            예약 제안 가능 {teacher.reservationCount ? `${teacher.reservationCount}건` : ""}
+                          </span>
+                        ) : null}
+                      </div>
+
+                      <div className="mt-3 flex flex-wrap items-end gap-3">
+                        <h2 className="text-2xl font-bold text-ink">{teacher.name}</h2>
+                        <span className="text-sm text-ink-muted">
+                          {teacher.age}세 · {teacher.birthYear}년생
+                        </span>
+                      </div>
+
+                      <div className="mt-2 text-sm font-semibold text-primary-700">
+                        {teacher.qualification}
+                        {teacher.subject ? ` · ${teacher.subject}` : ""}
+                      </div>
+
+                      <p className="mt-3 text-sm leading-6 text-ink-soft">{teacher.summary}</p>
+
+                      <div className="mt-4 grid gap-3 text-sm text-ink-soft md:grid-cols-2 xl:grid-cols-4">
+                        <div className="rounded-lg bg-surface-subtle px-3 py-2">
+                          경력 {teacher.experience}
+                        </div>
+                        <div className="rounded-lg bg-surface-subtle px-3 py-2">
+                          거주지 {teacher.residence}
+                        </div>
+                        <div className="rounded-lg bg-surface-subtle px-3 py-2">
+                          선호 {teacher.preferredTypes.join(", ")}
+                        </div>
+                        <div className="rounded-lg bg-surface-subtle px-3 py-2">
+                          조회 {teacher.portfolioViews}
+                        </div>
+                      </div>
+
+                      <div className="mt-4 flex flex-wrap gap-2">
+                        {teacher.preferredRegions.map((region) => (
+                          <span
+                            key={region}
+                            className="inline-flex items-center gap-1 rounded-full bg-white px-2.5 py-1 text-xs font-medium text-ink-soft ring-1 ring-outline"
+                          >
+                            <MapPin className="h-3 w-3" />
+                            {region}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex w-full gap-3 xl:w-auto xl:flex-col">
+                    <button
+                      type="button"
+                      className="inline-flex flex-1 items-center justify-center gap-2 rounded-lg border border-outline px-4 py-3 text-sm font-semibold text-primary-700 transition-colors hover:bg-primary-50 xl:min-w-[180px]"
+                    >
+                      <Star className="h-4 w-4" />
+                      관심 인재 등록
+                    </button>
+                    <Link
+                      href="/hr/dashboard"
+                      className="inline-flex flex-1 items-center justify-center gap-2 rounded-lg bg-[linear-gradient(135deg,#0058be,#2170e4)] px-4 py-3 text-sm font-semibold text-white shadow-soft transition-transform hover:-translate-y-px xl:min-w-[180px]"
+                    >
+                      <Users className="h-4 w-4" />
+                      매칭 요청 보내기
+                    </Link>
+                  </div>
+                </div>
+              </article>
+            );
+          })}
         </div>
-      </main>
-    </div>
+      </section>
+    </PortalShell>
   );
 }
