@@ -12,7 +12,9 @@ import {
 import { CharacterAvatar } from "@/components/character-avatar";
 import { JobVisual } from "@/components/job-visual";
 import { PortalShell } from "@/components/portal-shell";
+import { getViewerRoleFromServerCookie } from "@/lib/demo-session-server";
 import { featuredTeachers, hrMatchRequests, jobPosts } from "@/lib/demo-data";
+import { getTeacherDisplayName } from "@/lib/privacy";
 
 const navItems = [
   {
@@ -37,7 +39,8 @@ function requestTone(status: string) {
   }
 }
 
-export default function HRDashboardPage() {
+export default async function HRDashboardPage() {
+  const viewerRole = await getViewerRoleFromServerCookie();
   const liveJobs = jobPosts.filter((job) => job.status !== "closed");
 
   return (
@@ -152,7 +155,7 @@ export default function HRDashboardPage() {
                           : "응답 대기"}
                     </span>
                     <div className="mt-3 text-xl font-bold text-ink">
-                      {request.teacherName}
+                      {getTeacherDisplayName(request.teacherName, viewerRole)}
                     </div>
                     <div className="mt-1 text-sm text-ink-soft">
                       {request.qualification} · {request.position}
@@ -243,7 +246,9 @@ export default function HRDashboardPage() {
                   size={64}
                 />
                 <div className="min-w-0 flex-1">
-                  <div className="font-semibold text-ink">{teacher.name}</div>
+                  <div className="font-semibold text-ink">
+                    {getTeacherDisplayName(teacher.name, viewerRole)}
+                  </div>
                   <div className="mt-1 text-sm text-ink-soft">
                     {teacher.qualification}
                   </div>

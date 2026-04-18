@@ -11,7 +11,9 @@ import {
 
 import { BrandLockup } from "@/components/brand";
 import { JobVisual } from "@/components/job-visual";
+import { getViewerRoleFromServerCookie } from "@/lib/demo-session-server";
 import { jobPosts } from "@/lib/demo-data";
+import { getContactDisplayName } from "@/lib/privacy";
 
 function jobStatusLabel(status: string) {
   switch (status) {
@@ -33,14 +35,21 @@ function jobStatusLabel(status: string) {
   }
 }
 
-export default function JobDetailPage({ params }: { params: { id: string } }) {
-  const job = jobPosts.find((item) => item.id === params.id);
+export default async function JobDetailPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const viewerRole = await getViewerRoleFromServerCookie();
+  const { id } = await params;
+  const job = jobPosts.find((item) => item.id === id);
 
   if (!job) {
     notFound();
   }
 
   const status = jobStatusLabel(job.status);
+  const contactName = getContactDisplayName(job.contactName, viewerRole);
 
   return (
     <div className="min-h-screen bg-surface text-ink">
@@ -145,8 +154,7 @@ export default function JobDetailPage({ params }: { params: { id: string } }) {
                 <div className="rounded-lg bg-surface-subtle px-4 py-3 text-sm text-ink-soft">
                   <div className="flex items-center gap-2">
                     <Briefcase className="h-4 w-4 text-primary-600" />
-                    {job.isHomeroom ? "담임 포함" : "교과 중심"} ·{" "}
-                    {job.contactName}
+                    {job.isHomeroom ? "담임 포함" : "교과 중심"} · {contactName}
                   </div>
                 </div>
               </div>
@@ -213,7 +221,7 @@ export default function JobDetailPage({ params }: { params: { id: string } }) {
                 지원자 {job.applicants}명 · 조회 {job.views}
               </div>
               <div className="rounded-lg bg-surface-subtle px-4 py-3">
-                담당자 {job.contactName}
+                담당자 {contactName}
               </div>
             </div>
 

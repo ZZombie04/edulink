@@ -11,7 +11,9 @@ import {
 import { BrandLockup } from "@/components/brand";
 import { CharacterAvatar } from "@/components/character-avatar";
 import { JobVisual } from "@/components/job-visual";
+import { getViewerRoleFromServerCookie } from "@/lib/demo-session-server";
 import { featuredTeachers, jobPosts } from "@/lib/demo-data";
+import { getTeacherDisplayName } from "@/lib/privacy";
 
 function teacherStatusLabel(status: string) {
   switch (status) {
@@ -58,7 +60,8 @@ function jobStatusLabel(status: string) {
   }
 }
 
-export default function Home() {
+export default async function Home() {
+  const viewerRole = await getViewerRoleFromServerCookie();
   const openJobs = jobPosts.filter((job) => job.status !== "closed");
 
   return (
@@ -87,6 +90,12 @@ export default function Home() {
               className="hidden rounded-lg border border-white/20 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-white/10 sm:inline-flex"
             >
               로그인
+            </Link>
+            <Link
+              href="/auth/register/teacher"
+              className="hidden items-center gap-2 rounded-lg border border-white/20 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-white/10 sm:inline-flex"
+            >
+              교사 가입
             </Link>
             <Link
               href="/auth/register/hr"
@@ -178,7 +187,10 @@ export default function Home() {
                       />
                       <div>
                         <div className="text-lg font-bold text-white">
-                          {featuredTeachers[0].name}
+                          {getTeacherDisplayName(
+                            featuredTeachers[0].name,
+                            viewerRole,
+                          )}
                         </div>
                         <div className="text-sm text-white">
                           {featuredTeachers[0].qualification}
@@ -258,7 +270,7 @@ export default function Home() {
                           />
                           <div>
                             <div className="text-lg font-bold text-ink">
-                              {teacher.name}
+                              {getTeacherDisplayName(teacher.name, viewerRole)}
                             </div>
                             <div className="text-sm text-ink-soft">
                               {teacher.qualification}

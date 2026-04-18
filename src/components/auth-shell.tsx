@@ -7,7 +7,9 @@ import { CharacterAvatar } from "@/components/character-avatar";
 import { BrandLockup } from "@/components/brand";
 import { JobVisual } from "@/components/job-visual";
 import type { AvatarPresetId } from "@/lib/avatar-presets";
+import { useViewerRole } from "@/lib/demo-session-client";
 import { featuredTeachers, jobPosts } from "@/lib/demo-data";
+import { getTeacherDisplayName } from "@/lib/privacy";
 
 type AuthVariant = "login" | "school" | "teacher";
 
@@ -25,6 +27,8 @@ function AuthShowcase({
   variant: AuthVariant;
   avatarPreset?: AvatarPresetId;
 }) {
+  const viewerRole = useViewerRole();
+
   if (variant === "teacher") {
     const choices = Array.from(
       new Set(
@@ -139,7 +143,7 @@ function AuthShowcase({
             />
             <div>
               <div className="text-lg font-bold text-white">
-                {featuredTeachers[0].name}
+                {getTeacherDisplayName(featuredTeachers[0].name, viewerRole)}
               </div>
               <div className="text-sm text-white/72">
                 {featuredTeachers[0].qualification}
@@ -188,7 +192,7 @@ export function AuthShell({
   return (
     <div className="min-h-screen bg-surface text-ink">
       <div className="grid min-h-screen lg:grid-cols-[0.96fr_1.04fr]">
-        <section className="relative hidden overflow-hidden lg:block">
+        <section className="relative hidden overflow-hidden lg:sticky lg:top-0 lg:block lg:h-screen">
           <div className="absolute inset-0 bg-[linear-gradient(145deg,#071b3a,#0b4fa6,#17917b)]" />
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.18),transparent_32%),radial-gradient(circle_at_bottom_right,rgba(255,255,255,0.14),transparent_34%)]" />
 
@@ -202,7 +206,7 @@ export function AuthShell({
             </div>
 
             <div className="mt-10 flex flex-1 items-center justify-center">
-              <div className="w-full max-w-[560px]">
+              <div className="w-full max-w-[560px]" data-testid="auth-showcase">
                 <AuthShowcase avatarPreset={avatarPreset} variant={variant} />
               </div>
             </div>

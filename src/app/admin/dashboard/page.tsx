@@ -9,10 +9,17 @@ import {
 } from "lucide-react";
 
 import { PortalShell } from "@/components/portal-shell";
+import { getViewerRoleFromServerCookie } from "@/lib/demo-session-server";
 import { adminApprovals, recentUsers } from "@/lib/demo-data";
+import { getTeacherDisplayName } from "@/lib/privacy";
 
 const navItems = [
-  { href: "/admin/dashboard", label: "운영 개요", icon: LayoutDashboard, active: true },
+  {
+    href: "/admin/dashboard",
+    label: "운영 개요",
+    icon: LayoutDashboard,
+    active: true,
+  },
   { href: "/pool", label: "인재풀", icon: Search },
   { href: "/jobs", label: "공고 관리", icon: Briefcase },
   { href: "/hr/dashboard", label: "학교 운영", icon: BarChart3 },
@@ -29,12 +36,18 @@ function userTone(status: string) {
   }
 }
 
-export default function AdminDashboardPage() {
+export default async function AdminDashboardPage() {
+  const viewerRole = await getViewerRoleFromServerCookie();
+
   return (
     <PortalShell
       navItems={navItems}
       noticeCount={adminApprovals.length}
-      primaryAction={{ href: "/hr/dashboard", label: "승인 대기 확인", icon: ShieldCheck }}
+      primaryAction={{
+        href: "/hr/dashboard",
+        label: "승인 대기 확인",
+        icon: ShieldCheck,
+      }}
       sectionLabel="운영 관리자"
       user={{
         name: "관리자",
@@ -45,7 +58,9 @@ export default function AdminDashboardPage() {
       <section className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
         <div className="self-start rounded-lg bg-[linear-gradient(135deg,#1d2433,#0058be)] p-6 text-white shadow-soft">
           <div className="flex min-h-[176px] flex-col justify-end">
-            <div className="text-3xl font-bold tracking-tight sm:text-4xl">운영 개요</div>
+            <div className="text-3xl font-bold tracking-tight sm:text-4xl">
+              운영 개요
+            </div>
           </div>
         </div>
 
@@ -57,7 +72,10 @@ export default function AdminDashboardPage() {
               "이번 주 신규 교사 가입은 전주 대비 18% 늘었습니다.",
               "마감 임박 공고가 3건 있어 운영 검토가 필요합니다.",
             ].map((note) => (
-              <div key={note} className="rounded-lg bg-surface-subtle px-4 py-3 text-sm text-ink-soft">
+              <div
+                key={note}
+                className="rounded-lg bg-surface-subtle px-4 py-3 text-sm text-ink-soft"
+              >
                 {note}
               </div>
             ))}
@@ -94,10 +112,15 @@ export default function AdminDashboardPage() {
               >
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                   <div>
-                    <div className="text-xl font-bold text-ink">{approval.name}</div>
-                    <div className="mt-1 text-sm text-ink-soft">{approval.email}</div>
+                    <div className="text-xl font-bold text-ink">
+                      {approval.name}
+                    </div>
+                    <div className="mt-1 text-sm text-ink-soft">
+                      {approval.email}
+                    </div>
                     <div className="mt-3 text-sm text-ink-muted">
-                      {approval.schoolName} · {approval.schoolRegion} · {approval.position}
+                      {approval.schoolName} · {approval.schoolRegion} ·{" "}
+                      {approval.position}
                     </div>
                   </div>
                   <div className="flex gap-2">
@@ -115,7 +138,9 @@ export default function AdminDashboardPage() {
                     </button>
                   </div>
                 </div>
-                <div className="mt-3 text-sm text-ink-muted">{approval.requestedAt}</div>
+                <div className="mt-3 text-sm text-ink-muted">
+                  {approval.requestedAt}
+                </div>
               </div>
             ))}
           </div>
@@ -131,27 +156,35 @@ export default function AdminDashboardPage() {
                 className="flex items-center justify-between rounded-lg border border-outline bg-surface p-4"
               >
                 <div>
-                  <div className="font-semibold text-ink">{user.name}</div>
+                  <div className="font-semibold text-ink">
+                    {user.role === "teacher"
+                      ? getTeacherDisplayName(user.name, viewerRole)
+                      : user.name}
+                  </div>
                   <div className="mt-1 text-sm text-ink-soft">
-                    {user.role === "teacher" ? "교사" : "학교 담당자"} · {user.email}
+                    {user.role === "teacher" ? "교사" : "학교 담당자"} ·{" "}
+                    {user.email}
                   </div>
                 </div>
                 <div className="text-right">
-                  <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${userTone(user.status)}`}>
+                  <span
+                    className={`rounded-full px-2.5 py-1 text-xs font-semibold ${userTone(user.status)}`}
+                  >
                     {user.status === "active"
                       ? "활성"
                       : user.status === "pending"
-                      ? "승인 대기"
-                      : "휴면"}
+                        ? "승인 대기"
+                        : "휴면"}
                   </span>
-                  <div className="mt-2 text-sm text-ink-muted">{user.joinedAt}</div>
+                  <div className="mt-2 text-sm text-ink-muted">
+                    {user.joinedAt}
+                  </div>
                 </div>
               </div>
             ))}
           </div>
         </div>
       </section>
-
     </PortalShell>
   );
 }

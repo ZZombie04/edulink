@@ -6,11 +6,7 @@ import { useRouter } from "next/navigation";
 import { AlertCircle, ArrowRight, LockKeyhole, Mail } from "lucide-react";
 
 import { AuthShell } from "@/components/auth-shell";
-import {
-  DEMO_ACCOUNTS,
-  DEMO_PASSWORD,
-  findDemoAccount,
-} from "@/lib/demo-access";
+import { DEMO_ACCOUNTS, DEMO_PASSWORD } from "@/lib/demo-access";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -30,17 +26,39 @@ export default function LoginPage() {
     setLoading(true);
     setError("");
 
-    await new Promise((resolve) => setTimeout(resolve, 800));
+    try {
+      const response = await fetch("/api/auth/demo-login", {
+        body: JSON.stringify({ email, password }),
+        headers: {
+          "Content-Type": "application/json",
+        },
+        method: "POST",
+      });
 
-    const account = findDemoAccount(email, password);
+      const result = (await response.json().catch(() => null)) as {
+        message?: string;
+        redirectTo?: string;
+      } | null;
 
-    if (!account) {
+      if (!response.ok || !result?.redirectTo) {
+        setLoading(false);
+        setError(result?.message ?? "로그인 처리 중 오류가 발생했습니다.");
+        return;
+      }
+
+      const nextPath =
+        typeof window === "undefined"
+          ? null
+          : new URLSearchParams(window.location.search).get("next");
+      const destination =
+        nextPath && nextPath.startsWith("/") ? nextPath : result.redirectTo;
+
+      router.push(destination);
+      router.refresh();
+    } catch {
       setLoading(false);
-      setError("데모 계정 또는 비밀번호를 다시 확인해 주세요.");
-      return;
+      setError("로그인 처리 중 오류가 발생했습니다.");
     }
-
-    router.push(account.redirectTo);
   };
 
   return (
