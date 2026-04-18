@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 
 import "./globals.css";
-import { Toaster } from "@/components/ui/sonner";
 
 export const metadata: Metadata = {
   title: "EduLink | 학교 교원 매칭 플랫폼",
@@ -24,7 +23,6 @@ export default function RootLayout({
       </head>
       <body className="min-h-screen bg-background text-foreground">
         {children}
-        <Toaster />
       </body>
     </html>
   );

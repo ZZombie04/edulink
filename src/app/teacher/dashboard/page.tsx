@@ -55,17 +55,10 @@ export default function TeacherDashboardPage() {
       }}
     >
       <section className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
-        <div className="rounded-lg bg-[linear-gradient(135deg,#0058be,#2170e4)] p-8 text-white shadow-soft">
-          <span className="kicker text-white/85 before:bg-white">교사 대시보드</span>
-          <h1 className="mt-5 text-3xl font-bold tracking-tight sm:text-4xl">
-            내 프로필과 받은 제안을
-            <br />
-            한 화면에서 바로 확인합니다.
-          </h1>
-          <p className="mt-4 max-w-2xl text-sm leading-7 text-white/78 sm:text-base">
-            구직 상태, 받은 요청, 주목한 학교를 같은 톤으로 정리했습니다. 중요한 정보만
-            남기고 시선을 분산시키던 카드 층을 덜어냈습니다.
-          </p>
+        <div className="self-start rounded-lg bg-[linear-gradient(135deg,#0058be,#2170e4)] p-6 text-white shadow-soft">
+          <div className="flex min-h-[176px] flex-col justify-end">
+            <div className="text-3xl font-bold tracking-tight sm:text-4xl">교사 대시보드</div>
+          </div>
         </div>
 
         <div className="panel-surface p-6">
@@ -127,7 +120,6 @@ export default function TeacherDashboardPage() {
           <div className="flex items-center justify-between">
             <div>
               <div className="text-xl font-bold text-ink">받은 매칭 요청</div>
-              <div className="mt-1 text-sm text-ink-soft">응답이 필요한 순서대로 정리했습니다.</div>
             </div>
             <Link href="/jobs" className="text-sm font-semibold text-primary-700">
               공고 보기
@@ -204,6 +196,9 @@ export default function TeacherDashboardPage() {
                 <div className="mt-1 text-sm text-ink-soft">
                   {teacher.qualification} · {teacher.residence}
                 </div>
+                <div className="mt-2 text-sm font-medium text-primary-700">
+                  경력 {teacher.experience}
+                </div>
               </div>
             </div>
             <p className="mt-5 text-sm leading-6 text-ink-soft">{teacher.summary}</p>
@@ -220,17 +215,32 @@ export default function TeacherDashboardPage() {
           </div>
 
           <div className="panel-surface p-6">
-            <div className="text-xl font-bold text-ink">다음 액션</div>
-            <div className="mt-5 space-y-3">
-              {[
-                "프로필 소개 문장을 조금 더 구체적으로 다듬기",
-                "희망 지역에 화성과 성남을 추가 검토하기",
-                "관심 학교 2곳의 새 공고 알림 확인하기",
-              ].map((item) => (
-                <div key={item} className="rounded-lg bg-surface-subtle px-4 py-3 text-sm text-ink-soft">
-                  {item}
-                </div>
-              ))}
+            <div className="text-xl font-bold text-ink">희망 근무</div>
+            <div className="mt-5">
+              <div className="text-sm font-semibold text-ink">근무 형태</div>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {teacher.preferredTypes.map((type) => (
+                  <span
+                    key={type}
+                    className="rounded-full bg-primary-50 px-3 py-2 text-xs font-medium text-primary-700"
+                  >
+                    {type}
+                  </span>
+                ))}
+              </div>
+            </div>
+            <div className="mt-5">
+              <div className="text-sm font-semibold text-ink">희망 지역</div>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {teacher.preferredRegions.map((region) => (
+                  <span
+                    key={`preferred-${region}`}
+                    className="rounded-full bg-surface-subtle px-3 py-2 text-xs font-medium text-ink-soft"
+                  >
+                    {region}
+                  </span>
+                ))}
+              </div>
             </div>
           </div>
         </div>

@@ -43,17 +43,10 @@ export default function AdminDashboardPage() {
       }}
     >
       <section className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
-        <div className="rounded-lg bg-[linear-gradient(135deg,#1d2433,#0058be)] p-8 text-white shadow-soft">
-          <span className="kicker text-white/85 before:bg-white">운영 개요</span>
-          <h1 className="mt-5 text-3xl font-bold tracking-tight sm:text-4xl">
-            승인 대기와 플랫폼 지표를
-            <br />
-            한 화면에서 정리하는 운영 허브.
-          </h1>
-          <p className="mt-4 max-w-2xl text-sm leading-7 text-white/78 sm:text-base">
-            학교 계정 승인, 사용자 활성도, 공고 흐름을 동일한 표면과 간격 체계로
-            재배치했습니다. 지금 중요한 숫자가 먼저 보이도록 정돈했습니다.
-          </p>
+        <div className="self-start rounded-lg bg-[linear-gradient(135deg,#1d2433,#0058be)] p-6 text-white shadow-soft">
+          <div className="flex min-h-[176px] flex-col justify-end">
+            <div className="text-3xl font-bold tracking-tight sm:text-4xl">운영 개요</div>
+          </div>
         </div>
 
         <div className="panel-surface p-6">
@@ -92,7 +85,6 @@ export default function AdminDashboardPage() {
       <section className="mt-8 grid gap-6 xl:grid-cols-[1fr_1fr]">
         <div className="panel-surface p-6">
           <div className="text-xl font-bold text-ink">승인 대기 학교 계정</div>
-          <div className="mt-1 text-sm text-ink-soft">빠른 승인 여부 판단에 필요한 정보만 남겼습니다.</div>
 
           <div className="mt-6 space-y-4">
             {adminApprovals.map((approval) => (
@@ -131,7 +123,6 @@ export default function AdminDashboardPage() {
 
         <div className="panel-surface p-6">
           <div className="text-xl font-bold text-ink">최근 가입 사용자</div>
-          <div className="mt-1 text-sm text-ink-soft">활성/대기 상태가 바로 구분되게 정리했습니다.</div>
 
           <div className="mt-6 space-y-4">
             {recentUsers.map((user) => (
@@ -161,31 +152,6 @@ export default function AdminDashboardPage() {
         </div>
       </section>
 
-      <section className="mt-8 panel-surface p-6">
-        <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-          <div>
-            <div className="text-xl font-bold text-ink">플랫폼 리듬</div>
-            <div className="mt-1 text-sm text-ink-soft">
-              숫자를 설명 없이 읽을 수 있도록 길이를 통일했습니다.
-            </div>
-          </div>
-          <div className="text-sm font-semibold text-primary-700">이번 주 추세</div>
-        </div>
-
-        <div className="mt-6 grid gap-4 md:grid-cols-3">
-          {[
-            { label: "신규 가입", value: "42", detail: "전주 대비 +18%" },
-            { label: "매칭 완료", value: "28", detail: "전주 대비 +24%" },
-            { label: "평균 처리 시간", value: "2.3일", detail: "전주 대비 -0.5일" },
-          ].map((item) => (
-            <div key={item.label} className="rounded-lg bg-surface-subtle p-5">
-              <div className="text-sm font-medium text-ink-soft">{item.label}</div>
-              <div className="mt-2 text-3xl font-bold text-ink">{item.value}</div>
-              <div className="mt-2 text-sm text-primary-700">{item.detail}</div>
-            </div>
-          ))}
-        </div>
-      </section>
     </PortalShell>
   );
 }

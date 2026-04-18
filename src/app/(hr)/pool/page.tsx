@@ -114,17 +114,13 @@ export default function HCPoolPage() {
       }}
     >
       <section className="grid gap-6 xl:grid-cols-[1.35fr_0.65fr]">
-        <div className="rounded-lg bg-[linear-gradient(135deg,#0058be,#2170e4)] p-8 text-white shadow-soft">
-          <span className="kicker text-white/85 before:bg-white">인재풀</span>
-          <h1 className="mt-5 text-3xl font-bold tracking-tight sm:text-4xl">
-            채용 속도보다 먼저,
-            <br />
-            후보의 결을 읽는 인재풀.
-          </h1>
-          <p className="mt-4 max-w-2xl text-sm leading-7 text-white/78 sm:text-base">
-            지역과 자격, 근무 선호를 함께 묶어 바로 검토할 수 있게 정리했습니다. 빠른
-            액션 버튼과 상태 칩을 전면에 올려서 다음 행동이 눈에 띄게 바뀌었습니다.
-          </p>
+        <div className="self-start rounded-lg bg-[linear-gradient(135deg,#0058be,#2170e4)] p-6 text-white shadow-soft">
+          <div className="flex min-h-[170px] flex-col justify-between">
+            <div className="text-3xl font-bold tracking-tight sm:text-4xl">인재풀</div>
+            <div className="text-sm font-medium text-white/82">
+              현재 표시 {filteredTeachers.length}명
+            </div>
+          </div>
         </div>
 
         <div className="panel-surface p-6">
@@ -252,10 +248,8 @@ export default function HCPoolPage() {
           <div className="panel-surface p-5">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
               <div>
-                <div className="text-2xl font-bold text-ink">인재풀 탐색</div>
-                <div className="mt-1 text-sm text-ink-soft">
-                  검색 결과 {filteredTeachers.length}명 · 조건은 실시간으로 반영됩니다.
-                </div>
+                <div className="text-2xl font-bold text-ink">인재 검색</div>
+                <div className="mt-1 text-sm text-ink-soft">검색 결과 {filteredTeachers.length}명</div>
               </div>
 
               <div className="relative w-full max-w-md">

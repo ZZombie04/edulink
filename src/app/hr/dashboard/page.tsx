@@ -47,33 +47,26 @@ export default function HRDashboardPage() {
       }}
     >
       <section className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
-        <div className="rounded-lg bg-[linear-gradient(135deg,#0058be,#2170e4)] p-8 text-white shadow-soft">
-          <span className="kicker text-white/85 before:bg-white">학교 운영 대시보드</span>
-          <h1 className="mt-5 text-3xl font-bold tracking-tight sm:text-4xl">
-            오늘 처리해야 할
-            <br />
-            요청과 공고가 한 번에 보이게.
-          </h1>
-          <p className="mt-4 max-w-2xl text-sm leading-7 text-white/78 sm:text-base">
-            새 디자인은 요청 흐름, 공고 상태, 후보 반응을 한 화면에서 바로 이어보는 데
-            집중했습니다. 인재풀 탐색과 매칭 요청까지 이동 깊이를 줄였습니다.
-          </p>
+        <div className="self-start rounded-lg bg-[linear-gradient(135deg,#0058be,#2170e4)] p-6 text-white shadow-soft">
+          <div className="flex min-h-[176px] flex-col justify-between">
+            <div className="text-3xl font-bold tracking-tight sm:text-4xl">학교 채용 운영</div>
 
-          <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-            <Link
-              href="/pool"
-              className="inline-flex items-center justify-center gap-2 rounded-lg bg-white px-5 py-3 text-sm font-semibold text-primary-700"
-            >
-              <Search className="h-4 w-4" />
-              후보 다시 보기
-            </Link>
-            <Link
-              href="/jobs"
-              className="inline-flex items-center justify-center gap-2 rounded-lg border border-white/18 bg-white/10 px-5 py-3 text-sm font-semibold text-white"
-            >
-              <Briefcase className="h-4 w-4" />
-              공고 관리 이동
-            </Link>
+            <div className="flex flex-col gap-3 sm:flex-row">
+              <Link
+                href="/pool"
+                className="inline-flex items-center justify-center gap-2 rounded-lg bg-white px-5 py-3 text-sm font-semibold text-primary-700"
+              >
+                <Search className="h-4 w-4" />
+                후보 다시 보기
+              </Link>
+              <Link
+                href="/jobs"
+                className="inline-flex items-center justify-center gap-2 rounded-lg border border-white/18 bg-white/10 px-5 py-3 text-sm font-semibold text-white"
+              >
+                <Briefcase className="h-4 w-4" />
+                공고 관리 이동
+              </Link>
+            </div>
           </div>
         </div>
 
@@ -115,7 +108,6 @@ export default function HRDashboardPage() {
           <div className="flex items-center justify-between">
             <div>
               <div className="text-xl font-bold text-ink">최근 보낸 매칭 요청</div>
-              <div className="mt-1 text-sm text-ink-soft">응답 상태를 바로 확인할 수 있습니다.</div>
             </div>
             <Link href="/pool" className="text-sm font-semibold text-primary-700">
               더 보기
@@ -159,7 +151,6 @@ export default function HRDashboardPage() {
           <div className="flex items-center justify-between">
             <div>
               <div className="text-xl font-bold text-ink">운영 중인 채용 공고</div>
-              <div className="mt-1 text-sm text-ink-soft">학교별 공고 상태와 반응입니다.</div>
             </div>
             <Link href="/jobs" className="text-sm font-semibold text-primary-700">
               전체 공고
@@ -196,60 +187,55 @@ export default function HRDashboardPage() {
         </div>
       </section>
 
-      <section className="mt-8 grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
-        <div className="panel-surface p-6">
+      <section className="mt-8 panel-surface p-6">
+        <div className="flex items-center justify-between">
           <div className="text-xl font-bold text-ink">추천 후보</div>
-          <div className="mt-1 text-sm text-ink-soft">
-            현재 공고 조건과 맞는 후보를 먼저 모았습니다.
-          </div>
-
-          <div className="mt-6 space-y-4">
-            {featuredTeachers.slice(0, 3).map((teacher) => (
-              <div
-                key={teacher.id}
-                className="flex items-center gap-4 rounded-lg border border-outline bg-surface p-4"
-              >
-                <CharacterAvatar
-                  className="h-14 w-14 rounded-lg"
-                  presetId={teacher.avatarPreset}
-                  size={56}
-                />
-                <div className="flex-1">
-                  <div className="font-semibold text-ink">{teacher.name}</div>
-                  <div className="text-sm text-ink-soft">
-                    {teacher.qualification} · {teacher.residence}
-                  </div>
-                </div>
-                <Link
-                  href="/pool"
-                  className="inline-flex items-center gap-2 text-sm font-semibold text-primary-700"
-                >
-                  보기
-                  <ArrowRight className="h-4 w-4" />
-                </Link>
-              </div>
-            ))}
-          </div>
+          <Link href="/pool" className="inline-flex items-center gap-2 text-sm font-semibold text-primary-700">
+            전체 보기
+            <ArrowRight className="h-4 w-4" />
+          </Link>
         </div>
 
-        <div className="panel-surface p-6">
-          <div className="text-xl font-bold text-ink">학교 운영 리듬</div>
-          <div className="mt-1 text-sm text-ink-soft">
-            후보 발굴부터 요청까지 흐름을 짧게 유지하는 게 핵심입니다.
-          </div>
-
-          <div className="mt-6 grid gap-4 md:grid-cols-3">
-            {[
-              ["후보 압축", "조건에 맞는 후보를 먼저 묶어 액션 버튼 가까이에 둡니다."],
-              ["요청 발송", "관심 후보를 바로 요청 목록으로 연결합니다."],
-              ["응답 추적", "수락/거절/대기를 컬러로 바로 읽게 정리했습니다."],
-            ].map(([title, detail]) => (
-              <div key={title} className="rounded-lg bg-surface-subtle p-5">
-                <div className="text-base font-semibold text-ink">{title}</div>
-                <div className="mt-2 text-sm leading-6 text-ink-soft">{detail}</div>
+        <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          {featuredTeachers.slice(0, 3).map((teacher) => (
+            <div
+              key={teacher.id}
+              className="rounded-lg border border-outline bg-surface p-5"
+            >
+              <div className="flex items-start gap-4">
+                <CharacterAvatar
+                  className="h-16 w-16 rounded-lg"
+                  presetId={teacher.avatarPreset}
+                  size={64}
+                />
+                <div className="min-w-0 flex-1">
+                  <div className="font-semibold text-ink">{teacher.name}</div>
+                  <div className="mt-1 text-sm text-ink-soft">{teacher.qualification}</div>
+                  <div className="mt-1 text-sm text-ink-muted">{teacher.residence}</div>
+                </div>
               </div>
-            ))}
-          </div>
+              <div className="mt-4 flex flex-wrap gap-2">
+                <span className="rounded-full bg-surface-subtle px-3 py-2 text-xs font-medium text-ink-soft">
+                  경력 {teacher.experience}
+                </span>
+                {teacher.preferredTypes.slice(0, 1).map((type) => (
+                  <span
+                    key={type}
+                    className="rounded-full bg-primary-50 px-3 py-2 text-xs font-medium text-primary-700"
+                  >
+                    {type}
+                  </span>
+                ))}
+              </div>
+              <Link
+                href="/pool"
+                className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-primary-700"
+              >
+                후보 보기
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+            </div>
+          ))}
         </div>
       </section>
     </PortalShell>
