@@ -7,7 +7,9 @@ import {
   LayoutDashboard,
   MapPin,
   Search,
-  UserRound,
+  ShieldCheck,
+  Sparkles,
+  type LucideIcon,
 } from "lucide-react";
 
 import { BrandLockup } from "@/components/brand";
@@ -15,9 +17,114 @@ import { CharacterAvatar } from "@/components/character-avatar";
 import { JobVisual } from "@/components/job-visual";
 import { getDemoSessionFromServerCookie } from "@/lib/demo-session-server";
 import { featuredTeachers, jobPosts, teacherMatchRequests } from "@/lib/demo-data";
-import { getTeacherDisplayName } from "@/lib/privacy";
 
-function teacherStatusLabel(status: string) {
+type TeacherStatusTone = {
+  className: string;
+  label: string;
+};
+
+const publicLaunchRows: Array<{
+  Icon: LucideIcon;
+  detail: string;
+  meta: string;
+  title: string;
+}> = [
+  {
+    Icon: Search,
+    title: "교사 인력풀",
+    detail: "경력, 자격, 희망 지역을 기준으로 바로 탐색",
+    meta: "즉시 확인",
+  },
+  {
+    Icon: Briefcase,
+    title: "채용 공고",
+    detail: "기간제와 시간강사 공고를 한 화면에서 정리",
+    meta: "바로 등록",
+  },
+  {
+    Icon: ShieldCheck,
+    title: "학교 계정",
+    detail: "학교 가입 후 승인 흐름까지 끊김 없이 진행",
+    meta: "운영 연결",
+  },
+];
+
+const publicPoolPreview: Array<{
+  avatarPreset: Parameters<typeof CharacterAvatar>[0]["presetId"];
+  summary: string;
+  tags: string[];
+  title: string;
+}> = [
+  {
+    avatarPreset: "teacher-f-mint",
+    title: "초등 담임",
+    summary: "학급 운영, 생활지도, 기초학력 보강 중심으로 빠르게 검토합니다.",
+    tags: ["초등 자격", "담임", "남부권"],
+  },
+  {
+    avatarPreset: "teacher-m-navy",
+    title: "중등 수학",
+    summary: "중등 교과 수업과 평가 운영이 가능한 프로필 흐름으로 정리합니다.",
+    tags: ["중등 자격", "수학", "서남권"],
+  },
+  {
+    avatarPreset: "teacher-f-violet",
+    title: "특수 지원",
+    summary: "통합학급 지원과 개별화 수업 경험 중심으로 확인할 수 있습니다.",
+    tags: ["특수 자격", "지원 수업", "동부권"],
+  },
+];
+
+const publicJobPreview: Array<{
+  detail: string;
+  employmentType: string;
+  gradeLevel: string;
+  id: string;
+  qualificationSubject?: string;
+  qualificationType: string;
+  schedule: string;
+  schoolName: string;
+  schoolRegion: string;
+  summary: string;
+}> = [
+  {
+    id: "101",
+    schoolName: "초등 담임 공고",
+    schoolRegion: "경기 남부",
+    gradeLevel: "3학년 담임",
+    employmentType: "기간제",
+    qualificationType: "초등",
+    summary: "학급 운영과 생활지도를 바로 이어갈 수 있는 공고 형식으로 정리했습니다.",
+    schedule: "즉시 시작 - 학기말",
+    detail: "주 5일 / 담임",
+  },
+  {
+    id: "102",
+    schoolName: "중등 수학 공고",
+    schoolRegion: "경기 서남부",
+    gradeLevel: "1학년 교과",
+    employmentType: "시간강사",
+    qualificationType: "중등",
+    qualificationSubject: "수학",
+    summary: "교과 수업과 평가 운영 기준을 중심으로 검토하기 쉬운 구성입니다.",
+    schedule: "주 3일 - 단기",
+    detail: "교과 수업 / 평가",
+  },
+  {
+    id: "103",
+    schoolName: "고등 영어 공고",
+    schoolRegion: "경기 동남부",
+    gradeLevel: "2학년 교과",
+    employmentType: "기간제",
+    qualificationType: "중등",
+    qualificationSubject: "영어",
+    summary: "학년 운영과 교과 수업을 함께 맡는 채용 흐름을 기준으로 보여줍니다.",
+    schedule: "다음 달 시작 - 학기말",
+    detail: "교과 수업 / 학년 운영",
+  },
+];
+
+function teacherStatusLabel(status: string): TeacherStatusTone {
   switch (status) {
     case "seeking":
       return {
@@ -42,26 +149,6 @@ function teacherStatusLabel(status: string) {
   }
 }
 
-function jobStatusLabel(status: string) {
-  switch (status) {
-    case "open":
-      return {
-        label: "모집 중",
-        className: "bg-secondary-50 text-secondary-700",
-      };
-    case "closing-soon":
-      return {
-        label: "마감 임박",
-        className: "bg-[var(--warning-soft)] text-[#9a6a00]",
-      };
-    default:
-      return {
-        label: "마감",
-        className: "bg-surface-panel text-ink-soft",
-      };
-  }
-}
-
 function getDashboardHref(role?: string) {
   switch (role) {
     case "teacher":
@@ -77,7 +164,6 @@ function getDashboardHref(role?: string) {
 
 export default async function Home() {
   const session = await getDemoSessionFromServerCookie();
-  const viewerRole = session?.role ?? "guest";
   const dashboardHref = getDashboardHref(session?.role);
   const openJobs = jobPosts.filter((job) => job.status !== "closed");
   const closingSoonJobs = jobPosts.filter((job) => job.status === "closing-soon");
@@ -313,17 +399,21 @@ export default async function Home() {
                 </div>
               </div>
             ) : (
-              <div className="grid gap-10 lg:grid-cols-[1.02fr_0.98fr] lg:items-center">
+              <div className="grid gap-10 lg:grid-cols-[0.96fr_1.04fr] lg:items-center">
                 <div className="max-w-3xl">
-                  <h1 className="text-4xl font-bold leading-tight text-white sm:text-5xl lg:text-6xl">
+                  <div className="inline-flex rounded-full bg-white/12 px-4 py-2 text-sm font-semibold text-white backdrop-blur-sm">
                     경기도 기간제·시간강사
+                  </div>
+
+                  <h1 className="mt-6 text-4xl font-bold leading-tight text-white sm:text-5xl lg:text-6xl">
+                    교사 인력풀과 채용 공고를
                     <br />
-                    교사 인력풀
+                    바로 시작하는 첫 화면
                   </h1>
 
                   <p className="mt-5 max-w-2xl text-base leading-7 text-white sm:text-lg">
-                    교사 인력풀과 채용 공고를 바로 확인하고 회원가입을 시작할 수
-                    있습니다.
+                    교사는 경력과 희망 조건을 등록하고, 학교는 필요한 공고를
+                    열어 바로 검토 흐름을 이어갈 수 있습니다.
                   </p>
 
                   <div className="mt-8 flex flex-col gap-3 sm:flex-row">
@@ -364,38 +454,63 @@ export default async function Home() {
                   </div>
                 </div>
 
-                <div className="grid gap-4">
-                  <JobVisual
-                    className="min-h-[340px]"
-                    employmentType={openJobs[0].employmentType}
-                    gradeLevel={openJobs[0].gradeLevel}
-                    id={openJobs[0].id}
-                    qualificationSubject={openJobs[0].qualificationSubject}
-                    qualificationType={openJobs[0].qualificationType}
-                    schoolName={openJobs[0].schoolName}
-                    schoolRegion={openJobs[0].schoolRegion}
-                    variant="hero"
-                  />
+                <div className="rounded-[32px] border border-white/14 bg-white/10 p-6 backdrop-blur-sm sm:p-7">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                      <div className="text-sm font-semibold text-white/72">
+                        오늘 바로 시작
+                      </div>
+                      <div className="mt-2 text-2xl font-bold text-white">
+                        첫 화면에서 바로 이어지는 운영 흐름
+                      </div>
+                    </div>
+                    <div className="inline-flex items-center gap-2 rounded-full bg-white/12 px-3 py-2 text-xs font-semibold text-white">
+                      <Sparkles className="h-3.5 w-3.5" />
+                      교사 / 학교 분리 가입
+                    </div>
+                  </div>
 
-                  <div className="grid gap-4 md:grid-cols-2">
-                    {[
-                      ["교사 회원가입", "프로필 등록"],
-                      ["학교 회원가입", "공고 등록"],
-                      ["교사 인력풀", "조건 검색"],
-                      ["채용 공고", "상세 확인"],
-                    ].map(([title, detail]) => (
+                  <div className="mt-6 grid gap-3">
+                    {publicLaunchRows.map((item) => (
                       <div
-                        key={title}
-                        className="rounded-[22px] border border-white/12 bg-white/10 px-4 py-4 backdrop-blur-sm"
+                        key={item.title}
+                        className="grid gap-3 rounded-[24px] border border-white/10 bg-white/8 px-4 py-4 sm:grid-cols-[auto_1fr_auto] sm:items-center"
                       >
-                        <div className="text-sm font-semibold text-white">
-                          {title}
+                        <div className="flex h-11 w-11 items-center justify-center rounded-[16px] bg-white/14 text-white">
+                          <item.Icon className="h-5 w-5" />
                         </div>
-                        <div className="mt-1 text-xs text-white/78">
-                          {detail}
+                        <div>
+                          <div className="text-sm font-semibold text-white">
+                            {item.title}
+                          </div>
+                          <div className="mt-1 text-sm leading-6 text-white/72">
+                            {item.detail}
+                          </div>
+                        </div>
+                        <div className="text-xs font-semibold text-white/76">
+                          {item.meta}
                         </div>
                       </div>
                     ))}
+                  </div>
+
+                  <div className="mt-6 grid gap-3 sm:grid-cols-2">
+                    <div className="rounded-[24px] bg-white/8 px-4 py-4">
+                      <div className="text-xs font-semibold text-white/70">
+                        교사 가입
+                      </div>
+                      <div className="mt-2 text-lg font-bold text-white">
+                        경력과 희망 근무 조건 등록
+                      </div>
+                    </div>
+                    <div className="rounded-[24px] bg-white/8 px-4 py-4">
+                      <div className="text-xs font-semibold text-white/70">
+                        학교 가입
+                      </div>
+                      <div className="mt-2 text-lg font-bold text-white">
+                        채용 공고 등록과 승인 흐름 연결
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -425,59 +540,39 @@ export default async function Home() {
               </div>
 
               <div className="mt-8 grid gap-4 lg:grid-cols-3">
-                {featuredTeachers.slice(0, 3).map((teacher) => {
-                  const status = teacherStatusLabel(teacher.status);
-
-                  return (
-                    <article
-                      key={teacher.id}
-                      className="rounded-lg border border-outline bg-surface p-5 transition-transform hover:-translate-y-1"
-                    >
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="flex items-center gap-3">
-                          <CharacterAvatar
-                            className="h-14 w-14 rounded-lg"
-                            presetId={teacher.avatarPreset}
-                            size={56}
-                          />
-                          <div>
-                            <div className="text-lg font-bold text-ink">
-                              {getTeacherDisplayName(teacher.name, viewerRole)}
-                            </div>
-                            <div className="text-sm text-ink-soft">
-                              {teacher.qualification}
-                            </div>
-                          </div>
+                {publicPoolPreview.map((teacher) => (
+                  <article
+                    key={teacher.title}
+                    className="rounded-lg border border-outline bg-surface p-5 transition-transform hover:-translate-y-1"
+                  >
+                    <div className="flex items-start gap-3">
+                      <CharacterAvatar
+                        className="h-16 w-16 rounded-lg"
+                        presetId={teacher.avatarPreset}
+                        size={64}
+                      />
+                      <div className="min-w-0 flex-1">
+                        <div className="text-lg font-bold text-ink">
+                          {teacher.title}
                         </div>
+                        <p className="mt-2 text-sm leading-6 text-ink-soft">
+                          {teacher.summary}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="mt-4 flex flex-wrap gap-2 text-xs font-medium text-ink-muted">
+                      {teacher.tags.map((tag) => (
                         <span
-                          className={`rounded-full px-2.5 py-1 text-xs font-semibold ${status.className}`}
+                          key={tag}
+                          className="rounded-full bg-surface-panel px-2.5 py-1"
                         >
-                          {status.label}
+                          {tag}
                         </span>
-                      </div>
-
-                      <div className="mt-4 grid gap-3 text-sm text-ink-soft">
-                        <div className="rounded-lg bg-surface-panel px-3 py-2">
-                          경력 {teacher.experience}
-                        </div>
-                        <div className="rounded-lg bg-surface-panel px-3 py-2">
-                          거주지 {teacher.residence}
-                        </div>
-                      </div>
-
-                      <div className="mt-4 flex flex-wrap gap-2 text-xs font-medium text-ink-muted">
-                        {teacher.preferredRegions.map((region) => (
-                          <span
-                            key={region}
-                            className="rounded-full bg-surface-panel px-2.5 py-1"
-                          >
-                            {region}
-                          </span>
-                        ))}
-                      </div>
-                    </article>
-                  );
-                })}
+                      ))}
+                    </div>
+                  </article>
+                ))}
               </div>
             </div>
           </div>
@@ -503,61 +598,50 @@ export default async function Home() {
           </div>
 
           <div className="mt-8 grid gap-5 lg:grid-cols-3">
-            {openJobs.map((job) => {
-              const status = jobStatusLabel(job.status);
+            {publicJobPreview.map((job) => (
+              <article
+                key={job.id}
+                className="panel-surface overflow-hidden p-5 transition-transform hover:-translate-y-1"
+              >
+                <JobVisual
+                  className="min-h-[248px]"
+                  employmentType={job.employmentType}
+                  gradeLevel={job.gradeLevel}
+                  id={job.id}
+                  qualificationSubject={job.qualificationSubject}
+                  qualificationType={job.qualificationType}
+                  schoolName={job.schoolName}
+                  schoolRegion={job.schoolRegion}
+                />
 
-              return (
-                <article
-                  key={job.id}
-                  className="panel-surface overflow-hidden p-5 transition-transform hover:-translate-y-1"
-                >
-                  <JobVisual
-                    className="min-h-[248px]"
-                    employmentType={job.employmentType}
-                    gradeLevel={job.gradeLevel}
-                    id={job.id}
-                    qualificationSubject={job.qualificationSubject}
-                    qualificationType={job.qualificationType}
-                    schoolName={job.schoolName}
-                    schoolRegion={job.schoolRegion}
-                  />
+                <div className="mt-5">
+                  <p className="text-sm leading-6 text-ink-soft">{job.summary}</p>
 
-                  <div className="mt-5">
-                    <span
-                      className={`rounded-full px-2.5 py-1 text-xs font-semibold ${status.className}`}
-                    >
-                      {status.label}
-                    </span>
-                    <p className="mt-4 text-sm leading-6 text-ink-soft">
-                      {job.summary}
-                    </p>
-
-                    <div className="mt-5 space-y-3 text-sm text-ink-soft">
-                      <div className="flex items-center gap-2">
-                        <MapPin className="h-4 w-4 text-primary-600" />
-                        {job.schoolRegion} / {job.gradeLevel}
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Clock3 className="h-4 w-4 text-primary-600" />
-                        {job.startDate} - {job.endDate}
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <UserRound className="h-4 w-4 text-primary-600" />
-                        지원자 {job.applicants}명 / 조회 {job.views}
-                      </div>
+                  <div className="mt-5 space-y-3 text-sm text-ink-soft">
+                    <div className="flex items-center gap-2">
+                      <MapPin className="h-4 w-4 text-primary-600" />
+                      {job.schoolRegion} / {job.gradeLevel}
                     </div>
-
-                    <Link
-                      href={`/jobs/${job.id}`}
-                      className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-primary-700"
-                    >
-                      상세 보기
-                      <ArrowRight className="h-4 w-4" />
-                    </Link>
+                    <div className="flex items-center gap-2">
+                      <Clock3 className="h-4 w-4 text-primary-600" />
+                      {job.schedule}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Briefcase className="h-4 w-4 text-primary-600" />
+                      {job.detail}
+                    </div>
                   </div>
-                </article>
-              );
-            })}
+
+                  <Link
+                    href="/jobs"
+                    className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-primary-700"
+                  >
+                    전체 공고 보기
+                    <ArrowRight className="h-4 w-4" />
+                  </Link>
+                </div>
+              </article>
+            ))}
           </div>
         </section>
       </main>
