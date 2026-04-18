@@ -6,6 +6,11 @@ import { useRouter } from "next/navigation";
 import { AlertCircle, ArrowRight, LockKeyhole, Mail } from "lucide-react";
 
 import { AuthShell } from "@/components/auth-shell";
+import {
+  DEMO_ACCOUNTS,
+  DEMO_PASSWORD,
+  findDemoAccount,
+} from "@/lib/demo-access";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -27,13 +32,15 @@ export default function LoginPage() {
 
     await new Promise((resolve) => setTimeout(resolve, 800));
 
-    if (email.includes("admin")) {
-      router.push("/admin/dashboard");
-    } else if (email.includes("school") || email.includes("hr")) {
-      router.push("/hr/dashboard");
-    } else {
-      router.push("/teacher/dashboard");
+    const account = findDemoAccount(email, password);
+
+    if (!account) {
+      setLoading(false);
+      setError("데모 계정 또는 비밀번호를 다시 확인해 주세요.");
+      return;
     }
+
+    router.push(account.redirectTo);
   };
 
   return (
@@ -94,21 +101,37 @@ export default function LoginPage() {
 
           <div className="mt-6 rounded-lg bg-surface-subtle p-4 text-sm text-ink-soft">
             <div className="font-semibold text-ink">데모 로그인 예시</div>
+            <div className="mt-3 rounded-lg bg-white px-4 py-3 text-ink">
+              <div className="text-xs font-semibold uppercase tracking-[0.16em] text-ink-muted">
+                공통 비밀번호
+              </div>
+              <div className="mt-2 text-base font-bold">{DEMO_PASSWORD}</div>
+            </div>
             <div className="mt-3 space-y-2">
-              <div>
-                <span className="font-semibold text-ink">
-                  teacher@email.com
-                </span>{" "}
-                → 교사 대시보드
-              </div>
-              <div>
-                <span className="font-semibold text-ink">hr@school.go.kr</span>{" "}
-                → 학교 담당자 대시보드
-              </div>
-              <div>
-                <span className="font-semibold text-ink">admin@edulink.kr</span>{" "}
-                → 관리자 대시보드
-              </div>
+              {DEMO_ACCOUNTS.map((account) => (
+                <button
+                  key={account.email}
+                  type="button"
+                  className="flex w-full items-center justify-between rounded-lg border border-outline bg-white px-4 py-3 text-left"
+                  onClick={() => {
+                    setEmail(account.email);
+                    setPassword(account.password);
+                    setError("");
+                  }}
+                >
+                  <div>
+                    <div className="text-sm font-semibold text-ink">
+                      {account.label}
+                    </div>
+                    <div className="mt-1 text-sm text-ink-soft">
+                      {account.email}
+                    </div>
+                  </div>
+                  <div className="text-sm font-semibold text-primary-700">
+                    입력
+                  </div>
+                </button>
+              ))}
             </div>
           </div>
 

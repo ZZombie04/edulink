@@ -29,63 +29,49 @@ function AuthShowcase({
     const choices = Array.from(
       new Set(
         avatarPreset
-          ? [avatarPreset, "teacher-m-navy", "teacher-f-mint", "teacher-c-aqua"]
+          ? [
+              avatarPreset,
+              "teacher-m-navy",
+              "teacher-f-mint",
+              "teacher-c-aqua",
+              "teacher-c-cocoa",
+            ]
           : [
               "teacher-f-rose",
               "teacher-m-navy",
               "teacher-f-mint",
               "teacher-c-aqua",
+              "teacher-c-cocoa",
             ],
       ),
     );
 
     return (
       <div className="rounded-[30px] border border-white/12 bg-white/10 p-6 shadow-[0_24px_60px_rgba(7,18,43,0.28)] backdrop-blur-sm">
-        <div className="grid gap-4 xl:grid-cols-[1fr_0.92fr]">
-          <div className="rounded-[26px] bg-white/12 p-5">
-            <div className="text-xs font-semibold uppercase tracking-[0.18em] text-white/66">
-              Character
-            </div>
-            <div className="mt-5 flex justify-center">
+        <div className="grid gap-4 md:grid-cols-[1.08fr_0.92fr]">
+          <div className="rounded-[26px] bg-white/12 p-6">
+            <div className="flex min-h-[260px] items-center justify-center rounded-[24px] bg-white/8">
               <CharacterAvatar
-                className="h-[192px] w-[192px] rounded-[34px]"
+                className="rounded-[36px] border-white/55 shadow-[0_30px_60px_rgba(16,28,52,0.24)]"
                 presetId={choices[0] as AvatarPresetId}
-                size={192}
+                size={198}
               />
-            </div>
-            <div className="mt-5 flex flex-wrap gap-2">
-              {["수원", "용인", "화성"].map((item) => (
-                <span
-                  key={item}
-                  className="rounded-full bg-white/12 px-3 py-2 text-xs font-semibold text-white/78"
-                >
-                  {item}
-                </span>
-              ))}
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
-            {choices.slice(1).map((choice) => (
+            {choices.slice(1, 5).map((choice) => (
               <div
                 key={choice}
-                className="flex items-center justify-center rounded-[22px] bg-white/12 p-4"
+                className="flex aspect-square items-center justify-center rounded-[22px] bg-white/12 p-4"
               >
                 <CharacterAvatar
-                  className="h-[92px] w-[92px] rounded-[24px]"
+                  className="rounded-[22px] border-white/55 shadow-[0_18px_36px_rgba(16,28,52,0.2)]"
                   presetId={choice as AvatarPresetId}
-                  size={92}
+                  size={84}
                 />
               </div>
             ))}
-            <div className="col-span-2 rounded-[22px] bg-white/12 px-4 py-4">
-              <div className="text-xs font-semibold uppercase tracking-[0.16em] text-white/66">
-                Profile
-              </div>
-              <div className="mt-3 text-sm leading-6 text-white/82">
-                자격, 경력, 희망 지역을 한 화면에서 정리해 등록합니다.
-              </div>
-            </div>
           </div>
         </div>
       </div>
@@ -94,9 +80,9 @@ function AuthShowcase({
 
   if (variant === "school") {
     return (
-      <div className="grid gap-4">
+      <div className="flex flex-col items-center gap-4">
         <JobVisual
-          className="min-h-[260px]"
+          className="min-h-[280px] w-full"
           employmentType="학교 계정 승인"
           gradeLevel="기관 확인과 계정 등록"
           id={jobPosts[0].id}
@@ -105,7 +91,7 @@ function AuthShowcase({
           schoolRegion="경기"
           variant="hero"
         />
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid w-full max-w-[420px] gap-4 sm:grid-cols-2">
           {[
             ["기관 확인", "확인 코드 검증"],
             ["계정 신청", "학교 정보 입력"],
@@ -114,8 +100,12 @@ function AuthShowcase({
               key={title}
               className="rounded-[22px] border border-white/12 bg-white/10 px-4 py-4 backdrop-blur-sm"
             >
-              <div className="text-sm font-semibold text-white">{title}</div>
-              <div className="mt-2 text-sm text-white/74">{detail}</div>
+              <div className="text-center text-sm font-semibold text-white">
+                {title}
+              </div>
+              <div className="mt-2 text-center text-sm text-white">
+                {detail}
+              </div>
             </div>
           ))}
         </div>
@@ -211,8 +201,10 @@ export function AuthShell({
               {title}
             </div>
 
-            <div className="mt-12 flex flex-1 items-end">
-              <AuthShowcase avatarPreset={avatarPreset} variant={variant} />
+            <div className="mt-10 flex flex-1 items-center justify-center">
+              <div className="w-full max-w-[560px]">
+                <AuthShowcase avatarPreset={avatarPreset} variant={variant} />
+              </div>
             </div>
           </div>
         </section>

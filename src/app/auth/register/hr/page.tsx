@@ -12,6 +12,11 @@ import {
 } from "lucide-react";
 
 import { AuthShell } from "@/components/auth-shell";
+import {
+  DEMO_ACCOUNTS,
+  DEMO_PASSWORD,
+  DEMO_VERIFICATION_CODE,
+} from "@/lib/demo-access";
 import { gyeonggiRegions } from "@/lib/demo-data";
 
 const steps = [
@@ -24,6 +29,7 @@ export default function HRRegisterPage() {
   const [currentStep, setCurrentStep] = useState(1);
   const [verificationCode, setVerificationCode] = useState("");
   const [verified, setVerified] = useState(false);
+  const [verificationError, setVerificationError] = useState("");
   const [privacyConsent, setPrivacyConsent] = useState(false);
   const [termsConsent, setTermsConsent] = useState(false);
 
@@ -74,32 +80,92 @@ export default function HRRegisterPage() {
               </div>
 
               <div className="mt-6 space-y-4">
+                <div className="rounded-lg bg-surface-subtle p-4 text-sm text-ink-soft">
+                  <div className="font-semibold text-ink">
+                    테스트용 인증 번호
+                  </div>
+                  <div className="mt-3 rounded-lg bg-white px-4 py-3">
+                    <div className="text-xs font-semibold uppercase tracking-[0.16em] text-ink-muted">
+                      인증 번호
+                    </div>
+                    <div className="mt-2 text-base font-bold text-ink">
+                      {DEMO_VERIFICATION_CODE}
+                    </div>
+                  </div>
+                  <div className="mt-3 rounded-lg bg-white px-4 py-3">
+                    <div className="text-xs font-semibold uppercase tracking-[0.16em] text-ink-muted">
+                      학교 계정 로그인
+                    </div>
+                    <div className="mt-2 text-sm font-semibold text-ink">
+                      {DEMO_ACCOUNTS[1].email}
+                    </div>
+                    <div className="mt-1 text-sm text-ink-soft">
+                      비밀번호 {DEMO_PASSWORD}
+                    </div>
+                  </div>
+                </div>
+
                 <label className="block">
                   <div className="mb-2 text-sm font-semibold text-ink">
                     확인 코드
                   </div>
                   <input
                     className="input-surface text-center text-lg tracking-[0.35em]"
-                    placeholder="ABC123"
+                    placeholder={DEMO_VERIFICATION_CODE}
                     value={verificationCode}
                     onChange={(event) => {
                       setVerificationCode(event.target.value.toUpperCase());
                       setVerified(false);
+                      setVerificationError("");
                     }}
                   />
                 </label>
 
-                <button
-                  type="button"
-                  className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-outline px-4 py-3 text-sm font-semibold text-primary-700"
-                  onClick={() => setVerified(verificationCode.length >= 6)}
-                >
-                  코드 확인
-                </button>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <button
+                    type="button"
+                    className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-outline px-4 py-3 text-sm font-semibold text-primary-700"
+                    onClick={() => {
+                      setVerificationCode(DEMO_VERIFICATION_CODE);
+                      setVerified(false);
+                      setVerificationError("");
+                    }}
+                  >
+                    데모 번호 입력
+                  </button>
+
+                  <button
+                    type="button"
+                    className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-outline px-4 py-3 text-sm font-semibold text-primary-700"
+                    onClick={() => {
+                      if (
+                        verificationCode.trim().toUpperCase() ===
+                        DEMO_VERIFICATION_CODE
+                      ) {
+                        setVerified(true);
+                        setVerificationError("");
+                        return;
+                      }
+
+                      setVerified(false);
+                      setVerificationError(
+                        "테스트용 인증 번호를 다시 확인해 주세요.",
+                      );
+                    }}
+                  >
+                    코드 확인
+                  </button>
+                </div>
 
                 {verified ? (
                   <div className="rounded-lg bg-secondary-50 px-4 py-3 text-sm text-secondary-700">
                     기관 확인이 완료되었습니다. 다음 단계로 이동할 수 있습니다.
+                  </div>
+                ) : null}
+
+                {verificationError ? (
+                  <div className="rounded-lg bg-[var(--danger-soft)] px-4 py-3 text-sm text-[#9c2f24]">
+                    {verificationError}
                   </div>
                 ) : null}
               </div>

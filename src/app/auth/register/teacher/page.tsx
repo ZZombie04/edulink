@@ -379,24 +379,24 @@ export default function TeacherRegisterPage() {
                 </label>
               </div>
 
-              <div className="mt-8 grid gap-6 xl:grid-cols-[0.86fr_1.14fr]">
-                <div className="rounded-[26px] border border-outline bg-[linear-gradient(145deg,#f4f7ff,#ecfff7)] p-6">
-                  <div className="flex min-h-[280px] items-center justify-center">
+              <div className="mt-8 grid gap-4 xl:grid-cols-[0.82fr_1.18fr]">
+                <div className="rounded-[26px] border border-outline bg-[linear-gradient(145deg,#f4f7ff,#ecfff7)] p-4 sm:p-6">
+                  <div className="flex min-h-[188px] items-center justify-center rounded-[22px] bg-white/58 sm:min-h-[220px]">
                     <CharacterAvatar
-                      className="h-[220px] w-[220px] rounded-[32px]"
+                      className="rounded-[30px] border-white/60 shadow-[0_26px_48px_rgba(18,33,58,0.18)]"
                       presetId={selectedAvatarId}
-                      size={220}
+                      size={168}
                     />
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+                <div className="grid grid-cols-3 gap-3 sm:grid-cols-4">
                   {avatarPresets.map((avatar) => (
                     <button
                       key={avatar.id}
                       type="button"
                       aria-label={avatar.name}
-                      className={`group aspect-square rounded-[22px] border p-3 transition-all ${
+                      className={`group aspect-square rounded-[18px] border p-2.5 transition-all sm:rounded-[20px] sm:p-3 ${
                         selectedAvatarId === avatar.id
                           ? "border-primary-300 bg-white shadow-[0_16px_32px_rgba(36,56,88,0.14)]"
                           : "border-outline bg-surface-subtle hover:border-primary-100 hover:bg-white"
@@ -405,9 +405,9 @@ export default function TeacherRegisterPage() {
                     >
                       <div className="flex h-full items-center justify-center">
                         <CharacterAvatar
-                          className="h-[92px] w-[92px] rounded-[24px] border-white/50 shadow-none transition-transform duration-200 group-hover:scale-[1.03]"
+                          className="rounded-[18px] border-white/50 shadow-none transition-transform duration-200 group-hover:scale-[1.03] sm:rounded-[20px]"
                           presetId={avatar.id}
-                          size={92}
+                          size={68}
                         />
                       </div>
                     </button>
