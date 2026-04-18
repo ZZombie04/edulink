@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 import Link from "next/link";
-import { ArrowRight, BookOpen, Clock, Users, ShieldCheck, Search, Building2 } from "lucide-react";
+import { BookOpen, Clock, Users, ShieldCheck, Search, Building2 } from "lucide-react";
 
 export default function Home() {
   return (
