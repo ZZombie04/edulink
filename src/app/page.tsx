@@ -188,7 +188,7 @@ export default async function Home() {
             <BrandLockup textClassName="text-white" />
           </Link>
 
-          <nav className="hidden items-center gap-6 text-sm font-medium text-white/75 md:flex">
+          <nav className="hidden items-center gap-6 text-sm font-medium text-white md:flex">
             <Link
               href="#teacher-pool"
               className="transition-colors hover:text-white"
@@ -246,7 +246,7 @@ export default async function Home() {
         </div>
       </header>
 
-      <main className="bg-[#06162f]">
+      <main className="bg-[#06162f] text-white">
         <section className="relative overflow-hidden bg-[linear-gradient(140deg,#071b3a,#0a4da4,#18907c)]">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.18),transparent_30%),radial-gradient(circle_at_bottom_right,rgba(255,255,255,0.12),transparent_34%)]" />
 
@@ -408,7 +408,7 @@ export default async function Home() {
                     교사 채용 포털
                   </h1>
 
-                  <p className="mt-5 max-w-2xl text-base leading-7 text-white/88 sm:text-lg">
+                  <p className="mt-5 max-w-2xl text-base leading-7 text-white sm:text-lg">
                     기간제교사 및 시간강사 구인 구직
                   </p>
 
@@ -450,9 +450,9 @@ export default async function Home() {
                   </div>
                 </div>
 
-                <div className="rounded-[32px] border border-white/14 bg-white/10 p-6 backdrop-blur-sm sm:p-7">
+                <div className="rounded-[32px] border border-white/14 bg-white/10 p-6 text-white backdrop-blur-sm sm:p-7">
                   <div className="flex flex-wrap items-center justify-between gap-3">
-                    <div className="text-sm font-semibold text-white/78">
+                    <div className="text-sm font-semibold text-white">
                       오늘 바로 시작
                     </div>
                   </div>
@@ -471,11 +471,11 @@ export default async function Home() {
                           <div className="text-sm font-semibold text-white">
                             {item.title}
                           </div>
-                          <div className="mt-1 text-sm leading-6 text-white/72">
+                          <div className="mt-1 text-sm leading-6 text-white">
                             {item.detail}
                           </div>
                         </div>
-                        <div className="text-xs font-semibold text-white/76">
+                        <div className="text-xs font-semibold text-white">
                           {item.meta}
                         </div>
                       </Link>
@@ -484,7 +484,7 @@ export default async function Home() {
 
                   <div className="mt-6 grid gap-3 sm:grid-cols-2">
                     <div className="rounded-[24px] bg-white/8 px-4 py-4">
-                      <div className="text-xs font-semibold text-white/70">
+                      <div className="text-xs font-semibold text-white">
                         교사 가입
                       </div>
                       <div className="mt-2 text-lg font-bold text-white">
@@ -492,7 +492,7 @@ export default async function Home() {
                       </div>
                     </div>
                     <div className="rounded-[24px] bg-white/8 px-4 py-4">
-                      <div className="text-xs font-semibold text-white/70">
+                      <div className="text-xs font-semibold text-white">
                         학교 가입
                       </div>
                       <div className="mt-2 text-lg font-bold text-white">
@@ -511,7 +511,7 @@ export default async function Home() {
             <div className="rounded-[28px] border border-white/10 bg-white/[0.06] p-6 text-white sm:p-8">
               <div className="flex items-center justify-between gap-4">
                 <div>
-                  <div className="text-sm font-semibold text-white/72">
+                  <div className="text-sm font-semibold text-white">
                     기간제·시간강사
                   </div>
                   <h2 className="mt-2 text-3xl font-bold tracking-tight text-white">
@@ -544,13 +544,13 @@ export default async function Home() {
                         <div className="text-lg font-bold text-white">
                           {teacher.title}
                         </div>
-                        <p className="mt-2 text-sm leading-6 text-white/76">
+                        <p className="mt-2 text-sm leading-6 text-white">
                           {teacher.summary}
                         </p>
                       </div>
                     </div>
 
-                    <div className="mt-4 flex flex-wrap gap-2 text-xs font-medium text-white/72">
+                    <div className="mt-4 flex flex-wrap gap-2 text-xs font-medium text-white">
                       {teacher.tags.map((tag) => (
                         <span
                           key={tag}
@@ -570,7 +570,7 @@ export default async function Home() {
         <section className="mx-auto max-w-7xl px-4 py-20 sm:px-6" id="jobs">
           <div className="flex items-center justify-between gap-4">
             <div>
-              <div className="text-sm font-semibold text-white/72">
+              <div className="text-sm font-semibold text-white">
                 학교 채용
               </div>
               <h2 className="mt-2 text-3xl font-bold tracking-tight text-white">
@@ -604,9 +604,9 @@ export default async function Home() {
                 />
 
                 <div className="mt-5">
-                  <p className="text-sm leading-6 text-white/78">{job.summary}</p>
+                  <p className="text-sm leading-6 text-white">{job.summary}</p>
 
-                  <div className="mt-5 space-y-3 text-sm text-white/78">
+                  <div className="mt-5 space-y-3 text-sm text-white">
                     <div className="flex items-center gap-2">
                       <MapPin className="h-4 w-4 text-white" />
                       {job.schoolRegion} / {job.gradeLevel}
