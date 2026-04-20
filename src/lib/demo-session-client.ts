@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import {
   DEMO_SESSION_COOKIE,
@@ -22,13 +22,23 @@ function readCookie(name: string) {
 }
 
 export function useDemoSession(initialSession: DemoSession | null = null) {
-  const [session] = useState<DemoSession | null>(() => {
+  const [session, setSession] = useState<DemoSession | null>(initialSession);
+
+  useEffect(() => {
     if (typeof document === "undefined") {
-      return initialSession;
+      return;
     }
 
-    return parseDemoSession(readCookie(DEMO_SESSION_COOKIE)) ?? initialSession;
-  });
+    const nextSession =
+      parseDemoSession(readCookie(DEMO_SESSION_COOKIE)) ?? initialSession;
+    const frame = window.requestAnimationFrame(() => {
+      setSession(nextSession);
+    });
+
+    return () => {
+      window.cancelAnimationFrame(frame);
+    };
+  }, [initialSession]);
 
   return session;
 }

@@ -10,13 +10,13 @@ import {
 } from "lucide-react";
 
 import { BrandLockup } from "@/components/brand";
+import { JobApplyButton } from "@/components/job-apply-button";
 import { JobVisual } from "@/components/job-visual";
 import { LogoutButton } from "@/components/logout-button";
 import { jobPosts } from "@/lib/demo-data";
 import { getContactDisplayName } from "@/lib/privacy";
 import {
   getDashboardHref,
-  type DemoUserRole,
 } from "@/lib/demo-session";
 import {
   getDemoSessionFromServerCookie,
@@ -59,7 +59,7 @@ export default async function JobDetailPage({
 
   const status = jobStatusLabel(job.status);
   const contactName = getContactDisplayName(job.contactName, viewerRole);
-  const dashboardHref = getDashboardHref(session?.role as DemoUserRole | null);
+  const dashboardHref = getDashboardHref(session?.role ?? null);
 
   return (
     <div className="min-h-screen bg-surface text-ink">
@@ -247,12 +247,15 @@ export default async function JobDetailPage({
               </div>
             </div>
 
-            <Link
-              href={dashboardHref ?? "/auth/login"}
-              className="mt-6 inline-flex w-full items-center justify-center rounded-lg bg-[linear-gradient(135deg,#0058be,#2170e4)] px-4 py-3 text-sm font-semibold text-white shadow-soft"
-            >
-              {dashboardHref ? "내 홈으로 돌아가기" : "로그인하고 지원하기"}
-            </Link>
+            <JobApplyButton
+              className="mt-6"
+              dashboardHref={dashboardHref}
+              fullWidth
+              jobId={job.id}
+              jobStatus={job.status}
+              showHelperText
+              viewerRole={session?.role ?? "guest"}
+            />
           </aside>
         </div>
       </main>

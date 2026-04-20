@@ -24,7 +24,19 @@ export function parseDemoSession(value?: string | null) {
   }
 
   try {
-    const parsed = JSON.parse(decodeURIComponent(value));
+    let decodedValue = value;
+
+    for (let index = 0; index < 2; index += 1) {
+      const nextValue = decodeURIComponent(decodedValue);
+
+      if (nextValue === decodedValue) {
+        break;
+      }
+
+      decodedValue = nextValue;
+    }
+
+    const parsed = JSON.parse(decodedValue);
 
     if (
       typeof parsed !== "object" ||

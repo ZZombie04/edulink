@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 
 import { BrandLockup } from "@/components/brand";
+import { JobApplyButton } from "@/components/job-apply-button";
 import { JobVisual } from "@/components/job-visual";
 import { LogoutButton } from "@/components/logout-button";
 import { gyeonggiRegions, jobPosts } from "@/lib/demo-data";
@@ -43,6 +44,7 @@ function jobStatusLabel(status: string) {
 
 export default function JobsPage() {
   const session = useDemoSession();
+  const viewerRole = session?.role ?? "guest";
   const dashboardHref = getDashboardHref(session?.role);
   const [query, setQuery] = useState("");
   const [regionFilters, setRegionFilters] = useState<string[]>([
@@ -360,13 +362,22 @@ export default function JobsPage() {
                           지원자 {job.applicants}명 · 조회 {job.views} · 마감{" "}
                           {job.deadline}
                         </div>
-                        <Link
-                          href={`/jobs/${job.id}`}
-                          className="inline-flex items-center gap-2 text-sm font-semibold text-primary-700"
-                        >
-                          상세 보기
-                          <ArrowRight className="h-4 w-4" />
-                        </Link>
+                        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                          <JobApplyButton
+                            className="sm:min-w-[124px]"
+                            dashboardHref={dashboardHref}
+                            jobId={job.id}
+                            jobStatus={job.status}
+                            viewerRole={viewerRole}
+                          />
+                          <Link
+                            href={`/jobs/${job.id}`}
+                            className="inline-flex items-center gap-2 text-sm font-semibold text-primary-700"
+                          >
+                            상세 보기
+                            <ArrowRight className="h-4 w-4" />
+                          </Link>
+                        </div>
                       </div>
                     </div>
                   </div>

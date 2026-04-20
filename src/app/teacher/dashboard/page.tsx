@@ -18,8 +18,9 @@ import { CharacterAvatar } from "@/components/character-avatar";
 import { PortalShell } from "@/components/portal-shell";
 import {
   featuredTeachers,
-  getTeacherOffersForTeacher,
+  jobPosts,
 } from "@/lib/demo-data";
+import { getResolvedTeacherOffersForTeacher, useDemoHiringState } from "@/lib/demo-hiring-state";
 
 const navItems = [
   { href: "/teacher/dashboard", label: "내 홈", icon: LayoutDashboard, active: true },
@@ -40,6 +41,7 @@ function requestTone(status: string) {
 
 export default function TeacherDashboardPage() {
   const teacher = featuredTeachers[0];
+  const { appliedJobs, state } = useDemoHiringState();
   const [availability, setAvailability] = useState<"seeking" | "paused">(
     teacher.status === "paused" ? "paused" : "seeking",
   );
@@ -47,10 +49,10 @@ export default function TeacherDashboardPage() {
 
   const teacherRequests = useMemo(
     () =>
-      getTeacherOffersForTeacher(teacher.id).filter(
+      getResolvedTeacherOffersForTeacher(teacher.id, state).filter(
         (request) => !archivedRequestIds.includes(request.id),
       ),
-    [archivedRequestIds, teacher.id],
+    [archivedRequestIds, state, teacher.id],
   );
 
   const pendingRequests = useMemo(
@@ -61,6 +63,7 @@ export default function TeacherDashboardPage() {
     () => teacherRequests.filter((request) => request.status !== "pending"),
     [teacherRequests],
   );
+  const openJobCount = jobPosts.filter((job) => job.status !== "closed").length;
 
   return (
     <PortalShell
@@ -158,7 +161,11 @@ export default function TeacherDashboardPage() {
           { label: "프로필 조회", value: `${teacher.portfolioViews}회`, Icon: UserRound },
           { label: "받은 제안", value: `${teacherRequests.length}건`, Icon: Bell },
           { label: "희망 지역", value: `${teacher.preferredRegions.length}곳`, Icon: MapPin },
-          { label: "지원 가능한 공고", value: "18건", Icon: Briefcase },
+          {
+            label: appliedJobs.length > 0 ? "지원 완료" : "지원 가능한 공고",
+            value: appliedJobs.length > 0 ? `${appliedJobs.length}건` : `${openJobCount}건`,
+            Icon: Briefcase,
+          },
         ].map((item) => (
           <div key={item.label} className="panel-surface p-5">
             <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-primary-50 text-primary-700">
@@ -321,6 +328,27 @@ export default function TeacherDashboardPage() {
                     {request.schoolName} / {request.position}
                   </div>
                 ))}
+              </div>
+            </div>
+
+            <div className="mt-5">
+              <div className="text-sm font-semibold text-ink">지원 완료 공고</div>
+              <div className="mt-3 grid gap-3">
+                {appliedJobs.length > 0 ? (
+                  appliedJobs.map((job) => (
+                    <Link
+                      key={job.id}
+                      href={`/jobs/${job.id}`}
+                      className="rounded-lg bg-primary-50 px-4 py-3 text-sm font-medium text-primary-700"
+                    >
+                      {job.schoolName} / {job.gradeLevel}
+                    </Link>
+                  ))
+                ) : (
+                  <div className="rounded-lg bg-surface-subtle px-4 py-3 text-sm text-ink-soft">
+                    채용 공고에서 바로 지원하면 이곳에 기록됩니다.
+                  </div>
+                )}
               </div>
             </div>
           </div>

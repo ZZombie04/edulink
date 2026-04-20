@@ -23,7 +23,7 @@ export async function POST(request: Request) {
   });
 
   response.cookies.set({
-    httpOnly: true,
+    httpOnly: false,
     maxAge: 60 * 60 * 8,
     name: DEMO_SESSION_COOKIE,
     path: "/",
