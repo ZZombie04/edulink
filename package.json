@@ -4,10 +4,11 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "db:push": "prisma db push",
     "postinstall": "prisma generate",
     "prebuild": "prisma generate",
     "build": "next build",
-    "start": "next start",
+    "start": "prisma db push --skip-generate && next start",
     "lint": "eslint ."
   },
   "dependencies": {

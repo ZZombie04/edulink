@@ -49,6 +49,7 @@ model TeacherProfile {
   id     String @id @default(cuid())
   userId String @unique
   user   User   @relation(fields: [userId], references: [id])
+  demoId Int?   @unique
 
   // 교원 자격 정보
   qualificationType    QualificationType // 초등/중등
@@ -158,6 +159,7 @@ model HRProfile {
   id     String @id @default(cuid())
   userId String @unique
   user   User   @relation(fields: [userId], references: [id])
+  demoId Int?   @unique
 
   schoolName    String // 소속 학교명
   schoolCode    String // 학교 고유 코드 (NEIS 코드)
@@ -199,6 +201,7 @@ enum ApprovalStatus {
 // ─────────────────────────────────────
 model MatchRequest {
   id String @id @default(cuid())
+  demoId Int? @unique
 
   hrProfileId String
   hrProfile   HRProfile @relation("HRRequests", fields: [hrProfileId], references: [id])
@@ -213,6 +216,7 @@ model MatchRequest {
   employmentType TeacherType // 기간제/시간강사
   expectedPeriod String? // 예상 채용 기간
   message        String?     @db.Text // 요청 메시지
+  meta           Json?
 
   // 면접 관련
   interviewDate     DateTime?
@@ -261,6 +265,7 @@ model JobPosting {
   id          String    @id @default(cuid())
   hrProfileId String
   hrProfile   HRProfile @relation(fields: [hrProfileId], references: [id])
+  externalId  String?   @unique
 
   schoolName     String // 학교명
   schoolRegion   String // 학교 소재 지역
@@ -277,6 +282,7 @@ model JobPosting {
   isHomeroom Boolean @default(false) // 담임 여부
   duties     String? @db.Text // 업무 내용
   memo       String? @db.Text // 요청 메모
+  meta       Json?
 
   // 상태
   postingStatus PostingStatus @default(OPEN)
@@ -306,6 +312,7 @@ enum PostingStatus {
 // ─────────────────────────────────────
 model Application {
   id String @id @default(cuid())
+  demoId Int? @unique
 
   teacherProfileId String
   teacherProfile   TeacherProfile @relation(fields: [teacherProfileId], references: [id])
@@ -315,6 +322,7 @@ model Application {
 
   status      MatchStatus @default(PENDING)
   coverLetter String?     @db.Text // 지원 메시지
+  meta        Json?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { createDemoSession, findDemoAccount } from "@/lib/demo-access";
+import { authenticateUser } from "@/lib/hiring-state-service";
 import { DEMO_SESSION_COOKIE, serializeDemoSession } from "@/lib/demo-session";
 
 export async function POST(request: Request) {
@@ -8,11 +8,11 @@ export async function POST(request: Request) {
   const email = typeof body?.email === "string" ? body.email : "";
   const password = typeof body?.password === "string" ? body.password : "";
 
-  const account = findDemoAccount(email, password);
+  const account = await authenticateUser(email, password);
 
   if (!account) {
     return NextResponse.json(
-      { message: "데모 계정 또는 비밀번호를 다시 확인해 주세요." },
+      { message: "계정 정보 또는 비밀번호를 다시 확인해 주세요." },
       { status: 401 },
     );
   }
@@ -29,7 +29,7 @@ export async function POST(request: Request) {
     path: "/",
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",
-    value: serializeDemoSession(createDemoSession(account)),
+    value: serializeDemoSession(account),
   });
 
   return response;
