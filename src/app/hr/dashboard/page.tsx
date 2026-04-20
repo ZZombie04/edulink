@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import {
   ArrowRight,
@@ -12,8 +14,14 @@ import {
 import { CharacterAvatar } from "@/components/character-avatar";
 import { JobVisual } from "@/components/job-visual";
 import { PortalShell } from "@/components/portal-shell";
-import { getViewerRoleFromServerCookie } from "@/lib/demo-session-server";
-import { featuredTeachers, hrMatchRequests, jobPosts } from "@/lib/demo-data";
+import {
+  featuredTeachers,
+  getMatchedTeachersForJob,
+  hrMatchRequests,
+  jobPosts,
+  jobTeacherMatches,
+} from "@/lib/demo-data";
+import { useViewerRole } from "@/lib/demo-session-client";
 import { getTeacherDisplayName } from "@/lib/privacy";
 
 const navItems = [
@@ -38,14 +46,17 @@ function requestTone(status: string) {
   }
 }
 
-export default async function HRDashboardPage() {
-  const viewerRole = await getViewerRoleFromServerCookie();
+export default function HRDashboardPage() {
+  const viewerRole = useViewerRole("hr");
   const liveJobs = jobPosts.filter((job) => job.status !== "closed");
+  const pendingMatches = hrMatchRequests.filter(
+    (request) => request.status === "pending",
+  );
 
   return (
     <PortalShell
       navItems={navItems}
-      noticeCount={4}
+      noticeCount={pendingMatches.length}
       primaryAction={{ href: "/pool", label: "교사 인력풀 보기", icon: Search }}
       sectionLabel="학교 채용 운영"
       user={{
@@ -106,9 +117,9 @@ export default async function HRDashboardPage() {
 
       <section className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {[
-          { label: "보낸 요청", value: "8건", Icon: Users },
-          { label: "응답 대기", value: "3건", Icon: Send },
-          { label: "진행 중 공고", value: "2건", Icon: Briefcase },
+          { label: "보낸 요청", value: `${hrMatchRequests.length}건`, Icon: Users },
+          { label: "응답 대기", value: `${pendingMatches.length}건`, Icon: Send },
+          { label: "진행 중 공고", value: `${liveJobs.length}건`, Icon: Briefcase },
           { label: "신규 등록 교사", value: "4명", Icon: ShieldCheck },
         ].map((item) => (
           <div key={item.label} className="panel-surface p-5">
@@ -155,8 +166,19 @@ export default async function HRDashboardPage() {
                     <div className="mt-1 text-sm text-ink-soft">
                       {request.qualification} / {request.position}
                     </div>
+                    <div className="mt-2 text-sm text-ink-muted">
+                      {request.note}
+                    </div>
                   </div>
-                  <div className="text-sm text-ink-muted">{request.sentAt}</div>
+                  <div className="flex items-center gap-3">
+                    <div className="text-sm text-ink-muted">{request.sentAt}</div>
+                    <Link
+                      href={`/pool/${request.teacherId}`}
+                      className="text-sm font-semibold text-primary-700"
+                    >
+                      프로필 보기
+                    </Link>
+                  </div>
                 </div>
               </div>
             ))}
@@ -172,10 +194,16 @@ export default async function HRDashboardPage() {
           </div>
 
           <div className="mt-6 space-y-4">
-            {liveJobs.map((job) => (
-              <div
+            {liveJobs.map((job) => {
+              const matchedTeachers = getMatchedTeachersForJob(job.id);
+              const matchStage =
+                jobTeacherMatches.find((item) => item.jobId === job.id) ?? null;
+
+              return (
+                <Link
                 key={job.id}
-                className="rounded-lg border border-outline bg-surface p-5"
+                href={`/jobs/${job.id}`}
+                className="block rounded-lg border border-outline bg-surface p-5 transition-colors hover:bg-surface-subtle"
               >
                 <div className="flex gap-4">
                   <JobVisual
@@ -199,10 +227,40 @@ export default async function HRDashboardPage() {
                       <span>조회 {job.views}</span>
                       <span>마감 {job.deadline}</span>
                     </div>
+                    {matchedTeachers.length > 0 ? (
+                      <div className="mt-4 rounded-lg bg-surface-subtle px-3 py-3">
+                        <div className="flex flex-wrap items-center gap-3">
+                          <div className="text-xs font-semibold text-primary-700">
+                            {matchStage?.stage ?? "검토 진행"}
+                          </div>
+                          <div className="flex flex-wrap items-center gap-3">
+                            {matchedTeachers.map((teacher) => (
+                              <div
+                                key={teacher.id}
+                                className="flex items-center gap-2"
+                              >
+                                <CharacterAvatar
+                                  className="h-9 w-9 rounded-lg"
+                                  presetId={teacher.avatarPreset}
+                                  size={36}
+                                />
+                                <span className="text-sm font-medium text-ink-soft">
+                                  {getTeacherDisplayName(
+                                    teacher.name,
+                                    viewerRole,
+                                  )}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    ) : null}
                   </div>
                 </div>
-              </div>
-            ))}
+              </Link>
+              );
+            })}
           </div>
         </div>
       </section>
@@ -221,9 +279,10 @@ export default async function HRDashboardPage() {
 
         <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {featuredTeachers.slice(0, 3).map((teacher) => (
-            <div
+            <Link
               key={teacher.id}
-              className="rounded-lg border border-outline bg-surface p-5"
+              href={`/pool/${teacher.id}`}
+              className="block rounded-lg border border-outline bg-surface p-5 transition-colors hover:bg-surface-subtle"
             >
               <div className="flex items-start gap-4">
                 <CharacterAvatar
@@ -256,7 +315,7 @@ export default async function HRDashboardPage() {
                   </span>
                 ))}
               </div>
-            </div>
+            </Link>
           ))}
         </div>
       </section>

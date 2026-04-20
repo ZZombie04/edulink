@@ -4,6 +4,7 @@ import { useState } from "react";
 
 import {
   DEMO_SESSION_COOKIE,
+  type DemoSession,
   parseDemoSession,
   type ViewerRole,
 } from "@/lib/demo-session";
@@ -20,14 +21,18 @@ function readCookie(name: string) {
   return match ? match.slice(name.length + 1) : null;
 }
 
-export function useViewerRole(initialRole: ViewerRole = "guest") {
-  const [viewerRole] = useState<ViewerRole>(() => {
+export function useDemoSession(initialSession: DemoSession | null = null) {
+  const [session] = useState<DemoSession | null>(() => {
     if (typeof document === "undefined") {
-      return initialRole;
+      return initialSession;
     }
 
-    return parseDemoSession(readCookie(DEMO_SESSION_COOKIE))?.role ?? "guest";
+    return parseDemoSession(readCookie(DEMO_SESSION_COOKIE)) ?? initialSession;
   });
 
-  return viewerRole;
+  return session;
+}
+
+export function useViewerRole(initialRole: ViewerRole = "guest") {
+  return useDemoSession()?.role ?? initialRole;
 }

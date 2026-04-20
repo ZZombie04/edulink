@@ -16,6 +16,7 @@ const accessRules: Array<{
   { pathname: "/hr/dashboard", allowedRoles: ["hr"] },
   { pathname: "/admin/dashboard", allowedRoles: ["admin"] },
   { pathname: "/pool", allowedRoles: ["hr"] },
+  { pathname: "/teacher/offers", allowedRoles: ["teacher"] },
 ];
 
 function getFallbackPathname(
@@ -63,5 +64,10 @@ export function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/teacher/:path*", "/hr/:path*", "/admin/:path*", "/pool"],
+  matcher: [
+    "/teacher/:path*",
+    "/hr/:path*",
+    "/admin/:path*",
+    "/pool/:path*",
+  ],
 };

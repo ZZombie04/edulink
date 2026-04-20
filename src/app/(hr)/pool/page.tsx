@@ -364,11 +364,11 @@ export default function HCPoolPage() {
                       관심 등록
                     </button>
                     <Link
-                      href="/hr/dashboard"
+                      href={`/pool/${teacher.id}`}
                       className="inline-flex flex-1 items-center justify-center gap-2 rounded-lg bg-[linear-gradient(135deg,#0058be,#2170e4)] px-4 py-3 text-sm font-semibold text-white shadow-soft transition-transform hover:-translate-y-px xl:min-w-[180px]"
                     >
                       <Users className="h-4 w-4" />
-                      매칭 요청 보내기
+                      프로필 상세 보기
                     </Link>
                   </div>
                 </div>

@@ -1,9 +1,12 @@
+"use client";
+
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { Bell, type LucideIcon } from "lucide-react";
 
 import { BrandLockup, BrandMark } from "@/components/brand";
 import { CharacterAvatar } from "@/components/character-avatar";
+import { LogoutButton } from "@/components/logout-button";
 import type { AvatarPresetId } from "@/lib/avatar-presets";
 import { cn } from "@/lib/utils";
 
@@ -130,9 +133,9 @@ export function PortalShell({
             </div>
 
             <div className="flex items-center gap-3">
-              <button
+              <Link
+                href={navItems[0]?.href ?? "/"}
                 className="relative flex h-10 w-10 items-center justify-center rounded-lg border border-outline bg-white text-ink-soft transition-colors hover:text-ink"
-                type="button"
               >
                 <Bell className="h-4 w-4" />
                 {noticeCount > 0 ? (
@@ -140,7 +143,9 @@ export function PortalShell({
                     {noticeCount}
                   </span>
                 ) : null}
-              </button>
+              </Link>
+
+              <LogoutButton className="hidden border border-outline bg-white text-ink-soft hover:bg-surface-subtle hover:text-ink sm:inline-flex" />
 
               <div className="hidden items-center gap-3 rounded-lg border border-outline bg-white px-3 py-2 sm:flex">
                 <UserAvatar avatarPreset={user.avatarPreset} name={user.name} />
@@ -174,6 +179,7 @@ export function PortalShell({
                 {item.label}
               </Link>
             ))}
+            <LogoutButton className="inline-flex shrink-0 border border-outline bg-white text-ink-soft" />
           </div>
           {children}
         </main>

@@ -11,9 +11,17 @@ import {
 
 import { BrandLockup } from "@/components/brand";
 import { JobVisual } from "@/components/job-visual";
-import { getViewerRoleFromServerCookie } from "@/lib/demo-session-server";
+import { LogoutButton } from "@/components/logout-button";
 import { jobPosts } from "@/lib/demo-data";
 import { getContactDisplayName } from "@/lib/privacy";
+import {
+  getDashboardHref,
+  type DemoUserRole,
+} from "@/lib/demo-session";
+import {
+  getDemoSessionFromServerCookie,
+  getViewerRoleFromServerCookie,
+} from "@/lib/demo-session-server";
 
 function jobStatusLabel(status: string) {
   switch (status) {
@@ -40,6 +48,7 @@ export default async function JobDetailPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
+  const session = await getDemoSessionFromServerCookie();
   const viewerRole = await getViewerRoleFromServerCookie();
   const { id } = await params;
   const job = jobPosts.find((item) => item.id === id);
@@ -50,6 +59,7 @@ export default async function JobDetailPage({
 
   const status = jobStatusLabel(job.status);
   const contactName = getContactDisplayName(job.contactName, viewerRole);
+  const dashboardHref = getDashboardHref(session?.role as DemoUserRole | null);
 
   return (
     <div className="min-h-screen bg-surface text-ink">
@@ -66,12 +76,24 @@ export default async function JobDetailPage({
               <ArrowLeft className="h-4 w-4" />
               공고 목록
             </Link>
-            <Link
-              href="/auth/login"
-              className="rounded-lg border border-outline px-4 py-2 text-sm font-semibold text-primary-700"
-            >
-              로그인
-            </Link>
+            {dashboardHref ? (
+              <>
+                <Link
+                  href={dashboardHref}
+                  className="rounded-lg border border-outline px-4 py-2 text-sm font-semibold text-primary-700"
+                >
+                  내 홈
+                </Link>
+                <LogoutButton className="border border-outline bg-white text-ink-soft hover:bg-surface-subtle" />
+              </>
+            ) : (
+              <Link
+                href="/auth/login"
+                className="rounded-lg border border-outline px-4 py-2 text-sm font-semibold text-primary-700"
+              >
+                로그인
+              </Link>
+            )}
           </div>
         </div>
       </header>
@@ -226,10 +248,10 @@ export default async function JobDetailPage({
             </div>
 
             <Link
-              href="/auth/login"
+              href={dashboardHref ?? "/auth/login"}
               className="mt-6 inline-flex w-full items-center justify-center rounded-lg bg-[linear-gradient(135deg,#0058be,#2170e4)] px-4 py-3 text-sm font-semibold text-white shadow-soft"
             >
-              로그인하고 지원하기
+              {dashboardHref ? "내 홈으로 돌아가기" : "로그인하고 지원하기"}
             </Link>
           </aside>
         </div>

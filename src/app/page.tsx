@@ -6,15 +6,16 @@ import {
   Clock3,
   LayoutDashboard,
   MapPin,
+  School,
   Search,
-  ShieldCheck,
-  Sparkles,
   type LucideIcon,
 } from "lucide-react";
 
 import { BrandLockup } from "@/components/brand";
 import { CharacterAvatar } from "@/components/character-avatar";
 import { JobVisual } from "@/components/job-visual";
+import { LogoutButton } from "@/components/logout-button";
+import { getDashboardHref } from "@/lib/demo-session";
 import { getDemoSessionFromServerCookie } from "@/lib/demo-session-server";
 import { featuredTeachers, jobPosts, teacherMatchRequests } from "@/lib/demo-data";
 
@@ -26,49 +27,57 @@ type TeacherStatusTone = {
 const publicLaunchRows: Array<{
   Icon: LucideIcon;
   detail: string;
+  href: string;
   meta: string;
   title: string;
 }> = [
   {
     Icon: Search,
     title: "교사 인력풀",
-    detail: "경력, 자격, 희망 지역을 기준으로 바로 탐색",
-    meta: "즉시 확인",
+    detail: "경력과 희망 조건 확인",
+    href: "/pool",
+    meta: "바로 보기",
   },
   {
     Icon: Briefcase,
     title: "채용 공고",
-    detail: "기간제와 시간강사 공고를 한 화면에서 정리",
-    meta: "바로 등록",
+    detail: "기간제교사 및 시간강사 공고",
+    href: "/jobs",
+    meta: "공고 보기",
   },
   {
-    Icon: ShieldCheck,
-    title: "학교 계정",
-    detail: "학교 가입 후 승인 흐름까지 끊김 없이 진행",
-    meta: "운영 연결",
+    Icon: School,
+    title: "학교 가입",
+    detail: "채용 공고 등록",
+    href: "/auth/register/hr",
+    meta: "가입하기",
   },
 ];
 
 const publicPoolPreview: Array<{
   avatarPreset: Parameters<typeof CharacterAvatar>[0]["presetId"];
+  href: string;
   summary: string;
   tags: string[];
   title: string;
 }> = [
   {
     avatarPreset: "teacher-f-mint",
+    href: "/pool/1",
     title: "초등 담임",
     summary: "학급 운영, 생활지도, 기초학력 보강 중심으로 빠르게 검토합니다.",
     tags: ["초등 자격", "담임", "남부권"],
   },
   {
     avatarPreset: "teacher-m-navy",
+    href: "/pool/2",
     title: "중등 수학",
     summary: "중등 교과 수업과 평가 운영이 가능한 프로필 흐름으로 정리합니다.",
     tags: ["중등 자격", "수학", "서남권"],
   },
   {
     avatarPreset: "teacher-f-violet",
+    href: "/pool/4",
     title: "특수 지원",
     summary: "통합학급 지원과 개별화 수업 경험 중심으로 확인할 수 있습니다.",
     tags: ["특수 자격", "지원 수업", "동부권"],
@@ -88,38 +97,38 @@ const publicJobPreview: Array<{
   summary: string;
 }> = [
   {
-    id: "101",
-    schoolName: "초등 담임 공고",
-    schoolRegion: "경기 남부",
+    id: "1",
+    schoolName: "정인초등학교",
+    schoolRegion: "수원",
     gradeLevel: "3학년 담임",
-    employmentType: "기간제",
+    employmentType: "기간제 교사",
     qualificationType: "초등",
-    summary: "학급 운영과 생활지도를 바로 이어갈 수 있는 공고 형식으로 정리했습니다.",
-    schedule: "즉시 시작 - 학기말",
+    summary: "3학년 담임과 생활지도를 담당할 기간제 교사를 모집합니다.",
+    schedule: "2026-05-01 - 2026-08-31",
     detail: "주 5일 / 담임",
   },
   {
-    id: "102",
-    schoolName: "중등 수학 공고",
-    schoolRegion: "경기 서남부",
+    id: "2",
+    schoolName: "서해중학교",
+    schoolRegion: "화성",
     gradeLevel: "1학년 교과",
     employmentType: "시간강사",
     qualificationType: "중등",
     qualificationSubject: "수학",
-    summary: "교과 수업과 평가 운영 기준을 중심으로 검토하기 쉬운 구성입니다.",
-    schedule: "주 3일 - 단기",
+    summary: "중1 수학 수업을 맡을 시간강사를 모집합니다.",
+    schedule: "2026-04-22 - 2026-05-30",
     detail: "교과 수업 / 평가",
   },
   {
-    id: "103",
-    schoolName: "고등 영어 공고",
-    schoolRegion: "경기 동남부",
+    id: "3",
+    schoolName: "늘봄고등학교",
+    schoolRegion: "용인",
     gradeLevel: "2학년 교과",
-    employmentType: "기간제",
+    employmentType: "기간제 교사",
     qualificationType: "중등",
     qualificationSubject: "영어",
-    summary: "학년 운영과 교과 수업을 함께 맡는 채용 흐름을 기준으로 보여줍니다.",
-    schedule: "다음 달 시작 - 학기말",
+    summary: "영어 수업과 담임 업무를 맡을 기간제 교사를 모집합니다.",
+    schedule: "2026-03-01 - 2027-02-28",
     detail: "교과 수업 / 학년 운영",
   },
 ];
@@ -149,19 +158,6 @@ function teacherStatusLabel(status: string): TeacherStatusTone {
   }
 }
 
-function getDashboardHref(role?: string) {
-  switch (role) {
-    case "teacher":
-      return "/teacher/dashboard";
-    case "hr":
-      return "/hr/dashboard";
-    case "admin":
-      return "/admin/dashboard";
-    default:
-      return null;
-  }
-}
-
 export default async function Home() {
   const session = await getDemoSessionFromServerCookie();
   const dashboardHref = getDashboardHref(session?.role);
@@ -178,8 +174,10 @@ export default async function Home() {
   const teacherRequests =
     signedInTeacher === null
       ? []
-      : teacherMatchRequests.filter((request) =>
-          signedInTeacher.preferredRegions.includes(request.region),
+      : teacherMatchRequests.filter(
+          (request) =>
+            request.teacherId === signedInTeacher.id ||
+            signedInTeacher.preferredRegions.includes(request.region),
         );
 
   return (
@@ -219,6 +217,7 @@ export default async function Home() {
                   <Briefcase className="h-4 w-4" />
                   공고 보기
                 </Link>
+                <LogoutButton className="hidden border border-white/20 text-white hover:bg-white/10 sm:inline-flex" />
               </>
             ) : (
               <>
@@ -247,7 +246,7 @@ export default async function Home() {
         </div>
       </header>
 
-      <main>
+      <main className="bg-[#06162f]">
         <section className="relative overflow-hidden bg-[linear-gradient(140deg,#071b3a,#0a4da4,#18907c)]">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.18),transparent_30%),radial-gradient(circle_at_bottom_right,rgba(255,255,255,0.12),transparent_34%)]" />
 
@@ -406,14 +405,11 @@ export default async function Home() {
                   </div>
 
                   <h1 className="mt-6 text-4xl font-bold leading-tight text-white sm:text-5xl lg:text-6xl">
-                    교사 인력풀과 채용 공고를
-                    <br />
-                    바로 시작하는 첫 화면
+                    교사 채용 포털
                   </h1>
 
-                  <p className="mt-5 max-w-2xl text-base leading-7 text-white sm:text-lg">
-                    교사는 경력과 희망 조건을 등록하고, 학교는 필요한 공고를
-                    열어 바로 검토 흐름을 이어갈 수 있습니다.
+                  <p className="mt-5 max-w-2xl text-base leading-7 text-white/88 sm:text-lg">
+                    기간제교사 및 시간강사 구인 구직
                   </p>
 
                   <div className="mt-8 flex flex-col gap-3 sm:flex-row">
@@ -456,25 +452,17 @@ export default async function Home() {
 
                 <div className="rounded-[32px] border border-white/14 bg-white/10 p-6 backdrop-blur-sm sm:p-7">
                   <div className="flex flex-wrap items-center justify-between gap-3">
-                    <div>
-                      <div className="text-sm font-semibold text-white/72">
-                        오늘 바로 시작
-                      </div>
-                      <div className="mt-2 text-2xl font-bold text-white">
-                        첫 화면에서 바로 이어지는 운영 흐름
-                      </div>
-                    </div>
-                    <div className="inline-flex items-center gap-2 rounded-full bg-white/12 px-3 py-2 text-xs font-semibold text-white">
-                      <Sparkles className="h-3.5 w-3.5" />
-                      교사 / 학교 분리 가입
+                    <div className="text-sm font-semibold text-white/78">
+                      오늘 바로 시작
                     </div>
                   </div>
 
                   <div className="mt-6 grid gap-3">
                     {publicLaunchRows.map((item) => (
-                      <div
+                      <Link
                         key={item.title}
-                        className="grid gap-3 rounded-[24px] border border-white/10 bg-white/8 px-4 py-4 sm:grid-cols-[auto_1fr_auto] sm:items-center"
+                        href={item.href}
+                        className="grid gap-3 rounded-[24px] border border-white/10 bg-white/8 px-4 py-4 transition-colors hover:bg-white/12 sm:grid-cols-[auto_1fr_auto] sm:items-center"
                       >
                         <div className="flex h-11 w-11 items-center justify-center rounded-[16px] bg-white/14 text-white">
                           <item.Icon className="h-5 w-5" />
@@ -490,7 +478,7 @@ export default async function Home() {
                         <div className="text-xs font-semibold text-white/76">
                           {item.meta}
                         </div>
-                      </div>
+                      </Link>
                     ))}
                   </div>
 
@@ -508,7 +496,7 @@ export default async function Home() {
                         학교 가입
                       </div>
                       <div className="mt-2 text-lg font-bold text-white">
-                        채용 공고 등록과 승인 흐름 연결
+                        채용 공고 등록
                       </div>
                     </div>
                   </div>
@@ -520,19 +508,19 @@ export default async function Home() {
 
         <section className="relative z-10 -mt-8 px-4 sm:px-6" id="teacher-pool">
           <div className="mx-auto max-w-7xl">
-            <div className="panel-surface p-6 sm:p-8">
+            <div className="rounded-[28px] border border-white/10 bg-white/[0.06] p-6 text-white sm:p-8">
               <div className="flex items-center justify-between gap-4">
                 <div>
-                  <div className="text-sm font-semibold text-primary-700">
+                  <div className="text-sm font-semibold text-white/72">
                     기간제·시간강사
                   </div>
-                  <h2 className="mt-2 text-3xl font-bold tracking-tight text-ink">
+                  <h2 className="mt-2 text-3xl font-bold tracking-tight text-white">
                     교사 인력풀
                   </h2>
                 </div>
                 <Link
                   href="/pool"
-                  className="inline-flex items-center gap-2 text-sm font-semibold text-primary-700"
+                  className="inline-flex items-center gap-2 text-sm font-semibold text-white"
                 >
                   전체 보기
                   <ArrowRight className="h-4 w-4" />
@@ -541,9 +529,10 @@ export default async function Home() {
 
               <div className="mt-8 grid gap-4 lg:grid-cols-3">
                 {publicPoolPreview.map((teacher) => (
-                  <article
+                  <Link
                     key={teacher.title}
-                    className="rounded-lg border border-outline bg-surface p-5 transition-transform hover:-translate-y-1"
+                    href={teacher.href}
+                    className="block rounded-lg border border-white/10 bg-white/8 p-5 transition-colors hover:bg-white/12"
                   >
                     <div className="flex items-start gap-3">
                       <CharacterAvatar
@@ -552,26 +541,26 @@ export default async function Home() {
                         size={64}
                       />
                       <div className="min-w-0 flex-1">
-                        <div className="text-lg font-bold text-ink">
+                        <div className="text-lg font-bold text-white">
                           {teacher.title}
                         </div>
-                        <p className="mt-2 text-sm leading-6 text-ink-soft">
+                        <p className="mt-2 text-sm leading-6 text-white/76">
                           {teacher.summary}
                         </p>
                       </div>
                     </div>
 
-                    <div className="mt-4 flex flex-wrap gap-2 text-xs font-medium text-ink-muted">
+                    <div className="mt-4 flex flex-wrap gap-2 text-xs font-medium text-white/72">
                       {teacher.tags.map((tag) => (
                         <span
                           key={tag}
-                          className="rounded-full bg-surface-panel px-2.5 py-1"
+                          className="rounded-full bg-white/10 px-2.5 py-1"
                         >
                           {tag}
                         </span>
                       ))}
                     </div>
-                  </article>
+                  </Link>
                 ))}
               </div>
             </div>
@@ -581,16 +570,16 @@ export default async function Home() {
         <section className="mx-auto max-w-7xl px-4 py-20 sm:px-6" id="jobs">
           <div className="flex items-center justify-between gap-4">
             <div>
-              <div className="text-sm font-semibold text-primary-700">
+              <div className="text-sm font-semibold text-white/72">
                 학교 채용
               </div>
-              <h2 className="mt-2 text-3xl font-bold tracking-tight text-ink">
+              <h2 className="mt-2 text-3xl font-bold tracking-tight text-white">
                 채용 공고
               </h2>
             </div>
             <Link
               href="/jobs"
-              className="inline-flex items-center gap-2 text-sm font-semibold text-primary-700"
+              className="inline-flex items-center gap-2 text-sm font-semibold text-white"
             >
               전체 보기
               <ArrowRight className="h-4 w-4" />
@@ -601,7 +590,7 @@ export default async function Home() {
             {publicJobPreview.map((job) => (
               <article
                 key={job.id}
-                className="panel-surface overflow-hidden p-5 transition-transform hover:-translate-y-1"
+                className="rounded-[28px] border border-white/10 bg-white/[0.06] p-5 text-white transition-colors hover:bg-white/10"
               >
                 <JobVisual
                   className="min-h-[248px]"
@@ -615,28 +604,28 @@ export default async function Home() {
                 />
 
                 <div className="mt-5">
-                  <p className="text-sm leading-6 text-ink-soft">{job.summary}</p>
+                  <p className="text-sm leading-6 text-white/78">{job.summary}</p>
 
-                  <div className="mt-5 space-y-3 text-sm text-ink-soft">
+                  <div className="mt-5 space-y-3 text-sm text-white/78">
                     <div className="flex items-center gap-2">
-                      <MapPin className="h-4 w-4 text-primary-600" />
+                      <MapPin className="h-4 w-4 text-white" />
                       {job.schoolRegion} / {job.gradeLevel}
                     </div>
                     <div className="flex items-center gap-2">
-                      <Clock3 className="h-4 w-4 text-primary-600" />
+                      <Clock3 className="h-4 w-4 text-white" />
                       {job.schedule}
                     </div>
                     <div className="flex items-center gap-2">
-                      <Briefcase className="h-4 w-4 text-primary-600" />
+                      <Briefcase className="h-4 w-4 text-white" />
                       {job.detail}
                     </div>
                   </div>
 
                   <Link
-                    href="/jobs"
-                    className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-primary-700"
+                    href={`/jobs/${job.id}`}
+                    className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-white"
                   >
-                    전체 공고 보기
+                    공고 상세 보기
                     <ArrowRight className="h-4 w-4" />
                   </Link>
                 </div>

@@ -1,8 +1,18 @@
-import { Briefcase, Home, LayoutDashboard, ShieldCheck, TrendingUp, Users } from "lucide-react";
+"use client";
+
+import { useMemo, useState } from "react";
+import {
+  Briefcase,
+  Home,
+  LayoutDashboard,
+  ShieldCheck,
+  TrendingUp,
+  Users,
+} from "lucide-react";
 
 import { PortalShell } from "@/components/portal-shell";
-import { getViewerRoleFromServerCookie } from "@/lib/demo-session-server";
 import { adminApprovals, recentUsers } from "@/lib/demo-data";
+import { useViewerRole } from "@/lib/demo-session-client";
 import { getTeacherDisplayName } from "@/lib/privacy";
 
 const navItems = [
@@ -27,13 +37,27 @@ function userTone(status: string) {
   }
 }
 
-export default async function AdminDashboardPage() {
-  const viewerRole = await getViewerRoleFromServerCookie();
+export default function AdminDashboardPage() {
+  const viewerRole = useViewerRole("admin");
+  const [approvalStatuses, setApprovalStatuses] = useState<
+    Record<number, "pending" | "approved" | "on-hold">
+  >({});
+  const approvalRows = useMemo(
+    () =>
+      adminApprovals.map((approval) => ({
+        ...approval,
+        status: approvalStatuses[approval.id] ?? "pending",
+      })),
+    [approvalStatuses],
+  );
+  const pendingApprovals = approvalRows.filter(
+    (approval) => approval.status === "pending",
+  );
 
   return (
     <PortalShell
       navItems={navItems}
-      noticeCount={adminApprovals.length}
+      noticeCount={pendingApprovals.length}
       primaryAction={{
         href: "/admin/dashboard",
         label: "승인 대기 확인",
@@ -59,7 +83,7 @@ export default async function AdminDashboardPage() {
           <div className="text-sm font-semibold text-ink-soft">운영 알림</div>
           <div className="mt-5 space-y-3">
             {[
-              `${adminApprovals.length}건의 학교 계정이 승인 대기 중입니다.`,
+              `${pendingApprovals.length}건의 학교 계정이 승인 대기 중입니다.`,
               "이번 주 교사 가입 수가 지난주 대비 18% 증가했습니다.",
               "마감 임박 공고 3건에 대한 운영 확인이 필요합니다.",
             ].map((note) => (
@@ -96,7 +120,7 @@ export default async function AdminDashboardPage() {
           <div className="text-xl font-bold text-ink">승인 대기 학교 계정</div>
 
           <div className="mt-6 space-y-4">
-            {adminApprovals.map((approval) => (
+            {approvalRows.map((approval) => (
               <div
                 key={approval.id}
                 className="rounded-lg border border-outline bg-surface p-5"
@@ -114,16 +138,43 @@ export default async function AdminDashboardPage() {
                       {approval.position}
                     </div>
                   </div>
-                  <div className="flex gap-2">
+                  <div className="flex items-center gap-2">
+                    <span
+                      className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
+                        approval.status === "approved"
+                          ? "bg-secondary-50 text-secondary-700"
+                          : approval.status === "on-hold"
+                            ? "bg-[var(--warning-soft)] text-[#9a6a00]"
+                            : "bg-surface-panel text-ink-soft"
+                      }`}
+                    >
+                      {approval.status === "approved"
+                        ? "승인 완료"
+                        : approval.status === "on-hold"
+                          ? "보류"
+                          : "대기"}
+                    </span>
                     <button
                       type="button"
                       className="rounded-lg bg-[linear-gradient(135deg,#0058be,#2170e4)] px-4 py-3 text-sm font-semibold text-white shadow-soft"
+                      onClick={() =>
+                        setApprovalStatuses((current) => ({
+                          ...current,
+                          [approval.id]: "approved",
+                        }))
+                      }
                     >
                       승인
                     </button>
                     <button
                       type="button"
                       className="rounded-lg border border-outline px-4 py-3 text-sm font-semibold text-ink-soft"
+                      onClick={() =>
+                        setApprovalStatuses((current) => ({
+                          ...current,
+                          [approval.id]: "on-hold",
+                        }))
+                      }
                     >
                       보류
                     </button>

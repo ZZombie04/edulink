@@ -8,7 +8,6 @@ interface BrandMarkProps {
 
 export function BrandMark({ className }: BrandMarkProps) {
   const gradientId = useId();
-  const glowId = useId();
 
   return (
     <svg
@@ -21,26 +20,15 @@ export function BrandMark({ className }: BrandMarkProps) {
       <defs>
         <linearGradient
           id={gradientId}
-          x1="6"
-          y1="5"
-          x2="42"
-          y2="43"
+          x1="9"
+          y1="6"
+          x2="40"
+          y2="42"
           gradientUnits="userSpaceOnUse"
         >
-          <stop stopColor="#0F234A" />
+          <stop stopColor="#0B2A57" />
           <stop offset="0.52" stopColor="#0C63D9" />
-          <stop offset="1" stopColor="#1BB58F" />
-        </linearGradient>
-        <linearGradient
-          id={glowId}
-          x1="13"
-          y1="13"
-          x2="34"
-          y2="34"
-          gradientUnits="userSpaceOnUse"
-        >
-          <stop stopColor="white" stopOpacity="0.92" />
-          <stop offset="1" stopColor="white" stopOpacity="0.62" />
+          <stop offset="1" stopColor="#15926E" />
         </linearGradient>
       </defs>
       <rect
@@ -52,20 +40,30 @@ export function BrandMark({ className }: BrandMarkProps) {
         fill={`url(#${gradientId})`}
       />
       <path
-        d="M15.2 14.8c3.72 0 6.38 1.26 8.8 4.18 2.42-2.92 5.08-4.18 8.8-4.18v15.7c-3.31 0-5.6.92-7.84 3.12a1.34 1.34 0 0 1-1.92 0c-2.24-2.2-4.53-3.12-7.84-3.12V14.8Z"
-        fill={`url(#${glowId})`}
+        d="M12.8 23.8 24 15.8l11.2 8"
+        stroke="white"
+        strokeWidth="3.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
       />
       <path
-        d="M19.2 18.6v10.03c1.56.35 2.93.95 4.2 1.88V20.58c-1.12-1.31-2.32-1.92-4.2-1.98Z"
-        fill="#0D4FA5"
-        fillOpacity="0.28"
+        d="M15.8 23.6h16.4v13.6H15.8V23.6Z"
+        fill="white"
+        fillOpacity="0.95"
       />
       <path
-        d="M28.8 18.6c-1.88.06-3.08.67-4.2 1.98v9.93a12.7 12.7 0 0 1 4.2-1.88V18.6Z"
-        fill="#0D4FA5"
-        fillOpacity="0.22"
+        d="M21 27.8h6v9.4h-6v-9.4Z"
+        fill="#0B2A57"
+        fillOpacity="0.84"
       />
-      <circle cx="24" cy="16.1" r="1.7" fill="white" />
+      <path d="M17.9 27.8h2.9v3h-2.9v-3Z" fill="#0C63D9" fillOpacity="0.78" />
+      <path d="M27.1 27.8H30v3h-2.9v-3Z" fill="#0C63D9" fillOpacity="0.78" />
+      <path
+        d="M15.8 37.2h16.4"
+        stroke="white"
+        strokeWidth="3"
+        strokeLinecap="round"
+      />
     </svg>
   );
 }

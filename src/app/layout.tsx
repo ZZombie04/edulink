@@ -13,7 +13,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ko" className="font-sans antialiased">
+    <html
+      lang="ko"
+      className="font-sans antialiased"
+      data-scroll-behavior="smooth"
+    >
       <head>
         <link rel="preconnect" href="https://cdn.jsdelivr.net" />
         <link

@@ -82,6 +82,7 @@ export default function LoginPage() {
               <div className="relative">
                 <Mail className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-muted" />
                 <input
+                  autoComplete="email"
                   className="input-surface pl-11"
                   placeholder="name@school.go.kr"
                   type="email"
@@ -98,6 +99,7 @@ export default function LoginPage() {
               <div className="relative">
                 <LockKeyhole className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-muted" />
                 <input
+                  autoComplete="current-password"
                   className="input-surface pl-11"
                   placeholder="비밀번호 입력"
                   type="password"

@@ -2,7 +2,9 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
+  AlertCircle,
   ArrowLeft,
   ArrowRight,
   Briefcase,
@@ -24,6 +26,7 @@ import {
   defaultAvatarPreset,
   type AvatarPresetId,
 } from "@/lib/avatar-presets";
+import { DEMO_ACCOUNTS, DEMO_PASSWORD } from "@/lib/demo-access";
 import { gyeonggiRegions, secondarySubjects } from "@/lib/demo-data";
 
 const steps = [
@@ -149,6 +152,7 @@ function createCareerEntry(id: number): CareerEntry {
 }
 
 export default function TeacherRegisterPage() {
+  const router = useRouter();
   const [currentStep, setCurrentStep] = useState(1);
   const [privacyConsent, setPrivacyConsent] = useState(false);
   const [thirdPartyConsent, setThirdPartyConsent] = useState(false);
@@ -164,6 +168,8 @@ export default function TeacherRegisterPage() {
   ]);
   const [isNewTeacher, setIsNewTeacher] = useState(false);
   const [careers, setCareers] = useState<CareerEntry[]>([createCareerEntry(1)]);
+  const [submitError, setSubmitError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
   const allConsents = privacyConsent && thirdPartyConsent && termsConsent;
 
@@ -248,6 +254,15 @@ export default function TeacherRegisterPage() {
         </div>
 
         <div className="panel-surface p-8">
+          {submitError ? (
+            <div className="mb-6 rounded-lg bg-[var(--danger-soft)] px-4 py-3 text-sm text-[#9c2f24]">
+              <div className="flex items-center gap-2">
+                <AlertCircle className="h-4 w-4" />
+                {submitError}
+              </div>
+            </div>
+          ) : null}
+
           {currentStep === 1 ? (
             <>
               <div className="text-3xl font-bold text-ink">필수 동의</div>
@@ -844,8 +859,45 @@ export default function TeacherRegisterPage() {
                 <button
                   type="button"
                   className="inline-flex flex-1 items-center justify-center gap-2 rounded-lg bg-[linear-gradient(135deg,#0058be,#2170e4)] px-4 py-3 text-sm font-semibold text-white shadow-soft"
+                  disabled={submitting}
+                  onClick={async () => {
+                    setSubmitError("");
+                    setSubmitting(true);
+
+                    try {
+                      const response = await fetch("/api/auth/demo-login", {
+                        body: JSON.stringify({
+                          email: DEMO_ACCOUNTS[0].email,
+                          password: DEMO_PASSWORD,
+                        }),
+                        headers: {
+                          "Content-Type": "application/json",
+                        },
+                        method: "POST",
+                      });
+
+                      const result = (await response.json().catch(() => null)) as
+                        | { message?: string; redirectTo?: string }
+                        | null;
+
+                      if (!response.ok || !result?.redirectTo) {
+                        setSubmitError(
+                          result?.message ??
+                            "인재풀 등록을 완료하지 못했습니다.",
+                        );
+                        setSubmitting(false);
+                        return;
+                      }
+
+                      router.push(result.redirectTo);
+                      router.refresh();
+                    } catch {
+                      setSubmitError("인재풀 등록을 완료하지 못했습니다.");
+                      setSubmitting(false);
+                    }
+                  }}
                 >
-                  인재풀 등록 완료
+                  {submitting ? "등록 중..." : "인재풀 등록 완료"}
                   <Check className="h-4 w-4" />
                 </button>
               </div>

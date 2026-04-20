@@ -2,7 +2,9 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
+  AlertCircle,
   ArrowLeft,
   ArrowRight,
   Check,
@@ -18,6 +20,7 @@ import {
   DEMO_VERIFICATION_CODE,
 } from "@/lib/demo-access";
 import { gyeonggiRegions } from "@/lib/demo-data";
+import { hrConsentSections } from "@/lib/hr-consents";
 
 const steps = [
   { id: 1, title: "기관 확인", icon: KeyRound },
@@ -26,12 +29,15 @@ const steps = [
 ];
 
 export default function HRRegisterPage() {
+  const router = useRouter();
   const [currentStep, setCurrentStep] = useState(1);
   const [verificationCode, setVerificationCode] = useState("");
   const [verified, setVerified] = useState(false);
   const [verificationError, setVerificationError] = useState("");
   const [privacyConsent, setPrivacyConsent] = useState(false);
   const [termsConsent, setTermsConsent] = useState(false);
+  const [submitError, setSubmitError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
   return (
     <AuthShell title="학교 가입" variant="school">
@@ -72,6 +78,15 @@ export default function HRRegisterPage() {
         </div>
 
         <div className="panel-surface p-8">
+          {submitError ? (
+            <div className="mb-6 rounded-lg bg-[var(--danger-soft)] px-4 py-3 text-sm text-[#9c2f24]">
+              <div className="flex items-center gap-2">
+                <AlertCircle className="h-4 w-4" />
+                {submitError}
+              </div>
+            </div>
+          ) : null}
+
           {currentStep === 1 ? (
             <>
               <div className="text-3xl font-bold text-ink">기관 확인</div>
@@ -186,44 +201,69 @@ export default function HRRegisterPage() {
             <>
               <div className="text-3xl font-bold text-ink">필수 동의</div>
               <div className="mt-2 text-sm leading-6 text-ink-soft">
-                학교 계정 승인과 공고 운영에 필요한 기본 항목입니다.
+                학교 계정 승인과 채용 공고 운영을 위해 필요한 필수 동의입니다.
               </div>
 
               <div className="mt-6 space-y-4">
-                {[
-                  {
-                    checked: privacyConsent,
-                    setter: setPrivacyConsent,
-                    title: "개인정보 수집 및 이용 동의",
-                    detail:
-                      "담당자 연락처와 학교 정보를 계정 승인 및 운영 안내에 사용합니다.",
-                  },
-                  {
-                    checked: termsConsent,
-                    setter: setTermsConsent,
-                    title: "서비스 이용약관 동의",
-                    detail:
-                      "공고 등록, 매칭 요청, 승인 절차에 필요한 기본 약관입니다.",
-                  },
-                ].map((item) => (
-                  <label
-                    key={item.title}
-                    className="flex cursor-pointer gap-4 rounded-lg bg-surface-subtle p-5"
-                  >
-                    <input
-                      checked={item.checked}
-                      className="mt-1 h-4 w-4"
-                      type="checkbox"
-                      onChange={(event) => item.setter(event.target.checked)}
-                    />
-                    <div>
-                      <div className="font-semibold text-ink">{item.title}</div>
-                      <div className="mt-1 text-sm leading-6 text-ink-soft">
-                        {item.detail}
+                {hrConsentSections.map((section) => {
+                  const checked =
+                    section.id === "privacy" ? privacyConsent : termsConsent;
+                  const onChange =
+                    section.id === "privacy"
+                      ? setPrivacyConsent
+                      : setTermsConsent;
+
+                  return (
+                    <div
+                      key={section.id}
+                      className="overflow-hidden rounded-[20px] border border-outline bg-surface-subtle"
+                    >
+                      <div className="flex items-center gap-3 px-5 py-4">
+                        <input
+                          checked={checked}
+                          className="h-4 w-4"
+                          type="checkbox"
+                          onChange={(event) => onChange(event.target.checked)}
+                        />
+                        <div className="font-semibold text-ink">
+                          {section.title}
+                        </div>
                       </div>
+
+                      <details className="border-t border-outline/70">
+                        <summary className="cursor-pointer list-none px-5 py-3 text-xs font-semibold text-primary-700">
+                          내용 보기
+                        </summary>
+                        <div className="space-y-4 px-5 pb-5 text-sm leading-6 text-ink-soft">
+                          <div>
+                            <div className="font-semibold text-ink">
+                              {section.heading}
+                            </div>
+                            <ul className="mt-2 list-disc space-y-1 pl-5">
+                              {section.points.map((point) => (
+                                <li key={point}>{point}</li>
+                              ))}
+                            </ul>
+                          </div>
+
+                          {section.sections.map((detail) => (
+                            <div
+                              key={detail.title}
+                              className="rounded-xl bg-white px-4 py-3"
+                            >
+                              <div className="font-semibold text-ink">
+                                {detail.title}
+                              </div>
+                              <div className="mt-1 text-sm leading-6 text-ink-soft">
+                                {detail.body}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </details>
                     </div>
-                  </label>
-                ))}
+                  );
+                })}
               </div>
 
               <div className="mt-6 flex gap-3">
@@ -333,8 +373,47 @@ export default function HRRegisterPage() {
                 <button
                   type="button"
                   className="inline-flex flex-1 items-center justify-center gap-2 rounded-lg bg-[linear-gradient(135deg,#0058be,#2170e4)] px-4 py-3 text-sm font-semibold text-white shadow-soft"
+                  disabled={submitting}
+                  onClick={async () => {
+                    setSubmitError("");
+                    setSubmitting(true);
+
+                    try {
+                      const response = await fetch("/api/auth/demo-login", {
+                        body: JSON.stringify({
+                          email: DEMO_ACCOUNTS[1].email,
+                          password: DEMO_PASSWORD,
+                        }),
+                        headers: {
+                          "Content-Type": "application/json",
+                        },
+                        method: "POST",
+                      });
+
+                      const result = (await response.json().catch(() => null)) as
+                        | { message?: string; redirectTo?: string }
+                        | null;
+
+                      if (!response.ok || !result?.redirectTo) {
+                        setSubmitError(
+                          result?.message ??
+                            "학교 계정 신청을 완료하지 못했습니다.",
+                        );
+                        setSubmitting(false);
+                        return;
+                      }
+
+                      router.push(result.redirectTo);
+                      router.refresh();
+                    } catch {
+                      setSubmitError(
+                        "학교 계정 신청을 완료하지 못했습니다.",
+                      );
+                      setSubmitting(false);
+                    }
+                  }}
                 >
-                  학교 계정 신청
+                  {submitting ? "학교 계정 생성 중..." : "학교 계정 신청"}
                   <Check className="h-4 w-4" />
                 </button>
               </div>

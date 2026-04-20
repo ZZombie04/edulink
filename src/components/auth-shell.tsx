@@ -98,7 +98,7 @@ function AuthShowcase({
         <div className="grid w-full max-w-[420px] gap-4 sm:grid-cols-2">
           {[
             ["기관 확인", "확인 코드 검증"],
-            ["계정 신청", "학교 정보 입력"],
+            ["채용 공고 등록", "학교 정보 입력"],
           ].map(([title, detail]) => (
             <div
               key={title}

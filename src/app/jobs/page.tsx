@@ -13,7 +13,10 @@ import {
 
 import { BrandLockup } from "@/components/brand";
 import { JobVisual } from "@/components/job-visual";
+import { LogoutButton } from "@/components/logout-button";
 import { gyeonggiRegions, jobPosts } from "@/lib/demo-data";
+import { useDemoSession } from "@/lib/demo-session-client";
+import { getDashboardHref } from "@/lib/demo-session";
 
 const employmentTypes = ["기간제 교사", "시간강사"] as const;
 const qualificationTypes = ["초등", "중등", "특수"] as const;
@@ -39,6 +42,8 @@ function jobStatusLabel(status: string) {
 }
 
 export default function JobsPage() {
+  const session = useDemoSession();
+  const dashboardHref = getDashboardHref(session?.role);
   const [query, setQuery] = useState("");
   const [regionFilters, setRegionFilters] = useState<string[]>([
     "수원",
@@ -96,18 +101,32 @@ export default function JobsPage() {
           </Link>
 
           <div className="flex items-center gap-2">
-            <Link
-              href="/auth/login"
-              className="hidden rounded-lg border border-outline px-4 py-2 text-sm font-semibold text-ink-soft sm:inline-flex"
-            >
-              로그인
-            </Link>
-            <Link
-              href="/auth/register/hr"
-              className="inline-flex items-center gap-2 rounded-lg bg-[linear-gradient(135deg,#0058be,#2170e4)] px-4 py-2 text-sm font-semibold text-white shadow-soft"
-            >
-              학교 가입
-            </Link>
+            {dashboardHref ? (
+              <>
+                <Link
+                  href={dashboardHref}
+                  className="hidden rounded-lg border border-outline px-4 py-2 text-sm font-semibold text-ink-soft sm:inline-flex"
+                >
+                  내 홈
+                </Link>
+                <LogoutButton className="border border-outline bg-white text-ink-soft hover:bg-surface-subtle" />
+              </>
+            ) : (
+              <>
+                <Link
+                  href="/auth/login"
+                  className="hidden rounded-lg border border-outline px-4 py-2 text-sm font-semibold text-ink-soft sm:inline-flex"
+                >
+                  로그인
+                </Link>
+                <Link
+                  href="/auth/register/hr"
+                  className="inline-flex items-center gap-2 rounded-lg bg-[linear-gradient(135deg,#0058be,#2170e4)] px-4 py-2 text-sm font-semibold text-white shadow-soft"
+                >
+                  학교 가입
+                </Link>
+              </>
+            )}
           </div>
         </div>
       </header>

@@ -16,7 +16,10 @@ import {
 
 import { CharacterAvatar } from "@/components/character-avatar";
 import { PortalShell } from "@/components/portal-shell";
-import { featuredTeachers, teacherMatchRequests } from "@/lib/demo-data";
+import {
+  featuredTeachers,
+  getTeacherOffersForTeacher,
+} from "@/lib/demo-data";
 
 const navItems = [
   { href: "/teacher/dashboard", label: "내 홈", icon: LayoutDashboard, active: true },
@@ -40,15 +43,23 @@ export default function TeacherDashboardPage() {
   const [availability, setAvailability] = useState<"seeking" | "paused">(
     teacher.status === "paused" ? "paused" : "seeking",
   );
+  const [archivedRequestIds, setArchivedRequestIds] = useState<number[]>([]);
 
-  const pendingRequests = useMemo(
-    () => teacherMatchRequests.filter((request) => request.status === "pending"),
-    [],
+  const teacherRequests = useMemo(
+    () =>
+      getTeacherOffersForTeacher(teacher.id).filter(
+        (request) => !archivedRequestIds.includes(request.id),
+      ),
+    [archivedRequestIds, teacher.id],
   );
 
+  const pendingRequests = useMemo(
+    () => teacherRequests.filter((request) => request.status === "pending"),
+    [teacherRequests],
+  );
   const processedRequests = useMemo(
-    () => teacherMatchRequests.filter((request) => request.status !== "pending"),
-    [],
+    () => teacherRequests.filter((request) => request.status !== "pending"),
+    [teacherRequests],
   );
 
   return (
@@ -145,7 +156,7 @@ export default function TeacherDashboardPage() {
       <section className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {[
           { label: "프로필 조회", value: `${teacher.portfolioViews}회`, Icon: UserRound },
-          { label: "받은 제안", value: `${teacherMatchRequests.length}건`, Icon: Bell },
+          { label: "받은 제안", value: `${teacherRequests.length}건`, Icon: Bell },
           { label: "희망 지역", value: `${teacher.preferredRegions.length}곳`, Icon: MapPin },
           { label: "지원 가능한 공고", value: "18건", Icon: Briefcase },
         ].map((item) => (
@@ -163,13 +174,20 @@ export default function TeacherDashboardPage() {
         <div className="panel-surface p-6">
           <div className="flex items-center justify-between">
             <div className="text-xl font-bold text-ink">최근 받은 제안</div>
-            <Link href="/jobs" className="text-sm font-semibold text-primary-700">
-              공고 보기
+            <Link
+              href={
+                pendingRequests[0]
+                  ? `/teacher/offers/${pendingRequests[0].id}`
+                  : "/jobs"
+              }
+              className="text-sm font-semibold text-primary-700"
+            >
+              최근 제안 보기
             </Link>
           </div>
 
           <div className="mt-6 space-y-4">
-            {teacherMatchRequests.map((request) => (
+            {teacherRequests.map((request) => (
               <div
                 key={request.id}
                 className="rounded-lg border border-outline bg-surface p-5"
@@ -193,6 +211,9 @@ export default function TeacherDashboardPage() {
                     <div className="mt-1 text-sm text-ink-soft">
                       {request.position} / {request.period}
                     </div>
+                    <div className="mt-2 text-sm text-ink-muted">
+                      {request.summary}
+                    </div>
                     <div className="mt-2 inline-flex items-center gap-2 text-sm text-ink-muted">
                       <MapPin className="h-4 w-4 text-primary-600" />
                       {request.region}
@@ -202,15 +223,21 @@ export default function TeacherDashboardPage() {
                   <div className="flex gap-2">
                     {request.status === "pending" ? (
                       <>
-                        <button
-                          type="button"
+                        <Link
+                          href={`/teacher/offers/${request.id}`}
                           className="rounded-lg bg-[linear-gradient(135deg,#0058be,#2170e4)] px-4 py-3 text-sm font-semibold text-white shadow-soft"
                         >
                           검토하기
-                        </button>
+                        </Link>
                         <button
                           type="button"
                           className="rounded-lg border border-outline px-4 py-3 text-sm font-semibold text-ink-soft"
+                          onClick={() =>
+                            setArchivedRequestIds((current) => [
+                              ...current,
+                              request.id,
+                            ])
+                          }
                         >
                           보관
                         </button>
@@ -222,6 +249,12 @@ export default function TeacherDashboardPage() {
                 </div>
               </div>
             ))}
+
+            {teacherRequests.length === 0 ? (
+              <div className="rounded-lg border border-dashed border-outline bg-surface-subtle px-4 py-8 text-center text-sm text-ink-soft">
+                보관하지 않은 제안이 없습니다.
+              </div>
+            ) : null}
           </div>
         </div>
 

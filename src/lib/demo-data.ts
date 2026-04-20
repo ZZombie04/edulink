@@ -1,6 +1,11 @@
 import type { AvatarPresetId } from "@/lib/avatar-presets";
 
 export type TeacherStatus = "seeking" | "interviewing" | "employed" | "paused";
+export type MatchRequestStatus =
+  | "pending"
+  | "accepted"
+  | "rejected"
+  | "archived";
 
 export interface TeacherProfile {
   id: number;
@@ -46,6 +51,39 @@ export interface JobPost {
   contactName: string;
   applicants: number;
   views: number;
+}
+
+export interface TeacherOffer {
+  id: number;
+  jobId: string;
+  teacherId: number;
+  schoolName: string;
+  region: string;
+  position: string;
+  period: string;
+  status: MatchRequestStatus;
+  receivedAt: string;
+  summary: string;
+  message: string;
+}
+
+export interface HRMatchRequest {
+  id: number;
+  jobId: string;
+  teacherId: number;
+  teacherName: string;
+  qualification: string;
+  status: Exclude<MatchRequestStatus, "archived">;
+  sentAt: string;
+  position: string;
+  note: string;
+}
+
+export interface JobTeacherMatch {
+  jobId: string;
+  teacherIds: number[];
+  stage: string;
+  lastUpdated: string;
 }
 
 export const gyeonggiRegions = [
@@ -273,60 +311,106 @@ export const jobPosts: JobPost[] = [
   },
 ];
 
-export const teacherMatchRequests = [
+export const teacherMatchRequests: TeacherOffer[] = [
   {
     id: 1,
+    jobId: "1",
+    teacherId: 1,
     schoolName: "정인초등학교",
     region: "수원",
     position: "3학년 담임 기간제",
     period: "2026.05.01 - 2026.08.31",
-    status: "pending" as const,
+    status: "pending",
     receivedAt: "2시간 전",
+    summary:
+      "3학년 담임 공고에 대해 서류 검토 후 우선 제안이 도착했습니다.",
+    message:
+      "학급 운영 경험과 기초학력 보강 수업 경험이 공고 조건과 잘 맞아 우선 검토 대상으로 제안드립니다.",
   },
   {
     id: 2,
+    jobId: "2",
+    teacherId: 1,
     schoolName: "서해중학교",
     region: "화성",
     position: "수학 시간강사",
     period: "2026.04.22 - 2026.05.30",
-    status: "accepted" as const,
+    status: "accepted",
     receivedAt: "어제",
+    summary: "단기 시간강사 제안에 응답을 완료한 상태입니다.",
+    message:
+      "주 3일 수업 일정과 방과후 보충수업 조건에 대한 검토 후 응답이 완료되었습니다.",
   },
   {
     id: 3,
+    jobId: "3",
+    teacherId: 1,
     schoolName: "늘봄고등학교",
     region: "용인",
     position: "영어 기간제",
     period: "2026.03.01 - 2027.02.28",
-    status: "rejected" as const,
+    status: "rejected",
     receivedAt: "3일 전",
+    summary: "장기 근무 조건 검토 후 보류 처리된 제안입니다.",
+    message:
+      "장기 담임 운영 일정이 현재 희망 조건과 달라 이번 제안은 진행하지 않기로 기록되었습니다.",
   },
 ];
 
-export const hrMatchRequests = [
+export const hrMatchRequests: HRMatchRequest[] = [
   {
     id: 1,
+    jobId: "1",
+    teacherId: 1,
     teacherName: "박서영",
     qualification: "초등 2급 정교사",
-    status: "pending" as const,
+    status: "pending",
     sentAt: "2시간 전",
     position: "정인초등학교 3학년 담임",
+    note: "프로필 열람 후 우선 제안 전달",
   },
   {
     id: 2,
+    jobId: "2",
+    teacherId: 2,
     teacherName: "이준호",
     qualification: "중등 수학 1급 정교사",
-    status: "accepted" as const,
+    status: "accepted",
     sentAt: "어제",
     position: "서해중학교 수학 시간강사",
+    note: "수업 가능 일정 확인 완료",
   },
   {
     id: 3,
+    jobId: "3",
+    teacherId: 3,
     teacherName: "김도현",
     qualification: "초등 1급 정교사",
-    status: "rejected" as const,
+    status: "rejected",
     sentAt: "3일 전",
     position: "늘봄초등학교 학년 대체",
+    note: "장기 배치 조건 불일치",
+  },
+];
+
+export const jobTeacherMatches: JobTeacherMatch[] = [
+  {
+    jobId: "1",
+    teacherIds: [1],
+    stage: "서류 검토 중",
+    lastUpdated: "2시간 전",
+  },
+  {
+    jobId: "2",
+    teacherIds: [2],
+    stage: "면접 일정 확정",
+    lastUpdated: "어제",
+  },
+  {
+    jobId: "3",
+    teacherIds: [3],
+    stage: "후보 보류",
+    lastUpdated: "3일 전",
   },
 ];
 
@@ -394,3 +478,31 @@ export const recentUsers = [
     joinedAt: "1주 전",
   },
 ];
+
+export function getTeacherById(id: number) {
+  return featuredTeachers.find((teacher) => teacher.id === id) ?? null;
+}
+
+export function getJobById(id: string) {
+  return jobPosts.find((job) => job.id === id) ?? null;
+}
+
+export function getTeacherOfferById(id: number) {
+  return teacherMatchRequests.find((offer) => offer.id === id) ?? null;
+}
+
+export function getTeacherOffersForTeacher(teacherId: number) {
+  return teacherMatchRequests.filter((offer) => offer.teacherId === teacherId);
+}
+
+export function getMatchedTeachersForJob(jobId: string) {
+  const match = jobTeacherMatches.find((item) => item.jobId === jobId);
+
+  if (!match) {
+    return [];
+  }
+
+  return match.teacherIds
+    .map((teacherId) => getTeacherById(teacherId))
+    .filter((teacher): teacher is TeacherProfile => teacher !== null);
+}

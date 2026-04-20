@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <defs>
+    <linearGradient id="edulink-school" x1="10" y1="8" x2="54" y2="56" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0B2A57" />
+      <stop offset="0.55" stop-color="#0C63D9" />
+      <stop offset="1" stop-color="#15926E" />
+    </linearGradient>
+  </defs>
+  <rect x="4" y="4" width="56" height="56" rx="18" fill="url(#edulink-school)" />
+  <path d="M13 29.5L32 16L51 29.5" stroke="white" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round" />
+  <path d="M18 29H46V47H18V29Z" fill="white" fill-opacity="0.95" />
+  <path d="M28 34H36V47H28V34Z" fill="#0B2A57" fill-opacity="0.85" />
+  <path d="M22 34H26V38H22V34Z" fill="#0C63D9" fill-opacity="0.78" />
+  <path d="M38 34H42V38H38V34Z" fill="#0C63D9" fill-opacity="0.78" />
+  <path d="M18 47H46" stroke="white" stroke-width="4" stroke-linecap="round" />
+</svg>

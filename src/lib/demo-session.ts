@@ -55,3 +55,16 @@ export function isAuthorizedRole(
 ) {
   return allowedRoles.includes(viewerRole as DemoUserRole);
 }
+
+export function getDashboardHref(role?: DemoUserRole | ViewerRole | null) {
+  switch (role) {
+    case "teacher":
+      return "/teacher/dashboard";
+    case "hr":
+      return "/hr/dashboard";
+    case "admin":
+      return "/admin/dashboard";
+    default:
+      return null;
+  }
+}
