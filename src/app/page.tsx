@@ -179,67 +179,130 @@ export default async function Home() {
             request.teacherId === signedInTeacher.id ||
             signedInTeacher.preferredRegions.includes(request.region),
         );
+  const desktopGhostLinkClassName =
+    "hidden items-center gap-2 rounded-lg border border-white/20 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-white/10 sm:inline-flex";
+  const desktopPrimaryLinkClassName =
+    "inline-flex items-center gap-2 rounded-lg bg-white px-4 py-2 text-sm font-semibold text-primary-700 transition-transform hover:-translate-y-px";
+  const mobileQuickLinkClassName =
+    "inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-white/16 bg-white/8 px-3 py-2 text-sm font-semibold text-white backdrop-blur transition-colors hover:bg-white/14";
+  const mobilePrimaryLinkClassName =
+    "inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-white px-4 py-2 text-sm font-semibold text-primary-700 transition-transform hover:-translate-y-px";
 
   return (
     <div className="min-h-screen bg-surface text-ink">
-      <header className="sticky top-0 z-50 border-b border-white/12 bg-[rgba(7,18,43,0.82)] backdrop-blur">
-        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6">
-          <Link href="/">
-            <BrandLockup textClassName="text-white" />
-          </Link>
-
-          <nav className="hidden items-center gap-6 text-sm font-medium text-white md:flex">
-            <Link
-              href="#teacher-pool"
-              className="transition-colors hover:text-white"
-            >
-              교사 인력풀
+      <header className="sticky top-0 z-50 border-b border-white/12 bg-[#07122b] md:bg-[rgba(7,18,43,0.82)] md:backdrop-blur">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6">
+          <div className="flex min-h-16 items-center justify-between gap-3 py-3 md:h-16 md:py-0">
+            <Link href="/">
+              <BrandLockup textClassName="text-white" />
             </Link>
-            <Link href="#jobs" className="transition-colors hover:text-white">
-              채용 공고
-            </Link>
-          </nav>
 
-          <div className="flex items-center gap-2">
-            {dashboardHref ? (
-              <>
-                <Link
-                  href={dashboardHref}
-                  className="hidden items-center gap-2 rounded-lg border border-white/20 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-white/10 sm:inline-flex"
-                >
+            <nav className="hidden items-center gap-6 text-sm font-medium text-white md:flex">
+              <Link
+                href="#teacher-pool"
+                className="transition-colors hover:text-white"
+              >
+                교사 인력풀
+              </Link>
+              <Link href="#jobs" className="transition-colors hover:text-white">
+                채용 공고
+              </Link>
+            </nav>
+
+            <div className="hidden items-center gap-2 md:flex">
+              {dashboardHref ? (
+                <>
+                  <Link href={dashboardHref} className={desktopGhostLinkClassName}>
+                    <LayoutDashboard className="h-4 w-4" />
+                    내 홈
+                  </Link>
+                  <Link href="/jobs" className={desktopPrimaryLinkClassName}>
+                    <Briefcase className="h-4 w-4" />
+                    공고 보기
+                  </Link>
+                  <LogoutButton className="hidden border border-white/20 text-white hover:bg-white/10 sm:inline-flex" />
+                </>
+              ) : (
+                <>
+                  <Link href="/auth/login" className={desktopGhostLinkClassName}>
+                    로그인
+                  </Link>
+                  <Link
+                    href="/auth/register/teacher"
+                    className={desktopGhostLinkClassName}
+                  >
+                    교사 가입
+                  </Link>
+                  <Link
+                    href="/auth/register/hr"
+                    className={desktopPrimaryLinkClassName}
+                  >
+                    학교 가입
+                    <ArrowRight className="h-4 w-4" />
+                  </Link>
+                </>
+              )}
+            </div>
+
+            <div className="flex md:hidden">
+              {dashboardHref ? (
+                <Link href={dashboardHref} className={mobilePrimaryLinkClassName}>
                   <LayoutDashboard className="h-4 w-4" />
                   내 홈
                 </Link>
-                <Link
-                  href="/jobs"
-                  className="inline-flex items-center gap-2 rounded-lg bg-white px-4 py-2 text-sm font-semibold text-primary-700 transition-transform hover:-translate-y-px"
-                >
-                  <Briefcase className="h-4 w-4" />
-                  공고 보기
-                </Link>
-                <LogoutButton className="hidden border border-white/20 text-white hover:bg-white/10 sm:inline-flex" />
-              </>
-            ) : (
-              <>
-                <Link
-                  href="/auth/login"
-                  className="hidden rounded-lg border border-white/20 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-white/10 sm:inline-flex"
-                >
-                  로그인
-                </Link>
-                <Link
-                  href="/auth/register/teacher"
-                  className="hidden items-center gap-2 rounded-lg border border-white/20 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-white/10 sm:inline-flex"
-                >
-                  교사 가입
-                </Link>
-                <Link
-                  href="/auth/register/hr"
-                  className="inline-flex items-center gap-2 rounded-lg bg-white px-4 py-2 text-sm font-semibold text-primary-700 transition-transform hover:-translate-y-px"
-                >
+              ) : (
+                <Link href="/auth/register/hr" className={mobilePrimaryLinkClassName}>
                   학교 가입
                   <ArrowRight className="h-4 w-4" />
                 </Link>
+              )}
+            </div>
+          </div>
+
+          <div className="grid gap-2 pb-3 md:hidden">
+            {dashboardHref ? (
+              <>
+                <div className="grid grid-cols-2 gap-2">
+                  <Link href="/jobs" className={mobileQuickLinkClassName}>
+                    <Briefcase className="mr-2 h-4 w-4" />
+                    채용 공고
+                  </Link>
+                  <Link href="#teacher-pool" className={mobileQuickLinkClassName}>
+                    <Search className="mr-2 h-4 w-4" />
+                    교사 인력풀
+                  </Link>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <Link href="#jobs" className={mobileQuickLinkClassName}>
+                    <School className="mr-2 h-4 w-4" />
+                    학교 채용
+                  </Link>
+                  <LogoutButton className="min-h-11 w-full border border-white/16 bg-white/8 text-white hover:bg-white/14" />
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="grid grid-cols-2 gap-2">
+                  <Link href="/auth/login" className={mobileQuickLinkClassName}>
+                    로그인
+                  </Link>
+                  <Link
+                    href="/auth/register/teacher"
+                    className={mobileQuickLinkClassName}
+                  >
+                    교사 가입
+                  </Link>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <Link href="#teacher-pool" className={mobileQuickLinkClassName}>
+                    <Search className="mr-2 h-4 w-4" />
+                    교사 인력풀
+                  </Link>
+                  <Link href="/jobs" className={mobileQuickLinkClassName}>
+                    <Briefcase className="mr-2 h-4 w-4" />
+                    채용 공고
+                  </Link>
+                </div>
               </>
             )}
           </div>
@@ -250,7 +313,7 @@ export default async function Home() {
         <section className="relative overflow-hidden bg-[linear-gradient(140deg,#071b3a,#0a4da4,#18907c)]">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.18),transparent_30%),radial-gradient(circle_at_bottom_right,rgba(255,255,255,0.12),transparent_34%)]" />
 
-          <div className="relative mx-auto max-w-7xl px-4 pb-16 pt-16 sm:px-6 sm:pb-20 sm:pt-20">
+          <div className="relative mx-auto max-w-7xl px-4 pb-14 pt-10 sm:px-6 sm:pb-20 sm:pt-20">
             {signedInTeacher ? (
               <div className="grid gap-10 lg:grid-cols-[1.05fr_0.95fr] lg:items-start">
                 <div className="max-w-3xl">
@@ -259,7 +322,7 @@ export default async function Home() {
                     교사 홈
                   </div>
 
-                  <h1 className="mt-6 text-4xl font-bold leading-tight text-white sm:text-5xl lg:text-6xl">
+                  <h1 className="mt-6 text-3xl font-bold leading-tight text-white sm:text-5xl lg:text-6xl">
                     {signedInTeacher.name} 선생님
                   </h1>
 
@@ -285,7 +348,7 @@ export default async function Home() {
                     </Link>
                   </div>
 
-                  <div className="mt-8 grid gap-3 sm:grid-cols-3">
+                  <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-3">
                     {[
                       ["받은 제안", `${teacherRequests.length}건`],
                       ["희망 지역", `${signedInTeacher.preferredRegions.length}곳`],
@@ -293,12 +356,12 @@ export default async function Home() {
                     ].map(([label, value]) => (
                       <div
                         key={label}
-                        className="rounded-[20px] border border-white/12 bg-white/10 px-4 py-4 backdrop-blur-sm"
+                        className="rounded-[20px] border border-white/12 bg-white/10 px-4 py-4 backdrop-blur-sm last:col-span-2 sm:last:col-span-1"
                       >
                         <div className="text-sm font-semibold text-white">
                           {label}
                         </div>
-                        <div className="mt-2 text-2xl font-bold text-white">
+                        <div className="mt-2 text-xl font-bold text-white sm:text-2xl">
                           {value}
                         </div>
                       </div>
@@ -404,7 +467,7 @@ export default async function Home() {
                     경기도 기간제·시간강사
                   </div>
 
-                  <h1 className="mt-6 text-4xl font-bold leading-tight text-white sm:text-5xl lg:text-6xl">
+                  <h1 className="mt-6 text-3xl font-bold leading-tight text-white sm:text-5xl lg:text-6xl">
                     교사 채용 포털
                   </h1>
 
@@ -429,7 +492,7 @@ export default async function Home() {
                     </Link>
                   </div>
 
-                  <div className="mt-8 grid gap-3 sm:grid-cols-3">
+                  <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-3">
                     {[
                       ["모집 중 공고", `${openJobs.length}건`],
                       ["등록 교사", `${featuredTeachers.length}명`],
@@ -437,12 +500,12 @@ export default async function Home() {
                     ].map(([label, value]) => (
                       <div
                         key={label}
-                        className="rounded-[20px] border border-white/12 bg-white/10 px-4 py-4 backdrop-blur-sm"
+                        className="rounded-[20px] border border-white/12 bg-white/10 px-4 py-4 backdrop-blur-sm last:col-span-2 sm:last:col-span-1"
                       >
                         <div className="text-sm font-semibold text-white">
                           {label}
                         </div>
-                        <div className="mt-2 text-2xl font-bold text-white">
+                        <div className="mt-2 text-xl font-bold text-white sm:text-2xl">
                           {value}
                         </div>
                       </div>
@@ -450,7 +513,7 @@ export default async function Home() {
                   </div>
                 </div>
 
-                <div className="rounded-[32px] border border-white/14 bg-white/10 p-6 text-white backdrop-blur-sm sm:p-7">
+                <div className="rounded-[32px] border border-white/14 bg-white/10 p-5 text-white backdrop-blur-sm sm:p-7">
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <div className="text-sm font-semibold text-white">
                       오늘 바로 시작
