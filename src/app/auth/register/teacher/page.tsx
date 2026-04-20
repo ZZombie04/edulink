@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import {
   AlertCircle,
   ArrowLeft,
@@ -152,7 +151,6 @@ function createCareerEntry(id: number): CareerEntry {
 }
 
 export default function TeacherRegisterPage() {
-  const router = useRouter();
   const [currentStep, setCurrentStep] = useState(1);
   const [privacyConsent, setPrivacyConsent] = useState(false);
   const [thirdPartyConsent, setThirdPartyConsent] = useState(false);
@@ -889,8 +887,7 @@ export default function TeacherRegisterPage() {
                         return;
                       }
 
-                      router.push(result.redirectTo);
-                      router.refresh();
+                      window.location.assign(result.redirectTo);
                     } catch {
                       setSubmitError("인재풀 등록을 완료하지 못했습니다.");
                       setSubmitting(false);

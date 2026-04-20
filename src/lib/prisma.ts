@@ -1,3 +1,4 @@
+import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "@prisma/client";
 
 const globalForPrisma = globalThis as unknown as {
@@ -11,7 +12,9 @@ function createPrismaClient() {
     throw new Error("DATABASE_URL 환경 변수가 설정되어 있지 않습니다.");
   }
 
-  return new PrismaClient();
+  const adapter = new PrismaPg({ connectionString: databaseUrl });
+
+  return new PrismaClient({ adapter });
 }
 
 function getPrismaClient() {

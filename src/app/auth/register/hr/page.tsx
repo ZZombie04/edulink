@@ -2,13 +2,11 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import {
   AlertCircle,
   ArrowLeft,
   ArrowRight,
   Check,
-  KeyRound,
   School,
   ShieldCheck,
 } from "lucide-react";
@@ -17,23 +15,17 @@ import { AuthShell } from "@/components/auth-shell";
 import {
   DEMO_ACCOUNTS,
   DEMO_PASSWORD,
-  DEMO_VERIFICATION_CODE,
 } from "@/lib/demo-access";
 import { gyeonggiRegions } from "@/lib/demo-data";
 import { hrConsentSections } from "@/lib/hr-consents";
 
 const steps = [
-  { id: 1, title: "기관 확인", icon: KeyRound },
-  { id: 2, title: "필수 동의", icon: ShieldCheck },
-  { id: 3, title: "학교 정보", icon: School },
+  { id: 1, title: "필수 동의", icon: ShieldCheck },
+  { id: 2, title: "학교 정보", icon: School },
 ];
 
 export default function HRRegisterPage() {
-  const router = useRouter();
   const [currentStep, setCurrentStep] = useState(1);
-  const [verificationCode, setVerificationCode] = useState("");
-  const [verified, setVerified] = useState(false);
-  const [verificationError, setVerificationError] = useState("");
   const [privacyConsent, setPrivacyConsent] = useState(false);
   const [termsConsent, setTermsConsent] = useState(false);
   const [submitError, setSubmitError] = useState("");
@@ -89,119 +81,9 @@ export default function HRRegisterPage() {
 
           {currentStep === 1 ? (
             <>
-              <div className="text-3xl font-bold text-ink">기관 확인</div>
-              <div className="mt-2 text-sm leading-6 text-ink-soft">
-                교육청 또는 운영 기관에서 받은 확인 코드를 입력해 주세요.
-              </div>
-
-              <div className="mt-6 space-y-4">
-                <div className="rounded-lg bg-surface-subtle p-4 text-sm text-ink-soft">
-                  <div className="font-semibold text-ink">
-                    테스트용 인증 번호
-                  </div>
-                  <div className="mt-3 rounded-lg bg-white px-4 py-3">
-                    <div className="text-xs font-semibold uppercase tracking-[0.16em] text-ink-muted">
-                      인증 번호
-                    </div>
-                    <div className="mt-2 text-base font-bold text-ink">
-                      {DEMO_VERIFICATION_CODE}
-                    </div>
-                  </div>
-                  <div className="mt-3 rounded-lg bg-white px-4 py-3">
-                    <div className="text-xs font-semibold uppercase tracking-[0.16em] text-ink-muted">
-                      학교 계정 로그인
-                    </div>
-                    <div className="mt-2 text-sm font-semibold text-ink">
-                      {DEMO_ACCOUNTS[1].email}
-                    </div>
-                    <div className="mt-1 text-sm text-ink-soft">
-                      비밀번호 {DEMO_PASSWORD}
-                    </div>
-                  </div>
-                </div>
-
-                <label className="block">
-                  <div className="mb-2 text-sm font-semibold text-ink">
-                    확인 코드
-                  </div>
-                  <input
-                    className="input-surface text-center text-lg tracking-[0.35em]"
-                    placeholder={DEMO_VERIFICATION_CODE}
-                    value={verificationCode}
-                    onChange={(event) => {
-                      setVerificationCode(event.target.value.toUpperCase());
-                      setVerified(false);
-                      setVerificationError("");
-                    }}
-                  />
-                </label>
-
-                <div className="grid gap-3 sm:grid-cols-2">
-                  <button
-                    type="button"
-                    className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-outline px-4 py-3 text-sm font-semibold text-primary-700"
-                    onClick={() => {
-                      setVerificationCode(DEMO_VERIFICATION_CODE);
-                      setVerified(false);
-                      setVerificationError("");
-                    }}
-                  >
-                    데모 번호 입력
-                  </button>
-
-                  <button
-                    type="button"
-                    className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-outline px-4 py-3 text-sm font-semibold text-primary-700"
-                    onClick={() => {
-                      if (
-                        verificationCode.trim().toUpperCase() ===
-                        DEMO_VERIFICATION_CODE
-                      ) {
-                        setVerified(true);
-                        setVerificationError("");
-                        return;
-                      }
-
-                      setVerified(false);
-                      setVerificationError(
-                        "테스트용 인증 번호를 다시 확인해 주세요.",
-                      );
-                    }}
-                  >
-                    코드 확인
-                  </button>
-                </div>
-
-                {verified ? (
-                  <div className="rounded-lg bg-secondary-50 px-4 py-3 text-sm text-secondary-700">
-                    기관 확인이 완료되었습니다. 다음 단계로 이동할 수 있습니다.
-                  </div>
-                ) : null}
-
-                {verificationError ? (
-                  <div className="rounded-lg bg-[var(--danger-soft)] px-4 py-3 text-sm text-[#9c2f24]">
-                    {verificationError}
-                  </div>
-                ) : null}
-              </div>
-
-              <button
-                type="button"
-                className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-[linear-gradient(135deg,#0058be,#2170e4)] px-4 py-3 text-sm font-semibold text-white shadow-soft disabled:opacity-50"
-                disabled={!verified}
-                onClick={() => setCurrentStep(2)}
-              >
-                다음 단계
-                <ArrowRight className="h-4 w-4" />
-              </button>
-            </>
-          ) : null}
-
-          {currentStep === 2 ? (
-            <>
               <div className="text-3xl font-bold text-ink">필수 동의</div>
               <div className="mt-2 text-sm leading-6 text-ink-soft">
-                학교 계정 승인과 채용 공고 운영을 위해 필요한 필수 동의입니다.
+                학교 계정 운영과 채용 공고 등록을 위해 필요한 필수 동의입니다.
               </div>
 
               <div className="mt-6 space-y-4">
@@ -279,7 +161,7 @@ export default function HRRegisterPage() {
                   type="button"
                   className="inline-flex flex-1 items-center justify-center gap-2 rounded-lg bg-[linear-gradient(135deg,#0058be,#2170e4)] px-4 py-3 text-sm font-semibold text-white shadow-soft disabled:opacity-50"
                   disabled={!privacyConsent || !termsConsent}
-                  onClick={() => setCurrentStep(3)}
+                  onClick={() => setCurrentStep(2)}
                 >
                   다음
                   <ArrowRight className="h-4 w-4" />
@@ -288,12 +170,27 @@ export default function HRRegisterPage() {
             </>
           ) : null}
 
-          {currentStep === 3 ? (
+          {currentStep === 2 ? (
             <>
               <div className="text-3xl font-bold text-ink">학교 정보</div>
               <div className="mt-2 text-sm leading-6 text-ink-soft">
                 승인 담당자가 빠르게 검토할 수 있도록 꼭 필요한 정보만
                 정리했습니다.
+              </div>
+
+              <div className="mt-6 rounded-lg bg-surface-subtle p-4 text-sm text-ink-soft">
+                <div className="font-semibold text-ink">시연용 학교 계정</div>
+                <div className="mt-3 rounded-lg bg-white px-4 py-3">
+                  <div className="text-xs font-semibold uppercase tracking-[0.16em] text-ink-muted">
+                    로그인 아이디
+                  </div>
+                  <div className="mt-2 text-sm font-semibold text-ink">
+                    {DEMO_ACCOUNTS[1].email}
+                  </div>
+                  <div className="mt-1 text-sm text-ink-soft">
+                    비밀번호 {DEMO_PASSWORD}
+                  </div>
+                </div>
               </div>
 
               <div className="mt-6 grid gap-4 sm:grid-cols-2">
@@ -317,12 +214,6 @@ export default function HRRegisterPage() {
                     학교명
                   </div>
                   <input className="input-surface" placeholder="정인초등학교" />
-                </label>
-                <label className="block">
-                  <div className="mb-2 text-sm font-semibold text-ink">
-                    NEIS 코드
-                  </div>
-                  <input className="input-surface" placeholder="7581234" />
                 </label>
                 <label className="block">
                   <div className="mb-2 text-sm font-semibold text-ink">
@@ -365,7 +256,7 @@ export default function HRRegisterPage() {
                 <button
                   type="button"
                   className="inline-flex flex-1 items-center justify-center gap-2 rounded-lg border border-outline px-4 py-3 text-sm font-semibold text-ink-soft"
-                  onClick={() => setCurrentStep(2)}
+                  onClick={() => setCurrentStep(1)}
                 >
                   <ArrowLeft className="h-4 w-4" />
                   이전
@@ -403,8 +294,7 @@ export default function HRRegisterPage() {
                         return;
                       }
 
-                      router.push(result.redirectTo);
-                      router.refresh();
+                      window.location.assign(result.redirectTo);
                     } catch {
                       setSubmitError(
                         "학교 계정 신청을 완료하지 못했습니다.",

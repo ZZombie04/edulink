@@ -85,7 +85,7 @@ function AuthShowcase({
         <JobVisual
           className="min-h-[280px] w-full"
           employmentType="학교 계정 승인"
-          gradeLevel="기관 확인과 계정 등록"
+          gradeLevel="학교 계정 등록"
           id={jobPosts[0].id}
           qualificationType="운영 계정"
           schoolName="학교 가입"
@@ -94,7 +94,7 @@ function AuthShowcase({
         />
         <div className="grid w-full max-w-[420px] gap-4 sm:grid-cols-2">
           {[
-            ["기관 확인", "확인 코드 검증"],
+            ["필수 동의", "약관 확인"],
             ["채용 공고 등록", "학교 정보 입력"],
           ].map(([title, detail]) => (
             <div

@@ -2,14 +2,12 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { AlertCircle, ArrowRight, LockKeyhole, Mail } from "lucide-react";
 
 import { AuthShell } from "@/components/auth-shell";
 import { DEMO_ACCOUNTS, DEMO_PASSWORD } from "@/lib/demo-access";
 
 export default function LoginPage() {
-  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -53,8 +51,7 @@ export default function LoginPage() {
       const destination =
         nextPath && nextPath.startsWith("/") ? nextPath : result.redirectTo;
 
-      router.push(destination);
-      router.refresh();
+      window.location.assign(destination);
     } catch {
       setLoading(false);
       setError("로그인 처리 중 오류가 발생했습니다.");
