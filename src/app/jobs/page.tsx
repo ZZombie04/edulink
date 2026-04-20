@@ -15,7 +15,8 @@ import { BrandLockup } from "@/components/brand";
 import { JobApplyButton } from "@/components/job-apply-button";
 import { JobVisual } from "@/components/job-visual";
 import { LogoutButton } from "@/components/logout-button";
-import { gyeonggiRegions, jobPosts } from "@/lib/demo-data";
+import { gyeonggiRegions } from "@/lib/demo-data";
+import { useDemoHiringState } from "@/lib/demo-hiring-state";
 import { useDemoSession } from "@/lib/demo-session-client";
 import { getDashboardHref } from "@/lib/demo-session";
 
@@ -46,6 +47,7 @@ export default function JobsPage() {
   const session = useDemoSession();
   const viewerRole = session?.role ?? "guest";
   const dashboardHref = getDashboardHref(session?.role);
+  const { jobs } = useDemoHiringState();
   const [query, setQuery] = useState("");
   const [regionFilters, setRegionFilters] = useState<string[]>([
     "수원",
@@ -64,7 +66,7 @@ export default function JobsPage() {
   const filteredJobs = useMemo(() => {
     const lowered = query.trim().toLowerCase();
 
-    return jobPosts.filter((job) => {
+    return jobs.filter((job) => {
       const matchesQuery =
         lowered.length === 0 ||
         [job.schoolName, job.summary, job.gradeLevel, job.qualificationType]
@@ -79,7 +81,7 @@ export default function JobsPage() {
         qualificationFilters.includes(job.qualificationType)
       );
     });
-  }, [employmentFilters, qualificationFilters, query, regionFilters]);
+  }, [employmentFilters, jobs, qualificationFilters, query, regionFilters]);
 
   const toggleFilter = (
     value: string,
@@ -149,9 +151,9 @@ export default function JobsPage() {
 
               <div className="mt-8 max-w-2xl">
                 <div className="relative">
-                  <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-white/62" />
+                  <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-muted" />
                   <input
-                    className="w-full rounded-lg border border-white/18 bg-white/12 py-4 pl-11 pr-4 text-sm text-white placeholder:text-white/58 backdrop-blur outline-none transition focus:border-white/36"
+                    className="w-full rounded-lg border border-white/28 bg-white/94 py-4 pl-11 pr-4 text-sm text-ink placeholder:text-ink-muted shadow-soft outline-none transition focus:border-white focus:ring-4 focus:ring-white/20"
                     placeholder="학교명, 지역, 자격으로 검색"
                     value={query}
                     onChange={(event) => setQuery(event.target.value)}
@@ -161,7 +163,10 @@ export default function JobsPage() {
             </div>
 
             <div className="grid gap-4 md:grid-cols-2">
-              {jobPosts.slice(0, 2).map((job) => (
+              {jobs
+                .filter((job) => job.status !== "closed")
+                .slice(0, 2)
+                .map((job) => (
                 <JobVisual
                   key={job.id}
                   className="min-h-[255px]"

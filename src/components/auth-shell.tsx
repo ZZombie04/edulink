@@ -7,7 +7,6 @@ import { CharacterAvatar } from "@/components/character-avatar";
 import { BrandLockup } from "@/components/brand";
 import { JobVisual } from "@/components/job-visual";
 import type { AvatarPresetId } from "@/lib/avatar-presets";
-import { useViewerRole } from "@/lib/demo-session-client";
 import { featuredTeachers, jobPosts } from "@/lib/demo-data";
 import { getTeacherDisplayName } from "@/lib/privacy";
 
@@ -27,8 +26,6 @@ function AuthShowcase({
   variant: AuthVariant;
   avatarPreset?: AvatarPresetId;
 }) {
-  const viewerRole = useViewerRole();
-
   if (variant === "teacher") {
     const choices = Array.from(
       new Set(
@@ -143,7 +140,7 @@ function AuthShowcase({
             />
             <div>
               <div className="text-lg font-bold text-white">
-                {getTeacherDisplayName(featuredTeachers[0].name, viewerRole)}
+                {getTeacherDisplayName(featuredTeachers[0].name, "guest")}
               </div>
               <div className="text-sm text-white/72">
                 {featuredTeachers[0].qualification}

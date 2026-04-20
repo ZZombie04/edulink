@@ -22,7 +22,13 @@ function readCookie(name: string) {
 }
 
 export function useDemoSession(initialSession: DemoSession | null = null) {
-  const [session, setSession] = useState<DemoSession | null>(initialSession);
+  const [session, setSession] = useState<DemoSession | null>(() => {
+    if (typeof document === "undefined") {
+      return initialSession;
+    }
+
+    return parseDemoSession(readCookie(DEMO_SESSION_COOKIE)) ?? initialSession;
+  });
 
   useEffect(() => {
     if (typeof document === "undefined") {

@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { useParams, useSearchParams } from "next/navigation";
+import { useParams } from "next/navigation";
 import {
   ArrowLeft,
   Briefcase,
@@ -20,6 +20,7 @@ import {
   getTeacherById,
   type TeacherStatus,
 } from "@/lib/demo-data";
+import { useDemoHiringState } from "@/lib/demo-hiring-state";
 
 const navItems = [
   { href: "/hr/dashboard", label: "채용 운영", icon: Briefcase },
@@ -55,12 +56,18 @@ function statusTone(status: TeacherStatus) {
 export default function PoolTeacherDetailPage() {
   const params = useParams<{ id: string }>();
   const teacher = getTeacherById(Number(params.id));
-  const searchParams = useSearchParams();
-  const requestMode = searchParams.get("request") === "true";
-  const [interested, setInterested] = useState(false);
-  const [requested, setRequested] = useState(requestMode);
+  const {
+    cancelPoolRequest,
+    getRequestForTeacherAndJob,
+    hrMatchRequests,
+    isTeacherInterested,
+    liveJobs,
+    sendPoolRequest,
+    toggleInterestedTeacher,
+  } = useDemoHiringState();
+  const [selectedJobId, setSelectedJobId] = useState(liveJobs[0]?.id ?? "");
 
-  const relatedJobs = useMemo(
+  const relatedTeachers = useMemo(
     () =>
       featuredTeachers
         .filter((item) => item.id !== teacher?.id)
@@ -82,12 +89,17 @@ export default function PoolTeacherDetailPage() {
     );
   }
 
+  const selectedJob = liveJobs.find((job) => job.id === selectedJobId) ?? liveJobs[0] ?? null;
+  const activeRequest = selectedJob
+    ? getRequestForTeacherAndJob(teacher.id, selectedJob.id)
+    : null;
+  const interested = isTeacherInterested(teacher.id);
   const status = statusTone(teacher.status);
 
   return (
     <PortalShell
       navItems={navItems}
-      noticeCount={2}
+      noticeCount={hrMatchRequests.filter((request) => request.status === "pending").length}
       primaryAction={{ href: "/jobs", label: "채용 공고 확인", icon: Briefcase }}
       sectionLabel="교사 상세 프로필"
       user={{
@@ -96,7 +108,7 @@ export default function PoolTeacherDetailPage() {
         detail: "성진초등학교",
       }}
     >
-      <section className="grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
+      <section className="grid gap-6 xl:grid-cols-[1.04fr_0.96fr]">
         <div className="panel-surface p-6">
           <Link
             href="/pool"
@@ -118,8 +130,10 @@ export default function PoolTeacherDetailPage() {
               >
                 {status.label}
               </span>
-              <div className="mt-3 text-3xl font-bold text-ink">{teacher.name}</div>
-              <div className="mt-2 text-sm font-semibold text-primary-700">
+              <div className="mt-3 break-keep text-3xl font-bold text-ink">
+                {teacher.name}
+              </div>
+              <div className="mt-2 break-keep text-sm font-semibold text-primary-700">
                 {teacher.qualification}
                 {teacher.subject ? ` / ${teacher.subject}` : ""}
               </div>
@@ -129,7 +143,9 @@ export default function PoolTeacherDetailPage() {
             </div>
           </div>
 
-          <p className="mt-6 text-sm leading-7 text-ink-soft">{teacher.summary}</p>
+          <p className="mt-6 break-keep text-sm leading-7 text-ink-soft">
+            {teacher.summary}
+          </p>
 
           <div className="mt-6 grid gap-3 sm:grid-cols-2">
             <div className="rounded-lg bg-surface-subtle px-4 py-3 text-sm text-ink-soft">
@@ -156,34 +172,88 @@ export default function PoolTeacherDetailPage() {
         <div className="space-y-6">
           <div className="panel-surface p-6">
             <div className="text-xl font-bold text-ink">학교 담당자 작업</div>
-            <div className="mt-5 grid gap-3">
+            <div className="mt-5 space-y-4">
               <button
                 type="button"
-                className={`inline-flex items-center justify-center gap-2 rounded-lg px-4 py-3 text-sm font-semibold ${
+                className={`inline-flex w-full items-center justify-center gap-2 rounded-lg px-4 py-3 text-sm font-semibold ${
                   interested
                     ? "bg-primary-50 text-primary-700"
-                    : "border border-outline text-ink-soft"
+                    : "border border-outline bg-white text-ink-soft"
                 }`}
-                onClick={() => setInterested((current) => !current)}
+                onClick={() => toggleInterestedTeacher(teacher.id)}
               >
                 <Heart className="h-4 w-4" />
-                {interested ? "관심 등록됨" : "관심 등록"}
+                {interested ? "관심 등록 해제" : "관심 등록"}
               </button>
 
-              <button
-                type="button"
-                className="inline-flex items-center justify-center gap-2 rounded-lg bg-[linear-gradient(135deg,#0058be,#2170e4)] px-4 py-3 text-sm font-semibold text-white shadow-soft"
-                onClick={() => setRequested(true)}
-              >
-                <Send className="h-4 w-4" />
-                {requested ? "매칭 요청 전송 완료" : "매칭 요청 보내기"}
-              </button>
-            </div>
+              <label className="block">
+                <div className="mb-2 text-sm font-semibold text-ink">
+                  연결할 채용 공고
+                </div>
+                <select
+                  className="input-surface"
+                  value={selectedJob?.id ?? ""}
+                  onChange={(event) => setSelectedJobId(event.target.value)}
+                >
+                  {liveJobs.map((job) => (
+                    <option key={job.id} value={job.id}>
+                      {job.schoolName} / {job.gradeLevel}
+                    </option>
+                  ))}
+                </select>
+              </label>
 
-            <div className="mt-4 rounded-lg bg-surface-subtle px-4 py-4 text-sm leading-6 text-ink-soft">
-              {requested
-                ? "정인초등학교 3학년 담임 공고 기준으로 제안이 전송된 상태로 더미 데이터가 연결되었습니다."
-                : "이 교사의 희망 지역과 자격 조건을 기준으로 바로 매칭 요청을 전송할 수 있습니다."}
+              {selectedJob ? (
+                <div className="rounded-lg bg-surface-subtle px-4 py-4 text-sm text-ink-soft">
+                  <div className="font-semibold text-ink">
+                    {selectedJob.schoolName} / {selectedJob.gradeLevel}
+                  </div>
+                  <div className="mt-2 break-keep leading-6">
+                    {selectedJob.summary}
+                  </div>
+                </div>
+              ) : null}
+
+              {selectedJob ? (
+                activeRequest &&
+                !["rejected", "cancelled", "archived"].includes(activeRequest.status) ? (
+                  <div className="grid gap-3">
+                    <div className="rounded-lg bg-primary-50 px-4 py-4 text-sm text-primary-700">
+                      {activeRequest.summary}
+                    </div>
+                    {activeRequest.status === "pending" ? (
+                      <button
+                        type="button"
+                        className="inline-flex items-center justify-center gap-2 rounded-lg border border-outline bg-white px-4 py-3 text-sm font-semibold text-ink-soft"
+                        onClick={() => cancelPoolRequest(activeRequest.id)}
+                      >
+                        <Send className="h-4 w-4" />
+                        매칭 요청 취소
+                      </button>
+                    ) : (
+                      <Link
+                        href={`/teacher/offers/${activeRequest.id}`}
+                        className="inline-flex items-center justify-center gap-2 rounded-lg border border-outline bg-white px-4 py-3 text-sm font-semibold text-primary-700"
+                      >
+                        교사 화면에서 상태 확인
+                      </Link>
+                    )}
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-[linear-gradient(135deg,#0058be,#2170e4)] px-4 py-3 text-sm font-semibold text-white shadow-soft"
+                    onClick={() => sendPoolRequest(selectedJob.id, teacher.id)}
+                  >
+                    <Send className="h-4 w-4" />
+                    매칭 요청 보내기
+                  </button>
+                )
+              ) : (
+                <div className="rounded-lg bg-surface-subtle px-4 py-4 text-sm text-ink-soft">
+                  먼저 연결할 공고를 선택해 주세요.
+                </div>
+              )}
             </div>
           </div>
 
@@ -191,13 +261,13 @@ export default function PoolTeacherDetailPage() {
             <div className="text-xl font-bold text-ink">검토 포인트</div>
             <div className="mt-4 space-y-3">
               <div className="rounded-lg bg-surface-subtle px-4 py-3 text-sm text-ink-soft">
-                최근 적합 공고: 정인초등학교 3학년 담임
-              </div>
-              <div className="rounded-lg bg-surface-subtle px-4 py-3 text-sm text-ink-soft">
                 희망 지역: {teacher.preferredRegions.join(", ")}
               </div>
               <div className="rounded-lg bg-surface-subtle px-4 py-3 text-sm text-ink-soft">
-                유사 경력 참고: {relatedJobs.join(", ")}
+                희망 근무 형태: {teacher.preferredTypes.join(", ")}
+              </div>
+              <div className="rounded-lg bg-surface-subtle px-4 py-3 text-sm text-ink-soft">
+                유사 검토 대상: {relatedTeachers.join(", ")}
               </div>
             </div>
           </div>

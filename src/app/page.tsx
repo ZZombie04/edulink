@@ -13,7 +13,10 @@ import {
 
 import { BrandLockup } from "@/components/brand";
 import { CharacterAvatar } from "@/components/character-avatar";
-import { JobVisual } from "@/components/job-visual";
+import {
+  RotatingJobShowcase,
+  RotatingPoolShowcase,
+} from "@/components/home-rotating-sections";
 import { LogoutButton } from "@/components/logout-button";
 import { getDashboardHref } from "@/lib/demo-session";
 import { getDemoSessionFromServerCookie } from "@/lib/demo-session-server";
@@ -313,7 +316,7 @@ export default async function Home() {
         <section className="relative overflow-hidden bg-[linear-gradient(140deg,#071b3a,#0a4da4,#18907c)]">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.18),transparent_30%),radial-gradient(circle_at_bottom_right,rgba(255,255,255,0.12),transparent_34%)]" />
 
-          <div className="relative mx-auto max-w-7xl px-4 pb-14 pt-10 sm:px-6 sm:pb-20 sm:pt-20">
+          <div className="relative mx-auto max-w-7xl px-4 pb-8 pt-10 sm:px-6 sm:pb-12 sm:pt-18">
             {signedInTeacher ? (
               <div className="grid gap-10 lg:grid-cols-[1.05fr_0.95fr] lg:items-start">
                 <div className="max-w-3xl">
@@ -356,7 +359,7 @@ export default async function Home() {
                     ].map(([label, value]) => (
                       <div
                         key={label}
-                        className="rounded-[20px] border border-white/12 bg-white/10 px-4 py-4 backdrop-blur-sm last:col-span-2 sm:last:col-span-1"
+                        className="rounded-xl border border-white/12 bg-white/10 px-4 py-4 backdrop-blur-sm last:col-span-2 sm:last:col-span-1"
                       >
                         <div className="text-sm font-semibold text-white">
                           {label}
@@ -395,7 +398,7 @@ export default async function Home() {
                     </div>
 
                     <div className="mt-5 grid gap-3 sm:grid-cols-2">
-                      <div className="rounded-[20px] bg-white/10 px-4 py-4">
+                      <div className="rounded-xl bg-white/10 px-4 py-4">
                         <div className="text-xs font-semibold text-white/70">
                           희망 근무 형태
                         </div>
@@ -403,7 +406,7 @@ export default async function Home() {
                           {signedInTeacher.preferredTypes.join(", ")}
                         </div>
                       </div>
-                      <div className="rounded-[20px] bg-white/10 px-4 py-4">
+                      <div className="rounded-xl bg-white/10 px-4 py-4">
                         <div className="text-xs font-semibold text-white/70">
                           거주 지역
                         </div>
@@ -440,10 +443,7 @@ export default async function Home() {
 
                     <div className="mt-4 space-y-3">
                       {teacherRequests.slice(0, 2).map((request) => (
-                        <div
-                          key={request.id}
-                          className="rounded-[20px] bg-white/10 px-4 py-4"
-                        >
+                        <div key={request.id} className="rounded-xl bg-white/10 px-4 py-4">
                           <div className="text-sm font-semibold text-white">
                             {request.schoolName}
                           </div>
@@ -500,7 +500,7 @@ export default async function Home() {
                     ].map(([label, value]) => (
                       <div
                         key={label}
-                        className="rounded-[20px] border border-white/12 bg-white/10 px-4 py-4 backdrop-blur-sm last:col-span-2 sm:last:col-span-1"
+                        className="rounded-xl border border-white/12 bg-white/10 px-4 py-4 backdrop-blur-sm last:col-span-2 sm:last:col-span-1"
                       >
                         <div className="text-sm font-semibold text-white">
                           {label}
@@ -525,9 +525,9 @@ export default async function Home() {
                       <Link
                         key={item.title}
                         href={item.href}
-                        className="grid gap-3 rounded-[24px] border border-white/10 bg-white/8 px-4 py-4 transition-colors hover:bg-white/12 sm:grid-cols-[auto_1fr_auto] sm:items-center"
+                        className="grid gap-3 rounded-xl border border-white/10 bg-white/8 px-4 py-4 transition-colors hover:bg-white/12 sm:grid-cols-[auto_1fr_auto] sm:items-center"
                       >
-                        <div className="flex h-11 w-11 items-center justify-center rounded-[16px] bg-white/14 text-white">
+                        <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-white/14 text-white">
                           <item.Icon className="h-5 w-5" />
                         </div>
                         <div>
@@ -546,7 +546,7 @@ export default async function Home() {
                   </div>
 
                   <div className="mt-6 grid gap-3 sm:grid-cols-2">
-                    <div className="rounded-[24px] bg-white/8 px-4 py-4">
+                    <div className="rounded-xl bg-white/8 px-4 py-4">
                       <div className="text-xs font-semibold text-white">
                         교사 가입
                       </div>
@@ -554,7 +554,7 @@ export default async function Home() {
                         경력과 희망 근무 조건 등록
                       </div>
                     </div>
-                    <div className="rounded-[24px] bg-white/8 px-4 py-4">
+                    <div className="rounded-xl bg-white/8 px-4 py-4">
                       <div className="text-xs font-semibold text-white">
                         학교 가입
                       </div>
@@ -569,7 +569,7 @@ export default async function Home() {
           </div>
         </section>
 
-        <section className="relative z-10 -mt-8 px-4 sm:px-6" id="teacher-pool">
+        <section className="relative z-10 px-4 pt-4 sm:px-6 sm:pt-6" id="teacher-pool">
           <div className="mx-auto max-w-7xl">
             <div className="rounded-[28px] border border-white/10 bg-white/[0.06] p-6 text-white sm:p-8">
               <div className="flex items-center justify-between gap-4">
@@ -590,47 +590,14 @@ export default async function Home() {
                 </Link>
               </div>
 
-              <div className="mt-8 grid gap-4 lg:grid-cols-3">
-                {publicPoolPreview.map((teacher) => (
-                  <Link
-                    key={teacher.title}
-                    href={teacher.href}
-                    className="block rounded-lg border border-white/10 bg-white/8 p-5 transition-colors hover:bg-white/12"
-                  >
-                    <div className="flex items-start gap-3">
-                      <CharacterAvatar
-                        className="h-16 w-16 rounded-lg"
-                        presetId={teacher.avatarPreset}
-                        size={64}
-                      />
-                      <div className="min-w-0 flex-1">
-                        <div className="text-lg font-bold text-white">
-                          {teacher.title}
-                        </div>
-                        <p className="mt-2 text-sm leading-6 text-white">
-                          {teacher.summary}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="mt-4 flex flex-wrap gap-2 text-xs font-medium text-white">
-                      {teacher.tags.map((tag) => (
-                        <span
-                          key={tag}
-                          className="rounded-full bg-white/10 px-2.5 py-1"
-                        >
-                          {tag}
-                        </span>
-                      ))}
-                    </div>
-                  </Link>
-                ))}
+              <div className="mt-8">
+                <RotatingPoolShowcase items={publicPoolPreview} />
               </div>
             </div>
           </div>
         </section>
 
-        <section className="mx-auto max-w-7xl px-4 py-20 sm:px-6" id="jobs">
+        <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 sm:py-20" id="jobs">
           <div className="flex items-center justify-between gap-4">
             <div>
               <div className="text-sm font-semibold text-white">
@@ -649,51 +616,8 @@ export default async function Home() {
             </Link>
           </div>
 
-          <div className="mt-8 grid gap-5 lg:grid-cols-3">
-            {publicJobPreview.map((job) => (
-              <article
-                key={job.id}
-                className="rounded-[28px] border border-white/10 bg-white/[0.06] p-5 text-white transition-colors hover:bg-white/10"
-              >
-                <JobVisual
-                  className="min-h-[248px]"
-                  employmentType={job.employmentType}
-                  gradeLevel={job.gradeLevel}
-                  id={job.id}
-                  qualificationSubject={job.qualificationSubject}
-                  qualificationType={job.qualificationType}
-                  schoolName={job.schoolName}
-                  schoolRegion={job.schoolRegion}
-                />
-
-                <div className="mt-5">
-                  <p className="text-sm leading-6 text-white">{job.summary}</p>
-
-                  <div className="mt-5 space-y-3 text-sm text-white">
-                    <div className="flex items-center gap-2">
-                      <MapPin className="h-4 w-4 text-white" />
-                      {job.schoolRegion} / {job.gradeLevel}
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Clock3 className="h-4 w-4 text-white" />
-                      {job.schedule}
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Briefcase className="h-4 w-4 text-white" />
-                      {job.detail}
-                    </div>
-                  </div>
-
-                  <Link
-                    href={`/jobs/${job.id}`}
-                    className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-white"
-                  >
-                    공고 상세 보기
-                    <ArrowRight className="h-4 w-4" />
-                  </Link>
-                </div>
-              </article>
-            ))}
+          <div className="mt-8">
+            <RotatingJobShowcase items={publicJobPreview} />
           </div>
         </section>
       </main>

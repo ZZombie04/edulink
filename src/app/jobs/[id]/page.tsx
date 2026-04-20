@@ -1,5 +1,7 @@
+"use client";
+
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { useParams } from "next/navigation";
 import {
   ArrowLeft,
   Briefcase,
@@ -13,15 +15,10 @@ import { BrandLockup } from "@/components/brand";
 import { JobApplyButton } from "@/components/job-apply-button";
 import { JobVisual } from "@/components/job-visual";
 import { LogoutButton } from "@/components/logout-button";
-import { jobPosts } from "@/lib/demo-data";
+import { useDemoHiringState } from "@/lib/demo-hiring-state";
+import { useDemoSession, useViewerRole } from "@/lib/demo-session-client";
+import { getDashboardHref } from "@/lib/demo-session";
 import { getContactDisplayName } from "@/lib/privacy";
-import {
-  getDashboardHref,
-} from "@/lib/demo-session";
-import {
-  getDemoSessionFromServerCookie,
-  getViewerRoleFromServerCookie,
-} from "@/lib/demo-session-server";
 
 function jobStatusLabel(status: string) {
   switch (status) {
@@ -43,23 +40,37 @@ function jobStatusLabel(status: string) {
   }
 }
 
-export default async function JobDetailPage({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
-  const session = await getDemoSessionFromServerCookie();
-  const viewerRole = await getViewerRoleFromServerCookie();
-  const { id } = await params;
-  const job = jobPosts.find((item) => item.id === id);
+export default function JobDetailPage() {
+  const params = useParams<{ id: string }>();
+  const session = useDemoSession();
+  const viewerRole = useViewerRole();
+  const dashboardHref = getDashboardHref(session?.role ?? null);
+  const { getJobById, getApplicationsForJob } = useDemoHiringState();
+  const job = getJobById(params.id);
 
   if (!job) {
-    notFound();
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-surface px-4 text-center">
+        <div className="panel-surface max-w-xl p-8">
+          <div className="text-2xl font-bold text-ink">공고 정보를 찾을 수 없습니다.</div>
+          <p className="mt-3 break-keep text-sm leading-6 text-ink-soft">
+            이미 마감되었거나 현재 더미 상태에 없는 공고입니다.
+          </p>
+          <Link
+            href="/jobs"
+            className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-primary-700"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            공고 목록으로 돌아가기
+          </Link>
+        </div>
+      </div>
+    );
   }
 
   const status = jobStatusLabel(job.status);
   const contactName = getContactDisplayName(job.contactName, viewerRole);
-  const dashboardHref = getDashboardHref(session?.role ?? null);
+  const applications = getApplicationsForJob(job.id);
 
   return (
     <div className="min-h-screen bg-surface text-ink">
@@ -101,20 +112,20 @@ export default async function JobDetailPage({
       <section className="relative overflow-hidden bg-[linear-gradient(145deg,#071b3a,#0b4fa6,#18907c)]">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.18),transparent_30%),radial-gradient(circle_at_bottom_right,rgba(255,255,255,0.14),transparent_34%)]" />
         <div className="relative mx-auto max-w-7xl px-4 py-14 sm:px-6 sm:py-16">
-          <div className="grid gap-6 lg:grid-cols-[1.05fr_0.95fr] lg:items-center">
-            <div>
+          <div className="grid gap-6 lg:grid-cols-[1.02fr_0.98fr] lg:items-center">
+            <div className="max-w-3xl">
               <span
                 className={`rounded-full px-3 py-1 text-xs font-semibold ${status.className}`}
               >
                 {status.label}
               </span>
-              <h1 className="mt-5 max-w-3xl text-4xl font-bold leading-tight text-white sm:text-5xl">
+              <h1 className="mt-5 break-keep text-4xl font-bold leading-tight text-white sm:text-5xl">
                 {job.schoolName}
               </h1>
-              <p className="mt-3 text-lg font-semibold text-white/92">
+              <p className="mt-3 break-keep text-lg font-semibold text-white/92">
                 {job.gradeLevel}
               </p>
-              <p className="mt-5 max-w-2xl text-base leading-7 text-white/88">
+              <p className="mt-5 break-keep text-base leading-7 text-white/88">
                 {job.summary}
               </p>
 
@@ -124,13 +135,16 @@ export default async function JobDetailPage({
                 </span>
                 <span className="rounded-full border border-white/18 bg-white/10 px-3 py-2 text-white">
                   {job.qualificationType}
-                  {job.qualificationSubject
-                    ? ` · ${job.qualificationSubject}`
-                    : ""}
+                  {job.qualificationSubject ? ` · ${job.qualificationSubject}` : ""}
                 </span>
                 <span className="rounded-full border border-white/18 bg-white/10 px-3 py-2 text-white">
                   마감 {job.deadline}
                 </span>
+                {job.source === "custom" ? (
+                  <span className="rounded-full border border-white/18 bg-white/10 px-3 py-2 text-white">
+                    새로 등록한 공고
+                  </span>
+                ) : null}
               </div>
             </div>
 
@@ -150,7 +164,7 @@ export default async function JobDetailPage({
       </section>
 
       <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
-        <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
+        <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
           <div className="space-y-6">
             <section className="panel-surface p-6">
               <div className="text-lg font-bold text-ink">근무 안내 정보</div>
@@ -191,7 +205,7 @@ export default async function JobDetailPage({
                     className="flex gap-3 rounded-lg bg-surface-subtle px-4 py-3"
                   >
                     <CheckCircle2 className="mt-0.5 h-4 w-4 text-secondary-600" />
-                    <div className="text-sm leading-6 text-ink-soft">
+                    <div className="break-keep text-sm leading-6 text-ink-soft">
                       {duty}
                     </div>
                   </div>
@@ -205,7 +219,7 @@ export default async function JobDetailPage({
                 {job.requirements.map((requirement) => (
                   <div
                     key={requirement}
-                    className="rounded-lg border border-outline bg-white px-4 py-3 text-sm leading-6 text-ink-soft"
+                    className="rounded-lg border border-outline bg-white px-4 py-3 break-keep text-sm leading-6 text-ink-soft"
                   >
                     {requirement}
                   </div>
@@ -219,7 +233,7 @@ export default async function JobDetailPage({
                 {job.benefits.map((benefit) => (
                   <div
                     key={benefit}
-                    className="rounded-lg border border-secondary-100 bg-secondary-50 px-4 py-3 text-sm leading-6 text-secondary-700"
+                    className="rounded-lg border border-secondary-100 bg-secondary-50 px-4 py-3 break-keep text-sm leading-6 text-secondary-700"
                   >
                     {benefit}
                   </div>
@@ -245,6 +259,11 @@ export default async function JobDetailPage({
               <div className="rounded-lg bg-surface-subtle px-4 py-3">
                 담당자 {contactName}
               </div>
+              {applications.length > 0 ? (
+                <div className="rounded-lg bg-primary-50 px-4 py-3 text-primary-700">
+                  새 더미 지원 {applications.length}건이 현재 공고에 연결되어 있습니다.
+                </div>
+              ) : null}
             </div>
 
             <JobApplyButton

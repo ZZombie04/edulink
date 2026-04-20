@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { CheckCircle2, Send } from "lucide-react";
+import { CheckCircle2, RotateCcw, Send } from "lucide-react";
 
 import { useDemoHiringState } from "@/lib/demo-hiring-state";
 import type { ViewerRole } from "@/lib/demo-session";
@@ -29,7 +29,13 @@ export function JobApplyButton({
   showHelperText = false,
   viewerRole,
 }: JobApplyButtonProps) {
-  const { applyToJob, isJobApplied } = useDemoHiringState();
+  const {
+    applyToJob,
+    getApplicationForTeacherAndJob,
+    isJobApplied,
+    withdrawApplication,
+  } = useDemoHiringState();
+  const application = getApplicationForTeacherAndJob(1, jobId);
   const applied = isJobApplied(jobId);
 
   if (jobStatus === "closed" && !applied) {
@@ -72,7 +78,8 @@ export function JobApplyButton({
   }
 
   const helperText = applied
-    ? "지원이 접수되었습니다. 학교 검토 후 진행 상태를 교사 홈에서 확인할 수 있습니다."
+    ? application?.summary ??
+      "지원이 접수되었습니다. 학교 검토 후 진행 상태를 교사 홈에서 확인할 수 있습니다."
     : "지원 후 학교 검토가 시작되며, 수락 요청이나 추가 안내는 교사 홈에서 이어집니다.";
 
   return (
@@ -104,15 +111,29 @@ export function JobApplyButton({
       </button>
 
       {showHelperText ? (
-        <div
-          className={cn(
-            "rounded-lg px-4 py-3 text-sm leading-6",
-            applied
-              ? "bg-secondary-50 text-secondary-700"
-              : "bg-surface-subtle text-ink-soft",
-          )}
-        >
-          {helperText}
+        <div className="space-y-3">
+          <div
+            className={cn(
+              "rounded-lg px-4 py-3 text-sm leading-6",
+              applied
+                ? "bg-secondary-50 text-secondary-700"
+                : "bg-surface-subtle text-ink-soft",
+            )}
+          >
+            {helperText}
+          </div>
+
+          {application &&
+          !["withdrawn", "rejected", "hired"].includes(application.status) ? (
+            <button
+              type="button"
+              className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-outline bg-white px-4 py-3 text-sm font-semibold text-ink-soft"
+              onClick={() => withdrawApplication(application.id)}
+            >
+              <RotateCcw className="h-4 w-4" />
+              지원 취소
+            </button>
+          ) : null}
         </div>
       ) : null}
     </div>

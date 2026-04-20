@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import {
   Briefcase,
+  Heart,
   LayoutDashboard,
   MapPin,
   Search,
@@ -15,6 +16,7 @@ import {
 import { CharacterAvatar } from "@/components/character-avatar";
 import { PortalShell } from "@/components/portal-shell";
 import { featuredTeachers, type TeacherStatus } from "@/lib/demo-data";
+import { useDemoHiringState } from "@/lib/demo-hiring-state";
 
 const navItems = [
   { href: "/hr/dashboard", label: "채용 운영", icon: LayoutDashboard },
@@ -50,15 +52,35 @@ function statusTone(status: TeacherStatus) {
   }
 }
 
-export default function HCPoolPage() {
+function requestTone(status?: string) {
+  switch (status) {
+    case "accepted":
+      return "bg-secondary-50 text-secondary-700";
+    case "rejected":
+      return "bg-[var(--danger-soft)] text-[#9c2f24]";
+    case "cancelled":
+      return "bg-surface-panel text-ink-soft";
+    default:
+      return "bg-primary-50 text-primary-700";
+  }
+}
+
+export default function HRPoolPage() {
+  const {
+    hrMatchRequests,
+    isTeacherInterested,
+    toggleInterestedTeacher,
+  } = useDemoHiringState();
   const [query, setQuery] = useState("");
   const [statusFilters, setStatusFilters] = useState<TeacherStatus[]>([
     "seeking",
     "interviewing",
+    "employed",
   ]);
   const [qualificationFilters, setQualificationFilters] = useState<string[]>([
     "초등",
     "중등",
+    "특수",
   ]);
   const [workTypeFilters, setWorkTypeFilters] = useState<string[]>([
     "기간제",
@@ -90,6 +112,10 @@ export default function HCPoolPage() {
     });
   }, [query, qualificationFilters, statusFilters, workTypeFilters]);
 
+  const pendingRequests = hrMatchRequests.filter(
+    (request) => request.status === "pending",
+  );
+
   const toggleFilter = (
     value: string,
     current: string[],
@@ -106,8 +132,8 @@ export default function HCPoolPage() {
   return (
     <PortalShell
       navItems={navItems}
-      noticeCount={3}
-      primaryAction={{ href: "/jobs", label: "채용 공고 확인", icon: Sparkles }}
+      noticeCount={pendingRequests.length}
+      primaryAction={{ href: "/hr/dashboard", label: "채용 운영 보기", icon: Sparkles }}
       sectionLabel="교사 인력풀 운영"
       user={{
         name: "홍수진",
@@ -117,13 +143,17 @@ export default function HCPoolPage() {
     >
       <section className="grid gap-6 xl:grid-cols-[1.35fr_0.65fr]">
         <div className="self-start rounded-lg bg-[linear-gradient(135deg,#0058be,#2170e4)] p-6 text-white shadow-soft">
-          <div className="flex min-h-[170px] flex-col justify-between">
+          <div className="flex min-h-[176px] flex-col justify-between">
             <div>
               <div className="inline-flex rounded-full bg-white/12 px-3 py-2 text-sm font-semibold text-white/90">
                 기간제·시간강사
               </div>
               <div className="mt-5 text-3xl font-bold tracking-tight sm:text-4xl">
                 교사 인력풀
+              </div>
+              <div className="mt-3 break-keep text-sm leading-6 text-white/84">
+                관심 교사 저장, 프로필 확인, 공고 연결 매칭 요청까지 한 흐름으로
+                이어집니다.
               </div>
             </div>
             <div className="text-sm font-medium text-white/82">
@@ -134,13 +164,13 @@ export default function HCPoolPage() {
 
         <div className="panel-surface p-6">
           <div className="text-sm font-semibold text-ink-soft">
-            오늘의 교사 인력풀 현황
+            오늘의 인력풀 현황
           </div>
           <div className="mt-5 grid gap-4 sm:grid-cols-3 xl:grid-cols-1">
             {[
-              ["연락 가능한 교사", "183명"],
-              ["면접 진행 중", "27명"],
-              ["예약 제안 가능", "9명"],
+              ["연락 가능한 교사", `${featuredTeachers.filter((item) => item.status === "seeking").length}명`],
+              ["응답 대기 제안", `${pendingRequests.length}건`],
+              ["관심 등록", `${featuredTeachers.filter((item) => isTeacherInterested(item.id)).length}명`],
             ].map(([label, value]) => (
               <div key={label} className="rounded-lg bg-surface-subtle p-4">
                 <div className="text-sm font-medium text-ink-soft">{label}</div>
@@ -161,8 +191,8 @@ export default function HCPoolPage() {
               type="button"
               className="text-xs font-semibold text-primary-700"
               onClick={() => {
-                setStatusFilters(["seeking", "interviewing"]);
-                setQualificationFilters(["초등", "중등"]);
+                setStatusFilters(["seeking", "interviewing", "employed"]);
+                setQualificationFilters(["초등", "중등", "특수"]);
                 setWorkTypeFilters(["기간제", "시간강사"]);
                 setQuery("");
               }}
@@ -279,6 +309,10 @@ export default function HCPoolPage() {
 
           {filteredTeachers.map((teacher) => {
             const status = statusTone(teacher.status);
+            const latestRequest =
+              hrMatchRequests.find((request) => request.teacherId === teacher.id) ??
+              null;
+            const interested = isTeacherInterested(teacher.id);
 
             return (
               <article
@@ -293,36 +327,50 @@ export default function HCPoolPage() {
                       size={80}
                     />
 
-                    <div className="flex-1">
+                    <div className="min-w-0 flex-1">
                       <div className="flex flex-wrap items-center gap-2">
                         <span
                           className={`rounded-full px-2.5 py-1 text-xs font-semibold ${status.className}`}
                         >
                           {status.label}
                         </span>
-                        {teacher.reservation ? (
+                        {latestRequest ? (
+                          <span
+                            className={`rounded-full px-2.5 py-1 text-xs font-semibold ${requestTone(
+                              latestRequest.status,
+                            )}`}
+                          >
+                            {latestRequest.status === "accepted"
+                              ? "응답 완료"
+                              : latestRequest.status === "rejected"
+                                ? "보류"
+                                : latestRequest.status === "cancelled"
+                                  ? "요청 취소"
+                                  : "요청 발송"}
+                          </span>
+                        ) : null}
+                        {interested ? (
                           <span className="rounded-full bg-[var(--tertiary-soft)] px-2.5 py-1 text-xs font-semibold text-[var(--tertiary-solid)]">
-                            예약 제안 가능
-                            {teacher.reservationCount
-                              ? ` ${teacher.reservationCount}건`
-                              : ""}
+                            관심 등록
                           </span>
                         ) : null}
                       </div>
 
                       <div className="mt-3 flex flex-wrap items-end gap-3">
-                        <h2 className="text-2xl font-bold text-ink">{teacher.name}</h2>
+                        <h2 className="break-keep text-2xl font-bold text-ink">
+                          {teacher.name}
+                        </h2>
                         <span className="text-sm text-ink-muted">
                           {teacher.age}세 / {teacher.birthYear}년생
                         </span>
                       </div>
 
-                      <div className="mt-2 text-sm font-semibold text-primary-700">
+                      <div className="mt-2 break-keep text-sm font-semibold text-primary-700">
                         {teacher.qualification}
                         {teacher.subject ? ` / ${teacher.subject}` : ""}
                       </div>
 
-                      <p className="mt-3 text-sm leading-6 text-ink-soft">
+                      <p className="mt-3 break-keep text-sm leading-6 text-ink-soft">
                         {teacher.summary}
                       </p>
 
@@ -345,7 +393,7 @@ export default function HCPoolPage() {
                         {teacher.preferredRegions.map((region) => (
                           <span
                             key={region}
-                            className="inline-flex items-center gap-1 rounded-full bg-white px-2.5 py-1 text-xs font-medium text-ink-soft ring-1 ring-outline"
+                            className="inline-flex items-center gap-1 rounded-full bg-white px-3 py-2 text-xs font-medium text-ink-soft ring-1 ring-outline"
                           >
                             <MapPin className="h-3 w-3" />
                             {region}
@@ -355,26 +403,44 @@ export default function HCPoolPage() {
                     </div>
                   </div>
 
-                  <div className="flex w-full gap-3 xl:w-auto xl:flex-col">
+                  <div className="grid w-full gap-3 xl:w-[240px]">
                     <button
                       type="button"
-                      className="inline-flex flex-1 items-center justify-center gap-2 rounded-lg border border-outline px-4 py-3 text-sm font-semibold text-primary-700 transition-colors hover:bg-primary-50 xl:min-w-[180px]"
+                      className={`inline-flex items-center justify-center gap-2 rounded-lg px-4 py-3 text-sm font-semibold ${
+                        interested
+                          ? "bg-primary-50 text-primary-700"
+                          : "border border-outline bg-white text-ink-soft"
+                      }`}
+                      onClick={() => toggleInterestedTeacher(teacher.id)}
                     >
-                      <Star className="h-4 w-4" />
-                      관심 등록
+                      <Heart className="h-4 w-4" />
+                      {interested ? "관심 등록 해제" : "관심 등록"}
                     </button>
+
                     <Link
                       href={`/pool/${teacher.id}`}
-                      className="inline-flex flex-1 items-center justify-center gap-2 rounded-lg bg-[linear-gradient(135deg,#0058be,#2170e4)] px-4 py-3 text-sm font-semibold text-white shadow-soft transition-transform hover:-translate-y-px xl:min-w-[180px]"
+                      className="inline-flex items-center justify-center gap-2 rounded-lg bg-[linear-gradient(135deg,#0058be,#2170e4)] px-4 py-3 text-sm font-semibold text-white shadow-soft"
                     >
                       <Users className="h-4 w-4" />
-                      프로필 상세 보기
+                      {latestRequest ? "프로필 상세 확인" : "매칭 요청 진행"}
                     </Link>
+
+                    <div className="rounded-lg bg-surface-subtle px-4 py-3 text-sm leading-6 text-ink-soft">
+                      {latestRequest
+                        ? latestRequest.summary
+                        : "프로필 상세로 들어가 공고를 연결한 뒤 매칭 요청을 보낼 수 있습니다."}
+                    </div>
                   </div>
                 </div>
               </article>
             );
           })}
+
+          {filteredTeachers.length === 0 ? (
+            <div className="rounded-lg border border-dashed border-outline bg-surface-subtle px-4 py-10 text-center text-sm text-ink-soft">
+              현재 조건에 맞는 교사가 없습니다. 필터를 조정해 주세요.
+            </div>
+          ) : null}
         </div>
       </section>
     </PortalShell>
