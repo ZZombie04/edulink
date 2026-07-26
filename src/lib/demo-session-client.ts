@@ -2,47 +2,67 @@
 
 import { useEffect, useState } from "react";
 
-import {
-  DEMO_SESSION_COOKIE,
-  type DemoSession,
-  parseDemoSession,
-  type ViewerRole,
+import type {
+  DemoSession,
+  ViewerRole,
 } from "@/lib/demo-session";
 
-function readCookie(name: string) {
-  if (typeof document === "undefined") {
-    return null;
+let cachedSession: DemoSession | null | undefined;
+let pendingSessionRequest: Promise<DemoSession | null> | null = null;
+
+async function requestCurrentSession() {
+  if (cachedSession !== undefined) {
+    return cachedSession;
   }
 
-  const match = document.cookie
-    .split("; ")
-    .find((entry) => entry.startsWith(`${name}=`));
+  if (!pendingSessionRequest) {
+    pendingSessionRequest = fetch("/api/auth/session", {
+      cache: "no-store",
+      credentials: "same-origin",
+    })
+      .then(async (response) => {
+        if (!response.ok) {
+          return null;
+        }
 
-  return match ? match.slice(name.length + 1) : null;
+        const result = (await response.json().catch(() => null)) as
+          | { session?: DemoSession | null }
+          | null;
+
+        return result?.session ?? null;
+      })
+      .catch(() => null)
+      .then((session) => {
+        cachedSession = session;
+        pendingSessionRequest = null;
+        return session;
+      });
+  }
+
+  return pendingSessionRequest;
+}
+
+export function clearDemoSessionClientCache() {
+  cachedSession = undefined;
+  pendingSessionRequest = null;
 }
 
 export function useDemoSession(initialSession: DemoSession | null = null) {
-  const [session, setSession] = useState<DemoSession | null>(() => {
-    if (typeof document === "undefined") {
-      return initialSession;
-    }
-
-    return parseDemoSession(readCookie(DEMO_SESSION_COOKIE)) ?? initialSession;
-  });
+  const [session, setSession] = useState<DemoSession | null>(
+    initialSession ?? cachedSession ?? null,
+  );
 
   useEffect(() => {
-    if (typeof document === "undefined") {
-      return;
-    }
+    let active = true;
 
-    const nextSession =
-      parseDemoSession(readCookie(DEMO_SESSION_COOKIE)) ?? initialSession;
-    const frame = window.requestAnimationFrame(() => {
-      setSession(nextSession);
+    void requestCurrentSession().then((nextSession) => {
+      if (active) {
+        setSession(nextSession ?? initialSession);
+      }
     });
 
     return () => {
-      window.cancelAnimationFrame(frame);
+      active = false;
     };
   }, [initialSession]);
 

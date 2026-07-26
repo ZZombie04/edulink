@@ -2,13 +2,18 @@
 
 import type { ReactNode } from "react";
 import Link from "next/link";
+import {
+  ArrowLeft,
+  Building2,
+  BriefcaseBusiness,
+  Check,
+  LockKeyhole,
+  ShieldCheck,
+  UserRoundCheck,
+} from "lucide-react";
 
-import { CharacterAvatar } from "@/components/character-avatar";
 import { BrandLockup } from "@/components/brand";
-import { JobVisual } from "@/components/job-visual";
 import type { AvatarPresetId } from "@/lib/avatar-presets";
-import { featuredTeachers, jobPosts } from "@/lib/demo-data";
-import { getTeacherDisplayName } from "@/lib/privacy";
 
 type AuthVariant = "login" | "school" | "teacher";
 
@@ -19,205 +24,133 @@ interface AuthShellProps {
   avatarPreset?: AvatarPresetId;
 }
 
-function AuthShowcase({
-  variant,
-  avatarPreset,
-}: {
-  variant: AuthVariant;
-  avatarPreset?: AvatarPresetId;
-}) {
-  if (variant === "teacher") {
-    const choices = Array.from(
-      new Set(
-        avatarPreset
-          ? [
-              avatarPreset,
-              "teacher-m-navy",
-              "teacher-f-mint",
-              "teacher-c-aqua",
-              "teacher-c-cocoa",
-            ]
-          : [
-              "teacher-f-rose",
-              "teacher-m-navy",
-              "teacher-f-mint",
-              "teacher-c-aqua",
-              "teacher-c-cocoa",
-            ],
-      ),
-    );
-
-    return (
-      <div className="rounded-[30px] border border-white/12 bg-white/10 p-6 shadow-[0_24px_60px_rgba(7,18,43,0.28)] backdrop-blur-sm">
-        <div className="grid gap-4 md:grid-cols-[1.08fr_0.92fr]">
-          <div className="rounded-[26px] bg-white/12 p-6">
-            <div className="flex min-h-[260px] items-center justify-center rounded-[24px] bg-white/8">
-              <CharacterAvatar
-                className="rounded-[36px] border-white/55 shadow-[0_30px_60px_rgba(16,28,52,0.24)]"
-                presetId={choices[0] as AvatarPresetId}
-                size={198}
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            {choices.slice(1, 5).map((choice) => (
-              <div
-                key={choice}
-                className="flex aspect-square items-center justify-center rounded-[22px] bg-white/12 p-4"
-              >
-                <CharacterAvatar
-                  className="rounded-[22px] border-white/55 shadow-[0_18px_36px_rgba(16,28,52,0.2)]"
-                  presetId={choice as AvatarPresetId}
-                  size={84}
-                />
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    );
+const variantContent = {
+  login: {
+    eyebrow: "안전한 교육 채용 네트워크",
+    headline: "한 번의 로그인으로\n채용 과정을 이어가세요.",
+    description:
+      "교사는 받은 제안과 지원 현황을, 학교 담당자는 인재풀과 채용 진행 상황을 한곳에서 확인합니다.",
+    items: [
+      { Icon: LockKeyhole, label: "권한별 정보 접근" },
+      { Icon: BriefcaseBusiness, label: "채용 진행 이력 관리" },
+      { Icon: ShieldCheck, label: "민감 정보 단계별 공개" },
+    ],
+  },
+  teacher: {
+    eyebrow: "교사 회원",
+    headline: "경력은 선명하게,\n기회는 더 가깝게.",
+    description:
+      "검증 가능한 자격과 희망 조건을 등록하면 승인된 학교 담당자가 적합한 채용 제안을 보낼 수 있습니다.",
+    items: [
+      { Icon: UserRoundCheck, label: "자격과 경력 프로필" },
+      { Icon: BriefcaseBusiness, label: "학교의 직접 채용 제안" },
+      { Icon: ShieldCheck, label: "수락 전 연락처 비공개" },
+    ],
+  },
+  school: {
+    eyebrow: "학교·교육기관",
+    headline: "신뢰할 수 있는 교사를\n더 빠르게 만나세요.",
+    description:
+      "학교 인증 후 인재풀 열람, 채용 공고 등록, 제안 전송과 지원자 검토를 하나의 흐름으로 운영합니다.",
+    items: [
+      { Icon: Building2, label: "관리자 승인 학교 계정" },
+      { Icon: UserRoundCheck, label: "검증 정보 기반 인재 검색" },
+      { Icon: ShieldCheck, label: "관리자 전용 채용 리뷰" },
+    ],
+  },
+} satisfies Record<
+  AuthVariant,
+  {
+    eyebrow: string;
+    headline: string;
+    description: string;
+    items: Array<{ Icon: typeof Check; label: string }>;
   }
-
-  if (variant === "school") {
-    return (
-      <div className="flex flex-col items-center gap-4">
-        <JobVisual
-          className="min-h-[280px] w-full"
-          employmentType="학교 계정 승인"
-          gradeLevel="학교 계정 등록"
-          id={jobPosts[0].id}
-          qualificationType="운영 계정"
-          schoolName="학교 가입"
-          schoolRegion="경기"
-          variant="hero"
-        />
-        <div className="grid w-full max-w-[420px] gap-4 sm:grid-cols-2">
-          {[
-            ["필수 동의", "약관 확인"],
-            ["채용 공고 등록", "학교 정보 입력"],
-          ].map(([title, detail]) => (
-            <div
-              key={title}
-              className="rounded-[22px] border border-white/12 bg-white/10 px-4 py-4 backdrop-blur-sm"
-            >
-              <div className="text-center text-sm font-semibold text-white">
-                {title}
-              </div>
-              <div className="mt-2 text-center text-sm text-white">
-                {detail}
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="grid gap-4 xl:grid-cols-[1.08fr_0.92fr]">
-      <JobVisual
-        className="min-h-[300px]"
-        employmentType={jobPosts[0].employmentType}
-        gradeLevel={jobPosts[0].gradeLevel}
-        id={jobPosts[0].id}
-        qualificationType={jobPosts[0].qualificationType}
-        schoolName={jobPosts[0].schoolName}
-        schoolRegion={jobPosts[0].schoolRegion}
-        variant="hero"
-      />
-
-      <div className="space-y-4">
-        <div className="rounded-[24px] border border-white/12 bg-white/10 p-5 backdrop-blur-sm">
-          <div className="text-xs font-semibold uppercase tracking-[0.18em] text-white/66">
-            교사
-          </div>
-          <div className="mt-4 flex items-center gap-3">
-            <CharacterAvatar
-              className="h-16 w-16 rounded-[18px]"
-              presetId={featuredTeachers[0].avatarPreset}
-              size={64}
-            />
-            <div>
-              <div className="text-lg font-bold text-white">
-                {getTeacherDisplayName(featuredTeachers[0].name, "guest")}
-              </div>
-              <div className="text-sm text-white/72">
-                {featuredTeachers[0].qualification}
-              </div>
-            </div>
-          </div>
-          <div className="mt-4 flex flex-wrap gap-2">
-            {featuredTeachers[0].preferredRegions.map((region) => (
-              <span
-                key={region}
-                className="rounded-full bg-white/12 px-3 py-2 text-xs font-semibold text-white/78"
-              >
-                {region}
-              </span>
-            ))}
-          </div>
-        </div>
-
-        <div className="grid grid-cols-2 gap-3">
-          {[
-            ["교사 인력풀", "교사 검색"],
-            ["채용 공고", "조건 확인"],
-            ["학교 가입", "계정 신청"],
-            ["매칭 요청", "제안 전달"],
-          ].map(([title, detail]) => (
-            <div
-              key={title}
-              className="rounded-[20px] border border-white/12 bg-white/10 px-4 py-4 backdrop-blur-sm"
-            >
-              <div className="text-sm font-semibold text-white">{title}</div>
-              <div className="mt-1 text-xs text-white/70">{detail}</div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-}
+>;
 
 export function AuthShell({
   children,
   title,
   variant,
-  avatarPreset,
 }: AuthShellProps) {
+  const content = variantContent[variant];
+
   return (
     <div className="min-h-screen bg-surface text-ink">
-      <div className="grid min-h-screen lg:grid-cols-[0.96fr_1.04fr]">
-        <section className="relative hidden overflow-hidden lg:sticky lg:top-0 lg:block lg:h-screen">
-          <div className="absolute inset-0 bg-[linear-gradient(145deg,#071b3a,#0b4fa6,#17917b)]" />
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.18),transparent_32%),radial-gradient(circle_at_bottom_right,rgba(255,255,255,0.14),transparent_34%)]" />
-
-          <div className="relative flex h-full flex-col px-10 py-9 text-white">
-            <Link href="/">
-              <BrandLockup textClassName="text-white" />
+      <div className="grid min-h-screen lg:grid-cols-[minmax(360px,0.76fr)_minmax(0,1.24fr)]">
+        <aside className="relative hidden min-h-screen bg-primary-900 text-white lg:sticky lg:top-0 lg:flex lg:h-screen lg:flex-col">
+          <div className="flex h-full flex-col px-10 py-9 xl:px-14 xl:py-11">
+            <Link
+              href="/"
+              className="w-fit focus-visible:outline-white/60"
+              aria-label="EduLink 홈으로 이동"
+            >
+              <BrandLockup
+                className="[&>span:first-child]:text-[#c6d9ce]"
+                textClassName="text-white"
+              />
             </Link>
 
-            <div className="mt-16 text-5xl font-bold leading-tight">
-              {title}
-            </div>
+            <div className="my-auto max-w-lg py-14">
+              <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#a8c5b6]">
+                {content.eyebrow}
+              </p>
+              <h1 className="mt-5 whitespace-pre-line text-[clamp(2.4rem,4vw,4rem)] font-bold leading-[1.12] tracking-[-0.045em] text-white">
+                {content.headline}
+              </h1>
+              <p className="mt-6 max-w-md break-keep text-base leading-7 text-white/70">
+                {content.description}
+              </p>
 
-            <div className="mt-10 flex flex-1 items-center justify-center">
-              <div className="w-full max-w-[560px]" data-testid="auth-showcase">
-                <AuthShowcase avatarPreset={avatarPreset} variant={variant} />
+              <div className="mt-10 border-y border-white/15">
+                {content.items.map(({ Icon, label }) => (
+                  <div
+                    key={label}
+                    className="flex items-center gap-3 border-b border-white/15 py-4 last:border-b-0"
+                  >
+                    <Icon
+                      className="h-5 w-5 text-[#b8d0c3]"
+                      strokeWidth={1.7}
+                    />
+                    <span className="text-sm font-semibold text-white/88">
+                      {label}
+                    </span>
+                  </div>
+                ))}
               </div>
             </div>
-          </div>
-        </section>
 
-        <section className="px-4 py-10 sm:px-6">
-          <div className="mx-auto w-full max-w-3xl">
-            <Link href="/" className="inline-flex lg:hidden">
-              <BrandLockup className="mb-8" />
+            <p className="text-xs leading-5 text-white/48">
+              EduLink는 역할과 채용 단계에 따라 필요한 정보만 제공합니다.
+            </p>
+          </div>
+        </aside>
+
+        <main className="min-w-0 px-4 py-6 sm:px-7 sm:py-9 lg:px-10 xl:px-16">
+          <div className="mx-auto w-full max-w-4xl">
+            <div className="mb-10 flex items-center justify-between gap-4 border-b border-outline pb-5">
+              <Link
+                href="/"
+                className="inline-flex items-center gap-2 text-sm font-semibold text-ink-soft transition-colors hover:text-primary-700"
+              >
+                <ArrowLeft className="h-4 w-4" />
+                홈으로
+              </Link>
+              <span className="text-sm font-semibold text-ink-muted">
+                {title}
+              </span>
+            </div>
+
+            <Link
+              href="/"
+              className="mb-9 inline-flex lg:hidden"
+              aria-label="EduLink 홈으로 이동"
+            >
+              <BrandLockup />
             </Link>
             {children}
           </div>
-        </section>
+        </main>
       </div>
     </div>
   );

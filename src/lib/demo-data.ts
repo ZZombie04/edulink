@@ -13,6 +13,19 @@ export interface TeacherProfile {
   age: number;
   birthYear: number;
   avatarPreset: AvatarPresetId;
+  availableFrom?: string;
+  careerHighlights?: Array<{
+    description?: string;
+    employmentType: string;
+    endDate?: string;
+    position: string;
+    region?: string;
+    schoolName: string;
+    startDate: string;
+    subject?: string;
+  }>;
+  education?: string;
+  graduationYear?: number;
   qualification: string;
   qualificationCategory: "초등" | "중등" | "특수";
   subject?: string;
@@ -146,6 +159,7 @@ export const featuredTeachers: TeacherProfile[] = [
     age: 28,
     birthYear: 1998,
     avatarPreset: "teacher-f-mint",
+    availableFrom: "2026-08-18",
     qualification: "초등 2급 정교사",
     qualificationCategory: "초등",
     experience: "2년 6개월",
@@ -162,6 +176,7 @@ export const featuredTeachers: TeacherProfile[] = [
     age: 45,
     birthYear: 1981,
     avatarPreset: "teacher-m-navy",
+    availableFrom: "2026-09-01",
     qualification: "중등 1급 정교사",
     qualificationCategory: "중등",
     subject: "수학",
@@ -180,6 +195,7 @@ export const featuredTeachers: TeacherProfile[] = [
     age: 52,
     birthYear: 1974,
     avatarPreset: "teacher-m-forest",
+    availableFrom: "2026-09-01",
     qualification: "초등 1급 정교사",
     qualificationCategory: "초등",
     experience: "25년",
@@ -199,6 +215,7 @@ export const featuredTeachers: TeacherProfile[] = [
     age: 31,
     birthYear: 1995,
     avatarPreset: "teacher-f-violet",
+    availableFrom: "2026-08-10",
     qualification: "특수 2급 정교사",
     qualificationCategory: "특수",
     experience: "6년 4개월",
@@ -218,8 +235,8 @@ export const jobPosts: JobPost[] = [
     schoolRegion: "수원",
     schoolAddress: "경기도 수원시 영통구 효원로 123",
     employmentType: "기간제 교사",
-    startDate: "2026-05-01",
-    endDate: "2026-08-31",
+    startDate: "2026-08-18",
+    endDate: "2026-12-18",
     qualificationType: "초등",
     gradeLevel: "3학년 담임",
     isHomeroom: true,
@@ -233,7 +250,7 @@ export const jobPosts: JobPost[] = [
     requirements: [
       "초등 2급 정교사 이상",
       "담임 경력 1년 이상 우대",
-      "5월 1일부터 근무 가능",
+      "8월 18일부터 근무 가능",
     ],
     benefits: [
       "경기도교육청 기준 보수 적용",
@@ -241,8 +258,8 @@ export const jobPosts: JobPost[] = [
       "급식 및 교재 지원",
     ],
     status: "open",
-    postedAt: "2026-04-15",
-    deadline: "2026-04-25",
+    postedAt: "2026-07-20",
+    deadline: "2026-08-05",
     contactName: "홍수진 교무부장",
     applicants: 5,
     views: 128,
@@ -253,8 +270,8 @@ export const jobPosts: JobPost[] = [
     schoolRegion: "화성",
     schoolAddress: "경기도 화성시 동탄반석로 44",
     employmentType: "시간강사",
-    startDate: "2026-04-22",
-    endDate: "2026-05-30",
+    startDate: "2026-08-10",
+    endDate: "2026-09-18",
     qualificationType: "중등",
     qualificationSubject: "수학",
     gradeLevel: "1학년 교과",
@@ -272,8 +289,8 @@ export const jobPosts: JobPost[] = [
     ],
     benefits: ["주차 지원", "수업 자료 공동 사용", "방과후 운영비 별도 지급"],
     status: "closing-soon",
-    postedAt: "2026-04-16",
-    deadline: "2026-04-20",
+    postedAt: "2026-07-22",
+    deadline: "2026-07-29",
     contactName: "김민석 연구부장",
     applicants: 12,
     views: 211,
@@ -319,7 +336,7 @@ export const teacherMatchRequests: TeacherOffer[] = [
     schoolName: "정인초등학교",
     region: "수원",
     position: "3학년 담임 기간제",
-    period: "2026.05.01 - 2026.08.31",
+    period: "2026.08.18 - 2026.12.18",
     status: "pending",
     receivedAt: "2시간 전",
     summary:
@@ -334,7 +351,7 @@ export const teacherMatchRequests: TeacherOffer[] = [
     schoolName: "서해중학교",
     region: "화성",
     position: "수학 시간강사",
-    period: "2026.04.22 - 2026.05.30",
+    period: "2026.08.10 - 2026.09.18",
     status: "accepted",
     receivedAt: "어제",
     summary: "단기 시간강사 제안에 응답을 완료한 상태입니다.",

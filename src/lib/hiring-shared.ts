@@ -1,6 +1,9 @@
 import type { JobPost, MatchRequestStatus, TeacherProfile } from "@/lib/demo-data";
 
-export type DemoRequestStatus = MatchRequestStatus | "cancelled";
+export type DemoRequestStatus =
+  | MatchRequestStatus
+  | "cancelled"
+  | "hired";
 export type ApplicationStatus =
   | "submitted"
   | "reviewing"
@@ -55,9 +58,193 @@ export interface ResolvedApplication {
 
 export interface HiringStatePayload {
   applications: ResolvedApplication[];
+  currentTeacher?: TeacherProfile | null;
+  currentTeacherId?: number;
+  hrOrganization?: {
+    schoolAddress: string;
+    schoolName: string;
+    schoolRegion: string;
+  };
   interestedTeacherIds: number[];
   jobs: ResolvedJobPost[];
   requests: ResolvedPoolRequest[];
+  teacherVisibility?: "paused" | "seeking";
+  teachers?: TeacherProfile[];
+}
+
+export type HiringActorRole = "teacher" | "hr" | "admin" | "guest";
+
+export type HiringMutationAction =
+  | "applyToJob"
+  | "archiveTeacherOffer"
+  | "cancelPoolRequest"
+  | "completePoolRequestHire"
+  | "createJob"
+  | "scheduleInterviewForApplication"
+  | "scheduleInterviewForRequest"
+  | "sendPoolRequest"
+  | "setPoolRequestStatus"
+  | "toggleInterestedTeacher"
+  | "updateApplicationStatus"
+  | "updateJobStatus"
+  | "updateTeacherVisibility"
+  | "withdrawApplication";
+
+export interface TeacherRegistrationCareerInput {
+  current?: boolean;
+  description?: string;
+  employmentType: string;
+  endDate?: string;
+  institutionName: string;
+  institutionType: string;
+  region?: string;
+  role: string;
+  startDate: string;
+  subject?: string;
+}
+
+export interface TeacherRegistrationInput {
+  avatarPreset?: string;
+  availableFrom?: string;
+  birthDate: string;
+  careers?: TeacherRegistrationCareerInput[];
+  educationLevel?: string;
+  email: string;
+  graduationYear?: number;
+  introduction?: string;
+  major: string;
+  name: string;
+  password: string;
+  phone: string;
+  preferredRegions: string[];
+  preferredTypes: string[];
+  privacyConsent: boolean;
+  qualificationGrade: string;
+  qualificationNumber: string;
+  qualificationSubject?: string;
+  qualificationType: string;
+  residenceAddress?: string;
+  residenceRegion: string;
+  reservationEnabled?: boolean;
+  specialSkills?: string;
+  termsConsent: boolean;
+  thirdPartyConsent: boolean;
+  university: string;
+}
+
+export interface HRRegistrationInput {
+  birthDate: string;
+  department?: string;
+  email: string;
+  name: string;
+  password: string;
+  phone: string;
+  position: string;
+  privacyConsent: boolean;
+  schoolAddress: string;
+  schoolCode: string;
+  schoolName: string;
+  schoolRegion: string;
+  schoolType: string;
+  termsConsent: boolean;
+  verificationCode: string;
+}
+
+const ACTION_ROLES: Record<HiringMutationAction, HiringActorRole[]> = {
+  applyToJob: ["teacher"],
+  archiveTeacherOffer: ["teacher"],
+  cancelPoolRequest: ["hr"],
+  completePoolRequestHire: ["hr"],
+  createJob: ["hr"],
+  scheduleInterviewForApplication: ["hr"],
+  scheduleInterviewForRequest: ["hr"],
+  sendPoolRequest: ["hr"],
+  setPoolRequestStatus: ["teacher", "hr"],
+  toggleInterestedTeacher: ["hr"],
+  updateApplicationStatus: ["teacher", "hr"],
+  updateJobStatus: ["hr"],
+  updateTeacherVisibility: ["teacher"],
+  withdrawApplication: ["teacher"],
+};
+
+export function isHiringMutationAction(
+  value: string,
+): value is HiringMutationAction {
+  return Object.hasOwn(ACTION_ROLES, value);
+}
+
+export function isHiringActionAllowed(
+  role: HiringActorRole,
+  action: string,
+) {
+  return (
+    isHiringMutationAction(action) &&
+    ACTION_ROLES[action].includes(role)
+  );
+}
+
+export function canTransitionApplicationStatus(
+  role: HiringActorRole,
+  current: ApplicationStatus,
+  next: ApplicationStatus,
+) {
+  if (current === next) {
+    return role === "teacher" || role === "hr";
+  }
+
+  if (role === "teacher") {
+    return (
+      (next === "withdrawn" &&
+        !["hired", "rejected", "withdrawn"].includes(current)) ||
+      (current === "interview-requested" &&
+        next === "interview-confirmed")
+    );
+  }
+
+  if (role === "hr") {
+    if (["hired", "rejected", "withdrawn"].includes(current)) {
+      return false;
+    }
+
+    return [
+      "reviewing",
+      "interview-requested",
+      "hired",
+      "rejected",
+    ].includes(next);
+  }
+
+  return false;
+}
+
+export function canTransitionRequestStatus(
+  role: HiringActorRole,
+  current: DemoRequestStatus,
+  next: DemoRequestStatus,
+) {
+  if (current === next) {
+    return role === "teacher" || role === "hr";
+  }
+
+  if (role === "teacher") {
+    return (
+      current === "pending" &&
+      ["accepted", "rejected", "archived"].includes(next)
+    );
+  }
+
+  if (role === "hr") {
+    if (next === "cancelled") {
+      return !["cancelled", "rejected", "hired"].includes(current);
+    }
+
+    return (
+      next === "hired" &&
+      ["accepted"].includes(current)
+    );
+  }
+
+  return false;
 }
 
 function parseMultilineField(value: string) {
@@ -87,6 +274,8 @@ export function getRequestStatusSummary(
       return "교사가 제안을 보관한 상태입니다.";
     case "cancelled":
       return "학교 담당자가 요청을 취소하고 후보 검토를 종료했습니다.";
+    case "hired":
+      return "최종 채용이 확정되어 계약 정보가 등록되었습니다.";
     default:
       return fallbackSummary;
   }

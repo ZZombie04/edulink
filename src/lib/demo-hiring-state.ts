@@ -14,7 +14,7 @@ import {
   type ResolvedPoolRequest,
 } from "@/lib/hiring-shared";
 
-const DEFAULT_TEACHER_ID = 1;
+const FALLBACK_TEACHER_ID = 1;
 
 const EMPTY_STATE: HiringStatePayload = {
   applications: [],
@@ -113,13 +113,23 @@ export {
 export function useDemoHiringState() {
   const [state, setState] = useState<HiringStatePayload>(EMPTY_STATE);
   const [loaded, setLoaded] = useState(false);
+  const [loadError, setLoadError] = useState("");
   const hasRequestedInitialState = useRef(false);
 
   const refresh = useCallback(async () => {
+    setLoadError("");
+
     try {
       const nextState = await requestHiringState();
       setState(nextState);
       return nextState;
+    } catch (error) {
+      setLoadError(
+        error instanceof Error
+          ? error.message
+          : "채용 데이터를 불러오지 못했습니다.",
+      );
+      throw error;
     } finally {
       setLoaded(true);
     }
@@ -131,7 +141,7 @@ export function useDemoHiringState() {
     }
 
     hasRequestedInitialState.current = true;
-    void refresh();
+    void refresh().catch(() => undefined);
   }, [refresh]);
 
   const mutate = useCallback(
@@ -144,10 +154,18 @@ export function useDemoHiringState() {
   );
 
   const jobs = useMemo(() => state.jobs, [state.jobs]);
+  const teachers = useMemo(
+    () => state.teachers ?? [],
+    [state.teachers],
+  );
   const hrMatchRequests = useMemo(() => state.requests, [state.requests]);
+  const currentTeacherId =
+    state.currentTeacherId ?? FALLBACK_TEACHER_ID;
+  const currentTeacher = state.currentTeacher ?? null;
+  const hrOrganization = state.hrOrganization ?? null;
   const teacherApplications = useMemo(
-    () => getApplicationsForTeacherFromState(DEFAULT_TEACHER_ID, state),
-    [state],
+    () => getApplicationsForTeacherFromState(currentTeacherId, state),
+    [currentTeacherId, state],
   );
 
   const isTeacherInterested = useCallback(
@@ -156,24 +174,30 @@ export function useDemoHiringState() {
   );
 
   const isJobApplied = useCallback(
-    (jobId: string, teacherId = DEFAULT_TEACHER_ID) =>
+    (jobId: string, teacherId = currentTeacherId) =>
       getApplicationForTeacherAndJobFromState(teacherId, jobId, state)?.status !==
         undefined &&
       getApplicationForTeacherAndJobFromState(teacherId, jobId, state)?.status !==
         "withdrawn",
-    [state],
+    [currentTeacherId, state],
   );
 
   return {
     applyToJob: async (
       jobId: string,
-      teacherId = DEFAULT_TEACHER_ID,
+      teacherId = currentTeacherId,
       coverNote = "",
     ) => {
       await mutate("applyToJob", { coverNote, jobId, teacherId });
     },
+    archiveTeacherOffer: async (requestId: number) => {
+      await mutate("archiveTeacherOffer", { requestId });
+    },
     cancelPoolRequest: async (requestId: number) => {
       await mutate("cancelPoolRequest", { requestId });
+    },
+    completePoolRequestHire: async (requestId: number) => {
+      await mutate("completePoolRequestHire", { requestId });
     },
     createJob: async (input: {
       benefits: string[];
@@ -207,10 +231,14 @@ export function useDemoHiringState() {
     getTeacherOffersForTeacher: (teacherId: number) =>
       getTeacherOffersForTeacherFromState(teacherId, state),
     hrMatchRequests,
+    hrOrganization,
+    currentTeacherId,
+    currentTeacher,
     isJobApplied,
     isTeacherInterested,
     jobs,
     loaded,
+    loadError,
     liveJobs: jobs.filter((job) => job.status !== "closed"),
     parseListInput,
     refresh,
@@ -255,6 +283,7 @@ export function useDemoHiringState() {
     },
     state,
     teacherApplications,
+    teachers,
     toggleInterestedTeacher: async (teacherId: number) => {
       await mutate("toggleInterestedTeacher", { teacherId });
     },
@@ -269,6 +298,9 @@ export function useDemoHiringState() {
       status: ResolvedJobPost["status"],
     ) => {
       await mutate("updateJobStatus", { jobId, status });
+    },
+    updateTeacherVisibility: async (status: "paused" | "seeking") => {
+      await mutate("updateTeacherVisibility", { status });
     },
     withdrawApplication: async (applicationId: number) => {
       await mutate("withdrawApplication", { applicationId });

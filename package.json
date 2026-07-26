@@ -3,19 +3,26 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "admin:bootstrap": "node scripts/bootstrap-admin.mjs",
+    "db:deploy": "prisma migrate deploy",
     "dev": "next dev",
     "db:push": "prisma db push",
     "postinstall": "prisma generate",
     "prebuild": "prisma generate",
     "build": "next build",
-    "start": "prisma db push && next start",
-    "lint": "eslint ."
+    "start": "next start",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:live": "node scripts/verify-live-workflows.mjs",
+    "test:watch": "vitest",
+    "verify": "npm run lint && npm run typecheck && npm run test && npm run build"
   },
   "dependencies": {
     "@base-ui/react": "^1.4.0",
     "@hookform/resolvers": "^5.2.2",
-    "@prisma/adapter-pg": "^7.7.0",
-    "@prisma/client": "^7.7.0",
+    "@prisma/adapter-pg": "^7.9.0",
+    "@prisma/client": "^7.9.0",
     "@tanstack/react-query": "^5.99.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
@@ -24,8 +31,8 @@
     "next": "^16.2.4",
     "next-auth": "^4.24.14",
     "next-themes": "^0.4.6",
-    "pg": "^8.20.0",
-    "prisma": "^7.7.0",
+    "pg": "^8.22.0",
+    "prisma": "^7.9.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "react-hook-form": "^7.72.1",
@@ -42,10 +49,12 @@
     "@types/node": "^20",
     "@types/react": "^19.2.2",
     "@types/react-dom": "^19.2.2",
+    "dotenv": "^17.4.2",
     "eslint": "^9.39.1",
     "eslint-config-next": "^16.2.4",
     "postcss": "^8",
     "tailwindcss": "^3.4.1",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^4.1.10"
   }
 }

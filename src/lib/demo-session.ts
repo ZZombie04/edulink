@@ -1,6 +1,7 @@
 import type { AvatarPresetId } from "@/lib/avatar-presets";
 
 export const DEMO_SESSION_COOKIE = "edulink_session";
+export const DEMO_SESSION_MAX_AGE_SECONDS = 60 * 60 * 8;
 
 export type DemoUserRole = "teacher" | "hr" | "admin";
 export type ViewerRole = DemoUserRole | "guest";
@@ -12,71 +13,113 @@ export interface DemoSession {
   name: string;
   redirectTo: string;
   role: DemoUserRole;
+  userId: string;
 }
 
-export function serializeDemoSession(session: DemoSession) {
-  return encodeURIComponent(JSON.stringify(session));
+const DEFAULT_REDIRECTS: Record<DemoUserRole, string> = {
+  admin: "/admin/dashboard",
+  hr: "/hr/dashboard",
+  teacher: "/teacher/dashboard",
+};
+
+const ROLE_PATH_PREFIXES: Record<DemoUserRole, string[]> = {
+  admin: ["/admin"],
+  hr: ["/hr", "/pool"],
+  teacher: ["/teacher", "/jobs"],
+};
+
+export function parseDemoUserRole(value: unknown): DemoUserRole | null {
+  return value === "teacher" || value === "hr" || value === "admin"
+    ? value
+    : null;
 }
 
-export function parseDemoSession(value?: string | null) {
-  if (!value) {
-    return null;
+/**
+ * Maps database roles to the three product-facing roles. Unknown values are
+ * rejected instead of silently receiving teacher privileges.
+ */
+export function mapDatabaseRoleToDemoRole(value: unknown): DemoUserRole | null {
+  switch (value) {
+    case "TEACHER":
+      return "teacher";
+    case "HR_MANAGER":
+      return "hr";
+    case "EDU_ADMIN":
+    case "SUPER_ADMIN":
+      return "admin";
+    default:
+      return null;
+  }
+}
+
+export function sanitizeNextRedirect(
+  value: unknown,
+  fallback = "/",
+): string {
+  const safeFallback =
+    typeof fallback === "string" &&
+    fallback.startsWith("/") &&
+    !fallback.startsWith("//") &&
+    !fallback.includes("\\")
+      ? fallback
+      : "/";
+
+  if (
+    typeof value !== "string" ||
+    value.length === 0 ||
+    value.length > 2048 ||
+    value !== value.trim() ||
+    !value.startsWith("/") ||
+    value.startsWith("//") ||
+    value.includes("\\") ||
+    /[\u0000-\u001f\u007f]/.test(value)
+  ) {
+    return safeFallback;
   }
 
   try {
-    let decodedValue = value;
-
-    for (let index = 0; index < 2; index += 1) {
-      const nextValue = decodeURIComponent(decodedValue);
-
-      if (nextValue === decodedValue) {
-        break;
-      }
-
-      decodedValue = nextValue;
-    }
-
-    const parsed = JSON.parse(decodedValue);
+    const decodedValue = decodeURIComponent(value);
 
     if (
-      typeof parsed !== "object" ||
-      parsed === null ||
-      typeof parsed.email !== "string" ||
-      typeof parsed.name !== "string" ||
-      typeof parsed.redirectTo !== "string" ||
-      !["teacher", "hr", "admin"].includes(parsed.role)
+      decodedValue.includes("\\") ||
+      /[\u0000-\u001f\u007f]/.test(decodedValue)
     ) {
-      return null;
+      return safeFallback;
     }
 
-    return parsed as DemoSession;
+    const parsed = new URL(value, "https://edulink.local");
+
+    if (parsed.origin !== "https://edulink.local") {
+      return safeFallback;
+    }
+
+    return `${parsed.pathname}${parsed.search}${parsed.hash}`;
   } catch {
-    return null;
+    return safeFallback;
   }
 }
 
-export function getViewerRoleFromCookieValue(
-  value?: string | null,
-): ViewerRole {
-  return parseDemoSession(value)?.role ?? "guest";
+export function getSafePostLoginRedirect(
+  role: DemoUserRole,
+  requestedNext?: unknown,
+) {
+  const fallback = DEFAULT_REDIRECTS[role];
+  const sanitized = sanitizeNextRedirect(requestedNext, fallback);
+  const isRolePath = ROLE_PATH_PREFIXES[role].some(
+    (prefix) =>
+      sanitized === prefix || sanitized.startsWith(`${prefix}/`),
+  );
+
+  return isRolePath ? sanitized : fallback;
 }
 
 export function isAuthorizedRole(
   viewerRole: ViewerRole,
   allowedRoles: DemoUserRole[],
 ) {
-  return allowedRoles.includes(viewerRole as DemoUserRole);
+  return viewerRole !== "guest" && allowedRoles.includes(viewerRole);
 }
 
 export function getDashboardHref(role?: DemoUserRole | ViewerRole | null) {
-  switch (role) {
-    case "teacher":
-      return "/teacher/dashboard";
-    case "hr":
-      return "/hr/dashboard";
-    case "admin":
-      return "/admin/dashboard";
-    default:
-      return null;
-  }
+  return role && role !== "guest" ? DEFAULT_REDIRECTS[role] : null;
 }

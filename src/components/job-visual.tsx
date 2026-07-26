@@ -1,22 +1,11 @@
-import { BriefcaseBusiness, GraduationCap, MapPin } from "lucide-react";
+import {
+  BriefcaseBusiness,
+  GraduationCap,
+  MapPin,
+  School2,
+} from "lucide-react";
 
-import { BrandMark } from "@/components/brand";
 import { cn } from "@/lib/utils";
-
-const visualTones = [
-  {
-    background: "linear-gradient(135deg,#0f1c39,#135cc6,#1c8d7c)",
-    glow: "bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.22),transparent_38%)]",
-  },
-  {
-    background: "linear-gradient(135deg,#182742,#0b5fca,#1774b8)",
-    glow: "bg-[radial-gradient(circle_at_bottom_left,rgba(255,255,255,0.2),transparent_36%)]",
-  },
-  {
-    background: "linear-gradient(135deg,#152033,#1251af,#2f7dd8)",
-    glow: "bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.2),transparent_38%)]",
-  },
-] as const;
 
 type JobVisualVariant = "card" | "hero" | "mini";
 
@@ -32,13 +21,7 @@ interface JobVisualProps {
   variant?: JobVisualVariant;
 }
 
-function getVisualTone(id: string) {
-  const index = Number.parseInt(id, 10);
-  return visualTones[Number.isNaN(index) ? 0 : index % visualTones.length];
-}
-
 export function JobVisual({
-  id,
   schoolName,
   schoolRegion,
   gradeLevel,
@@ -48,29 +31,23 @@ export function JobVisual({
   className,
   variant = "card",
 }: JobVisualProps) {
-  const tone = getVisualTone(id);
+  const isHero = variant === "hero";
 
   if (variant === "mini") {
     return (
       <div
         className={cn(
-          "relative overflow-hidden rounded-lg border border-white/12 p-3 text-white",
+          "flex h-full flex-col justify-between border border-outline bg-surface-contrast p-3 text-ink",
           className,
         )}
-        style={{ background: tone.background }}
       >
-        <div className={cn("absolute inset-0 opacity-90", tone.glow)} />
-        <div className="relative flex h-full flex-col justify-between gap-4">
-          <div className="flex items-center justify-between gap-2">
-            <span className="rounded-full bg-white/14 px-2 py-1 text-[10px] font-semibold">
-              {schoolRegion}
-            </span>
-            <BrandMark className="h-8 w-8" />
-          </div>
-          <div>
-            <div className="text-sm font-bold leading-tight">{schoolName}</div>
-            <div className="mt-1 text-[11px] text-white/78">{gradeLevel}</div>
-          </div>
+        <div className="flex items-center justify-between gap-2 text-xs text-ink-muted">
+          <span>{schoolRegion}</span>
+          <School2 className="h-4 w-4 text-primary-600" />
+        </div>
+        <div>
+          <div className="text-sm font-bold">{schoolName}</div>
+          <div className="mt-1 text-[11px] text-ink-muted">{gradeLevel}</div>
         </div>
       </div>
     );
@@ -79,63 +56,90 @@ export function JobVisual({
   return (
     <div
       className={cn(
-        "relative overflow-hidden rounded-[24px] border border-white/12 text-white",
-        variant === "hero" ? "p-6" : "p-5",
+        "flex h-full flex-col justify-between border p-5",
+        isHero
+          ? "border-white/15 bg-primary-900 text-white sm:p-7"
+          : "border-outline bg-surface-contrast text-ink",
         className,
       )}
-      style={{ background: tone.background }}
     >
-      <div className={cn("absolute inset-0 opacity-95", tone.glow)} />
-      <div className="absolute -right-12 top-8 h-28 w-28 rounded-full bg-white/12 blur-3xl" />
-      <div className="absolute bottom-4 left-6 h-16 w-16 rounded-full bg-white/10 blur-2xl" />
-
-      <div className="relative flex h-full flex-col justify-between gap-6">
-        <div className="flex items-start justify-between gap-4">
-          <span className="rounded-full bg-white/14 px-3 py-1 text-xs font-semibold">
-            {schoolRegion}
-          </span>
-          <BrandMark className="h-10 w-10" />
+      <div className="flex items-start justify-between gap-4">
+        <div
+          className={cn(
+            "inline-flex items-center gap-2 text-xs font-semibold",
+            isHero ? "text-white/70" : "text-ink-muted",
+          )}
+        >
+          <MapPin className="h-3.5 w-3.5" />
+          {schoolRegion}
         </div>
+        <School2
+          className={cn(
+            "h-6 w-6",
+            isHero ? "text-[#b9d3c5]" : "text-primary-600",
+          )}
+          strokeWidth={1.6}
+        />
+      </div>
 
-        <div>
-          <div
+      <div className="my-8">
+        <div
+          className={cn(
+            "font-bold tracking-[-0.035em]",
+            isHero ? "text-3xl sm:text-4xl" : "text-xl",
+          )}
+        >
+          {schoolName}
+        </div>
+        <div
+          className={cn(
+            "mt-2 text-sm",
+            isHero ? "text-white/72" : "text-ink-soft",
+          )}
+        >
+          {gradeLevel}
+        </div>
+      </div>
+
+      <dl
+        className={cn(
+          "grid gap-0 border-y sm:grid-cols-2",
+          isHero ? "border-white/16" : "border-outline",
+        )}
+      >
+        <div className="py-3 sm:pr-4">
+          <dt
             className={cn(
-              "font-bold leading-tight",
-              variant === "hero" ? "text-3xl" : "text-xl",
+              "flex items-center gap-2 text-xs",
+              isHero ? "text-white/60" : "text-ink-muted",
             )}
           >
-            {schoolName}
-          </div>
-          <div className="mt-2 text-sm text-white/82">{gradeLevel}</div>
+            <BriefcaseBusiness className="h-3.5 w-3.5" />
+            근무 형태
+          </dt>
+          <dd className="mt-1.5 text-sm font-semibold">{employmentType}</dd>
         </div>
-
-        <div className="grid gap-2 sm:grid-cols-2">
-          <div className="rounded-2xl bg-white/12 px-3 py-3 backdrop-blur-sm">
-            <div className="flex items-center gap-2 text-xs font-semibold text-white/72">
-              <BriefcaseBusiness className="h-3.5 w-3.5" />
-              근무 형태
-            </div>
-            <div className="mt-1 text-sm font-semibold">{employmentType}</div>
-          </div>
-          <div className="rounded-2xl bg-white/12 px-3 py-3 backdrop-blur-sm">
-            <div className="flex items-center gap-2 text-xs font-semibold text-white/72">
-              <GraduationCap className="h-3.5 w-3.5" />
-              자격 조건
-            </div>
-            <div className="mt-1 text-sm font-semibold">
-              {qualificationType}
-              {qualificationSubject ? ` ${qualificationSubject}` : ""}
-            </div>
-          </div>
+        <div
+          className={cn(
+            "border-t py-3 sm:border-l sm:border-t-0 sm:pl-4",
+            isHero ? "border-white/16" : "border-outline",
+          )}
+        >
+          <dt
+            className={cn(
+              "flex items-center gap-2 text-xs",
+              isHero ? "text-white/60" : "text-ink-muted",
+            )}
+          >
+            <GraduationCap className="h-3.5 w-3.5" />
+            자격 조건
+          </dt>
+          <dd className="mt-1.5 text-sm font-semibold">
+            {qualificationType}
+            {qualificationSubject ? ` · ${qualificationSubject}` : ""}
+          </dd>
         </div>
-
-        {variant === "hero" ? (
-          <div className="inline-flex items-center gap-2 rounded-full bg-white/12 px-3 py-2 text-sm text-white/82">
-            <MapPin className="h-4 w-4" />
-            {schoolRegion} 교육기관 채용
-          </div>
-        ) : null}
-      </div>
+      </dl>
     </div>
   );
 }

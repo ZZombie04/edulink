@@ -3,7 +3,18 @@ import type { DemoSession } from "@/lib/demo-session";
 export const DEMO_PASSWORD = "edulink123!";
 export const DEMO_VERIFICATION_CODE = "EDU2026";
 
-type DemoAccount = DemoSession & {
+export function isDemoSeedEnabled(
+  environment = process.env.NODE_ENV,
+  explicitSetting = process.env.EDULINK_ENABLE_DEMO_SEED,
+) {
+  if (environment === "production") {
+    return false;
+  }
+
+  return explicitSetting !== "false";
+}
+
+type DemoAccount = Omit<DemoSession, "userId"> & {
   label: string;
   password: string;
 };
@@ -39,6 +50,14 @@ export const DEMO_ACCOUNTS: DemoAccount[] = [
   },
 ];
 
+export function isReservedDemoEmail(value: string) {
+  const normalizedEmail = value.trim().toLowerCase();
+
+  return DEMO_ACCOUNTS.some(
+    (account) => account.email.toLowerCase() === normalizedEmail,
+  );
+}
+
 export function findDemoAccount(email: string, password: string) {
   const normalizedEmail = email.trim().toLowerCase();
   const normalizedPassword = password.trim();
@@ -50,7 +69,10 @@ export function findDemoAccount(email: string, password: string) {
   );
 }
 
-export function createDemoSession(account: DemoAccount): DemoSession {
+export function createDemoSession(
+  account: DemoAccount,
+  userId: string,
+): DemoSession {
   return {
     avatarPreset: account.avatarPreset,
     detail: account.detail,
@@ -58,5 +80,6 @@ export function createDemoSession(account: DemoAccount): DemoSession {
     name: account.name,
     redirectTo: account.redirectTo,
     role: account.role,
+    userId,
   };
 }

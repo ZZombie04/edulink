@@ -3,8 +3,12 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "EduLink | 학교 교원 매칭 플랫폼",
-  description: "학교와 교사를 빠르게 연결하는 경기권 교원 매칭 플랫폼입니다.",
+  title: {
+    default: "EduLink | 학교와 교사를 잇는 채용 네트워크",
+    template: "%s | EduLink",
+  },
+  description:
+    "검증된 교사 인재풀과 학교 채용 공고를 안전하게 연결하는 교육 채용 네트워크입니다.",
 };
 
 export default function RootLayout({

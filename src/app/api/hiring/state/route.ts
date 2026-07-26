@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 
 import {
   getHiringStateForSession,
+  HiringServiceError,
   performHiringMutation,
 } from "@/lib/hiring-state-service";
 import { getDemoSessionFromServerCookie } from "@/lib/demo-session-server";
@@ -11,16 +12,28 @@ export async function GET() {
     const session = await getDemoSessionFromServerCookie();
     const state = await getHiringStateForSession(session);
 
-    return NextResponse.json(state);
+    return NextResponse.json(state, {
+      headers: {
+        "Cache-Control": "no-store",
+      },
+    });
   } catch (error) {
+    const isExpected = error instanceof HiringServiceError;
+
+    if (!isExpected) {
+      console.error("Unexpected hiring state read error", error);
+    }
+
     return NextResponse.json(
       {
-        message:
-          error instanceof Error
-            ? error.message
-            : "채용 상태를 불러오지 못했습니다.",
+        code: isExpected ? error.code : "HIRING_STATE_READ_FAILED",
+        message: isExpected
+          ? error.message
+          : "채용 상태를 불러오지 못했습니다.",
       },
-      { status: 500 },
+      {
+        status: isExpected ? error.status : 500,
+      },
     );
   }
 }
@@ -45,14 +58,22 @@ export async function POST(request: Request) {
 
     return NextResponse.json(state);
   } catch (error) {
+    const isExpected = error instanceof HiringServiceError;
+
+    if (!isExpected) {
+      console.error("Unexpected hiring state mutation error", error);
+    }
+
     return NextResponse.json(
       {
-        message:
-          error instanceof Error
-            ? error.message
-            : "채용 상태를 저장하지 못했습니다.",
+        code: isExpected ? error.code : "HIRING_MUTATION_FAILED",
+        message: isExpected
+          ? error.message
+          : "채용 상태를 저장하지 못했습니다.",
       },
-      { status: 500 },
+      {
+        status: isExpected ? error.status : 500,
+      },
     );
   }
 }

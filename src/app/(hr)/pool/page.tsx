@@ -3,20 +3,24 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import {
+  AlertCircle,
   Briefcase,
+  Check,
   Heart,
   LayoutDashboard,
+  LoaderCircle,
   MapPin,
   Search,
-  Sparkles,
-  Star,
+  UserRoundSearch,
   Users,
 } from "lucide-react";
 
 import { CharacterAvatar } from "@/components/character-avatar";
+import { HiringStateError } from "@/components/hiring-state-error";
 import { PortalShell } from "@/components/portal-shell";
-import { featuredTeachers, type TeacherStatus } from "@/lib/demo-data";
+import type { TeacherStatus } from "@/lib/demo-data";
 import { useDemoHiringState } from "@/lib/demo-hiring-state";
+import { useDemoSession } from "@/lib/demo-session-client";
 
 const navItems = [
   { href: "/hr/dashboard", label: "채용 운영", icon: LayoutDashboard },
@@ -32,22 +36,22 @@ function statusTone(status: TeacherStatus) {
     case "seeking":
       return {
         label: "채용 제안 가능",
-        className: "bg-secondary-50 text-secondary-700",
+        className: "border-[#b9cec1] bg-[#edf4ef] text-[#1f6248]",
       };
     case "interviewing":
       return {
         label: "면접 진행 중",
-        className: "bg-[var(--warning-soft)] text-[#9a6a00]",
+        className: "border-[#e6d1a2] bg-[#fff7e6] text-[#865d13]",
       };
     case "employed":
       return {
         label: "근무 중",
-        className: "bg-primary-50 text-primary-700",
+        className: "border-[#c9d1cf] bg-[#eef1f0] text-[#58635e]",
       };
     default:
       return {
         label: "노출 일시중지",
-        className: "bg-surface-panel text-ink-soft",
+        className: "border-[#d8d5cc] bg-[#f0eee8] text-[#666e69]",
       };
   }
 }
@@ -55,27 +59,57 @@ function statusTone(status: TeacherStatus) {
 function requestTone(status?: string) {
   switch (status) {
     case "accepted":
-      return "bg-secondary-50 text-secondary-700";
+      return "border-[#b9cec1] bg-[#edf4ef] text-[#1f6248]";
     case "rejected":
-      return "bg-[var(--danger-soft)] text-[#9c2f24]";
+      return "border-[#e4b8ae] bg-[#fff3f0] text-[#8b3328]";
     case "cancelled":
-      return "bg-surface-panel text-ink-soft";
+      return "border-[#d8d5cc] bg-[#f0eee8] text-[#666e69]";
     default:
-      return "bg-primary-50 text-primary-700";
+      return "border-[#c5d1cb] bg-[#edf1ee] text-[#385646]";
   }
 }
 
+function FilterButton({
+  active,
+  children,
+  onClick,
+}: {
+  active: boolean;
+  children: React.ReactNode;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      aria-pressed={active}
+      className={`inline-flex min-h-9 items-center gap-1.5 rounded-md border px-3 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0b4a37] focus-visible:ring-offset-2 ${
+        active
+          ? "border-[#9eb8a9] bg-[#e7efe9] text-[#0b4a37]"
+          : "border-[#dedbd2] bg-white text-[#5d6661] hover:border-[#bbb7ac] hover:text-[#17231e]"
+      }`}
+      onClick={onClick}
+      type="button"
+    >
+      {active ? <Check aria-hidden="true" className="h-3.5 w-3.5" /> : null}
+      {children}
+    </button>
+  );
+}
+
 export default function HRPoolPage() {
+  const session = useDemoSession();
   const {
     hrMatchRequests,
     isTeacherInterested,
+    loaded,
+    loadError,
+    refresh,
+    teachers,
     toggleInterestedTeacher,
   } = useDemoHiringState();
   const [query, setQuery] = useState("");
   const [statusFilters, setStatusFilters] = useState<TeacherStatus[]>([
     "seeking",
     "interviewing",
-    "employed",
   ]);
   const [qualificationFilters, setQualificationFilters] = useState<string[]>([
     "초등",
@@ -86,167 +120,195 @@ export default function HRPoolPage() {
     "기간제",
     "시간강사",
   ]);
+  const [savingTeacherId, setSavingTeacherId] = useState<number | null>(null);
+  const [errorMessage, setErrorMessage] = useState("");
 
   const filteredTeachers = useMemo(() => {
     const lowered = query.trim().toLowerCase();
 
-    return featuredTeachers.filter((teacher) => {
+    return teachers.filter((teacher) => {
       const matchesQuery =
         lowered.length === 0 ||
-        [teacher.name, teacher.qualification, teacher.residence, teacher.summary]
+        [
+          teacher.name,
+          teacher.qualification,
+          teacher.subject,
+          teacher.residence,
+          teacher.summary,
+          ...teacher.preferredRegions,
+        ]
+          .filter(Boolean)
           .join(" ")
           .toLowerCase()
           .includes(lowered);
 
-      const matchesStatus = statusFilters.includes(teacher.status);
-      const matchesQualification = qualificationFilters.includes(
-        teacher.qualificationCategory,
-      );
-      const matchesWorkType = teacher.preferredTypes.some((type) =>
-        workTypeFilters.includes(type),
-      );
-
       return (
-        matchesQuery && matchesStatus && matchesQualification && matchesWorkType
+        matchesQuery &&
+        statusFilters.includes(teacher.status) &&
+        qualificationFilters.includes(teacher.qualificationCategory) &&
+        teacher.preferredTypes.some((type) => workTypeFilters.includes(type))
       );
     });
-  }, [query, qualificationFilters, statusFilters, workTypeFilters]);
+  }, [query, qualificationFilters, statusFilters, teachers, workTypeFilters]);
 
   const pendingRequests = hrMatchRequests.filter(
     (request) => request.status === "pending",
   );
+  const interestedCount = teachers.filter((teacher) =>
+    isTeacherInterested(teacher.id),
+  ).length;
 
   const toggleFilter = (
     value: string,
     current: string[],
     setter: (next: string[]) => void,
   ) => {
-    if (current.includes(value)) {
-      setter(current.filter((item) => item !== value));
-      return;
-    }
+    setter(
+      current.includes(value)
+        ? current.filter((item) => item !== value)
+        : [...current, value],
+    );
+  };
 
-    setter([...current, value]);
+  const resetFilters = () => {
+    setStatusFilters(["seeking", "interviewing"]);
+    setQualificationFilters(["초등", "중등", "특수"]);
+    setWorkTypeFilters(["기간제", "시간강사"]);
+    setQuery("");
+  };
+
+  const handleInterest = async (teacherId: number) => {
+    setErrorMessage("");
+    setSavingTeacherId(teacherId);
+
+    try {
+      await toggleInterestedTeacher(teacherId);
+    } catch (error) {
+      setErrorMessage(
+        error instanceof Error
+          ? error.message
+          : "관심 교사 상태를 저장하지 못했습니다.",
+      );
+    } finally {
+      setSavingTeacherId(null);
+    }
   };
 
   return (
     <PortalShell
       navItems={navItems}
       noticeCount={pendingRequests.length}
-      primaryAction={{ href: "/hr/dashboard", label: "채용 운영 보기", icon: Sparkles }}
-      sectionLabel="교사 인력풀 운영"
+      primaryAction={{
+        href: "/hr/dashboard",
+        label: "채용 운영으로 이동",
+        icon: LayoutDashboard,
+      }}
+      sectionLabel="교사 인력풀"
       user={{
-        name: "홍수진",
+        name: session?.name ?? "학교 담당자",
         role: "인사담당",
-        detail: "성진초등학교",
+        detail: session?.detail ?? "소속 학교",
       }}
     >
-      <section className="grid gap-6 xl:grid-cols-[1.35fr_0.65fr]">
-        <div className="self-start rounded-lg bg-[linear-gradient(135deg,#0058be,#2170e4)] p-6 text-white shadow-soft">
-          <div className="flex min-h-[176px] flex-col justify-between">
-            <div>
-              <div className="inline-flex rounded-full bg-white/12 px-3 py-2 text-sm font-semibold text-white/90">
-                기간제·시간강사
-              </div>
-              <div className="mt-5 text-3xl font-bold tracking-tight sm:text-4xl">
-                교사 인력풀
-              </div>
-              <div className="mt-3 break-keep text-sm leading-6 text-white/84">
-                관심 교사 저장, 프로필 확인, 공고 연결 매칭 요청까지 한 흐름으로
-                이어집니다.
-              </div>
+      <section className="border-b border-[#dcd9d0] pb-7">
+        <div className="flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
+          <div>
+            <div className="text-xs font-semibold uppercase tracking-[0.18em] text-[#0b4a37]">
+              TALENT POOL
             </div>
-            <div className="text-sm font-medium text-white/82">
-              현재 표시 {filteredTeachers.length}명
-            </div>
+            <h1 className="mt-3 text-3xl font-bold tracking-[-0.03em] text-[#17231e] sm:text-4xl">
+              교사 인력풀
+            </h1>
+            <p className="mt-3 max-w-2xl break-keep text-sm leading-7 text-[#65706a]">
+              공개 상태와 자격 조건을 확인한 뒤 관심 후보로 저장하거나 현재 채용
+              공고에 직접 제안할 수 있습니다.
+            </p>
           </div>
-        </div>
 
-        <div className="panel-surface p-6">
-          <div className="text-sm font-semibold text-ink-soft">
-            오늘의 인력풀 현황
-          </div>
-          <div className="mt-5 grid gap-4 sm:grid-cols-3 xl:grid-cols-1">
+          <dl className="grid grid-cols-3 divide-x divide-[#d8d5cc] rounded-md border border-[#d8d5cc] bg-[#fbfaf6]">
             {[
-              ["연락 가능한 교사", `${featuredTeachers.filter((item) => item.status === "seeking").length}명`],
-              ["응답 대기 제안", `${pendingRequests.length}건`],
-              ["관심 등록", `${featuredTeachers.filter((item) => isTeacherInterested(item.id)).length}명`],
-            ].map(([label, value]) => (
-              <div key={label} className="rounded-lg bg-surface-subtle p-4">
-                <div className="text-sm font-medium text-ink-soft">{label}</div>
-                <div className="mt-2 text-3xl font-bold text-ink">{value}</div>
+              [
+                "제안 가능",
+                teachers.filter((item) => item.status === "seeking").length,
+                "명",
+              ],
+              ["응답 대기", pendingRequests.length, "건"],
+              ["관심 후보", interestedCount, "명"],
+            ].map(([label, value, unit]) => (
+              <div key={label} className="min-w-[104px] px-4 py-3 text-center sm:min-w-[132px]">
+                <dt className="text-xs text-[#747c78]">{label}</dt>
+                <dd className="mt-1 text-xl font-bold text-[#17231e]">
+                  {value}
+                  <span className="ml-0.5 text-xs font-medium text-[#747c78]">
+                    {unit}
+                  </span>
+                </dd>
               </div>
             ))}
-          </div>
+          </dl>
         </div>
       </section>
 
-      <section className="mt-8 grid gap-6 lg:grid-cols-[280px_minmax(0,1fr)]">
-        <aside className="panel-muted h-fit p-5 lg:sticky lg:top-24">
+      {errorMessage ? (
+        <div
+          className="mt-5 flex items-start gap-2 rounded-md border border-[#e4b8ae] bg-[#fff3f0] px-4 py-3 text-sm text-[#8b3328]"
+          role="alert"
+        >
+          <AlertCircle aria-hidden="true" className="mt-0.5 h-4 w-4 shrink-0" />
+          {errorMessage}
+        </div>
+      ) : null}
+
+      <section className="mt-7 grid gap-6 lg:grid-cols-[264px_minmax(0,1fr)]">
+        <aside className="h-fit rounded-md border border-[#dedbd2] bg-[#fbfaf6] p-5 lg:sticky lg:top-24">
           <div className="flex items-center justify-between">
-            <div className="text-sm font-bold uppercase tracking-[0.16em] text-ink-soft">
-              필터
-            </div>
+            <div className="text-sm font-semibold text-[#26322d]">검색 조건</div>
             <button
+              className="rounded-md px-2 py-1 text-xs font-semibold text-[#0b4a37] hover:bg-[#e8eee9] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0b4a37]"
+              onClick={resetFilters}
               type="button"
-              className="text-xs font-semibold text-primary-700"
-              onClick={() => {
-                setStatusFilters(["seeking", "interviewing", "employed"]);
-                setQualificationFilters(["초등", "중등", "특수"]);
-                setWorkTypeFilters(["기간제", "시간강사"]);
-                setQuery("");
-              }}
             >
               초기화
             </button>
           </div>
 
-          <div className="mt-6 space-y-6">
-            <div>
-              <div className="text-sm font-semibold text-ink">노출 상태</div>
+          <div className="mt-5 space-y-6">
+            <fieldset>
+              <legend className="text-sm font-semibold text-[#39443e]">
+                공개 상태
+              </legend>
               <div className="mt-3 flex flex-wrap gap-2">
                 {(
                   [
-                    ["seeking", "채용 제안 가능"],
-                    ["interviewing", "면접 진행 중"],
+                    ["seeking", "제안 가능"],
+                    ["interviewing", "면접 중"],
                     ["employed", "근무 중"],
-                    ["paused", "노출 일시중지"],
                   ] as const
                 ).map(([key, label]) => (
-                  <button
+                  <FilterButton
                     key={key}
-                    type="button"
-                    className={`rounded-full px-3 py-2 text-sm font-medium ${
-                      statusFilters.includes(key)
-                        ? "bg-primary-50 text-primary-700"
-                        : "bg-white text-ink-soft"
-                    }`}
+                    active={statusFilters.includes(key)}
                     onClick={() =>
-                      toggleFilter(
-                        key,
-                        statusFilters,
-                        (next) => setStatusFilters(next as TeacherStatus[]),
+                      toggleFilter(key, statusFilters, (next) =>
+                        setStatusFilters(next as TeacherStatus[]),
                       )
                     }
                   >
                     {label}
-                  </button>
+                  </FilterButton>
                 ))}
               </div>
-            </div>
+            </fieldset>
 
-            <div>
-              <div className="text-sm font-semibold text-ink">자격 유형</div>
+            <fieldset>
+              <legend className="text-sm font-semibold text-[#39443e]">
+                자격 유형
+              </legend>
               <div className="mt-3 flex flex-wrap gap-2">
                 {qualificationOptions.map((option) => (
-                  <button
+                  <FilterButton
                     key={option}
-                    type="button"
-                    className={`rounded-full px-3 py-2 text-sm font-medium ${
-                      qualificationFilters.includes(option)
-                        ? "bg-primary-50 text-primary-700"
-                        : "bg-white text-ink-soft"
-                    }`}
+                    active={qualificationFilters.includes(option)}
                     onClick={() =>
                       toggleFilter(
                         option,
@@ -256,191 +318,244 @@ export default function HRPoolPage() {
                     }
                   >
                     {option}
-                  </button>
+                  </FilterButton>
                 ))}
               </div>
-            </div>
+            </fieldset>
 
-            <div>
-              <div className="text-sm font-semibold text-ink">근무 형태</div>
+            <fieldset>
+              <legend className="text-sm font-semibold text-[#39443e]">
+                희망 근무
+              </legend>
               <div className="mt-3 flex flex-wrap gap-2">
                 {workTypeOptions.map((option) => (
-                  <button
+                  <FilterButton
                     key={option}
-                    type="button"
-                    className={`rounded-full px-3 py-2 text-sm font-medium ${
-                      workTypeFilters.includes(option)
-                        ? "bg-primary-50 text-primary-700"
-                        : "bg-white text-ink-soft"
-                    }`}
+                    active={workTypeFilters.includes(option)}
                     onClick={() =>
                       toggleFilter(option, workTypeFilters, setWorkTypeFilters)
                     }
                   >
                     {option}
-                  </button>
+                  </FilterButton>
                 ))}
               </div>
-            </div>
+            </fieldset>
           </div>
         </aside>
 
-        <div className="space-y-4">
-          <div className="panel-surface p-5">
-            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-              <div>
-                <div className="text-2xl font-bold text-ink">교사 검색</div>
-                <div className="mt-1 text-sm text-ink-soft">
-                  검색 결과 {filteredTeachers.length}명
-                </div>
-              </div>
-
-              <div className="relative w-full max-w-md">
-                <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-muted" />
-                <input
-                  className="input-surface pl-11"
-                  placeholder="이름, 자격, 지역으로 검색"
-                  value={query}
-                  onChange={(event) => setQuery(event.target.value)}
-                />
-              </div>
+        <div className="min-w-0">
+          <div className="mb-4 flex flex-col gap-4 border-b border-[#dcd9d0] pb-5 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <h2 className="text-2xl font-bold tracking-[-0.02em] text-[#17231e]">
+                등록 교사
+              </h2>
+              <p className="mt-1 text-sm text-[#68706c]">
+                검색 결과 {filteredTeachers.length}명
+              </p>
+            </div>
+            <div className="relative w-full max-w-md">
+              <Search
+                aria-hidden="true"
+                className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#77807b]"
+              />
+              <label className="sr-only" htmlFor="teacher-pool-search">
+                교사 인력풀 검색
+              </label>
+              <input
+                id="teacher-pool-search"
+                className="h-11 w-full rounded-md border border-[#d8d5cc] bg-white pl-11 pr-4 text-sm text-[#17231e] outline-none placeholder:text-[#7b837f] focus:border-[#0b4a37] focus:ring-2 focus:ring-[#0b4a37]/15"
+                onChange={(event) => setQuery(event.target.value)}
+                placeholder="이름, 자격, 지역, 과목 검색"
+                type="search"
+                value={query}
+              />
             </div>
           </div>
 
-          {filteredTeachers.map((teacher) => {
-            const status = statusTone(teacher.status);
-            const latestRequest =
-              hrMatchRequests.find((request) => request.teacherId === teacher.id) ??
-              null;
-            const interested = isTeacherInterested(teacher.id);
-
-            return (
-              <article
-                key={teacher.id}
-                className="panel-surface overflow-hidden p-6 transition-transform hover:-translate-y-1"
-              >
-                <div className="flex flex-col gap-6 xl:flex-row xl:items-center">
-                  <div className="flex flex-1 items-start gap-4">
-                    <CharacterAvatar
-                      className="h-20 w-20 rounded-lg"
-                      presetId={teacher.avatarPreset}
-                      size={80}
-                    />
-
-                    <div className="min-w-0 flex-1">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <span
-                          className={`rounded-full px-2.5 py-1 text-xs font-semibold ${status.className}`}
-                        >
-                          {status.label}
-                        </span>
-                        {latestRequest ? (
-                          <span
-                            className={`rounded-full px-2.5 py-1 text-xs font-semibold ${requestTone(
-                              latestRequest.status,
-                            )}`}
-                          >
-                            {latestRequest.status === "accepted"
-                              ? "응답 완료"
-                              : latestRequest.status === "rejected"
-                                ? "보류"
-                                : latestRequest.status === "cancelled"
-                                  ? "요청 취소"
-                                  : "요청 발송"}
-                          </span>
-                        ) : null}
-                        {interested ? (
-                          <span className="rounded-full bg-[var(--tertiary-soft)] px-2.5 py-1 text-xs font-semibold text-[var(--tertiary-solid)]">
-                            관심 등록
-                          </span>
-                        ) : null}
-                      </div>
-
-                      <div className="mt-3 flex flex-wrap items-end gap-3">
-                        <h2 className="break-keep text-2xl font-bold text-ink">
-                          {teacher.name}
-                        </h2>
-                        <span className="text-sm text-ink-muted">
-                          {teacher.age}세 / {teacher.birthYear}년생
-                        </span>
-                      </div>
-
-                      <div className="mt-2 break-keep text-sm font-semibold text-primary-700">
-                        {teacher.qualification}
-                        {teacher.subject ? ` / ${teacher.subject}` : ""}
-                      </div>
-
-                      <p className="mt-3 break-keep text-sm leading-6 text-ink-soft">
-                        {teacher.summary}
-                      </p>
-
-                      <div className="mt-4 grid gap-3 text-sm text-ink-soft md:grid-cols-2 xl:grid-cols-4">
-                        <div className="rounded-lg bg-surface-subtle px-3 py-2">
-                          경력 {teacher.experience}
-                        </div>
-                        <div className="rounded-lg bg-surface-subtle px-3 py-2">
-                          거주지 {teacher.residence}
-                        </div>
-                        <div className="rounded-lg bg-surface-subtle px-3 py-2">
-                          희망 {teacher.preferredTypes.join(", ")}
-                        </div>
-                        <div className="rounded-lg bg-surface-subtle px-3 py-2">
-                          조회 {teacher.portfolioViews}회
-                        </div>
-                      </div>
-
-                      <div className="mt-4 flex flex-wrap gap-2">
-                        {teacher.preferredRegions.map((region) => (
-                          <span
-                            key={region}
-                            className="inline-flex items-center gap-1 rounded-full bg-white px-3 py-2 text-xs font-medium text-ink-soft ring-1 ring-outline"
-                          >
-                            <MapPin className="h-3 w-3" />
-                            {region}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="grid w-full gap-3 xl:w-[240px]">
-                    <button
-                      type="button"
-                      className={`inline-flex items-center justify-center gap-2 rounded-lg px-4 py-3 text-sm font-semibold ${
-                        interested
-                          ? "bg-primary-50 text-primary-700"
-                          : "border border-outline bg-white text-ink-soft"
-                      }`}
-                      onClick={() => toggleInterestedTeacher(teacher.id)}
-                    >
-                      <Heart className="h-4 w-4" />
-                      {interested ? "관심 등록 해제" : "관심 등록"}
-                    </button>
-
-                    <Link
-                      href={`/pool/${teacher.id}`}
-                      className="inline-flex items-center justify-center gap-2 rounded-lg bg-[linear-gradient(135deg,#0058be,#2170e4)] px-4 py-3 text-sm font-semibold text-white shadow-soft"
-                    >
-                      <Users className="h-4 w-4" />
-                      {latestRequest ? "프로필 상세 확인" : "매칭 요청 진행"}
-                    </Link>
-
-                    <div className="rounded-lg bg-surface-subtle px-4 py-3 text-sm leading-6 text-ink-soft">
-                      {latestRequest
-                        ? latestRequest.summary
-                        : "프로필 상세로 들어가 공고를 연결한 뒤 매칭 요청을 보낼 수 있습니다."}
-                    </div>
-                  </div>
-                </div>
-              </article>
-            );
-          })}
-
-          {filteredTeachers.length === 0 ? (
-            <div className="rounded-lg border border-dashed border-outline bg-surface-subtle px-4 py-10 text-center text-sm text-ink-soft">
-              현재 조건에 맞는 교사가 없습니다. 필터를 조정해 주세요.
+          {loadError ? (
+            <HiringStateError message={loadError} onRetry={refresh} />
+          ) : !loaded ? (
+            <div aria-live="polite" className="space-y-3">
+              {[0, 1, 2].map((item) => (
+                <div
+                  key={item}
+                  className="h-56 animate-pulse rounded-md border border-[#e2dfd7] bg-[#eeece6]"
+                />
+              ))}
+              <span className="sr-only">교사 인력풀을 불러오는 중입니다.</span>
             </div>
-          ) : null}
+          ) : filteredTeachers.length === 0 ? (
+            <div className="rounded-md border border-dashed border-[#c9c5ba] bg-[#fbfaf6] px-6 py-16 text-center">
+              <UserRoundSearch
+                aria-hidden="true"
+                className="mx-auto h-9 w-9 text-[#7a827e]"
+              />
+              <h3 className="mt-4 text-lg font-semibold text-[#26322d]">
+                조건에 맞는 교사가 없습니다
+              </h3>
+              <p className="mt-2 text-sm text-[#68706c]">
+                검색어나 공개 상태 필터를 조정해 보세요.
+              </p>
+              <button
+                className="mt-5 inline-flex min-h-10 items-center rounded-md border border-[#c8c4b9] bg-white px-4 py-2 text-sm font-semibold text-[#0b4a37] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0b4a37]"
+                onClick={resetFilters}
+                type="button"
+              >
+                전체 조건으로 돌아가기
+              </button>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {filteredTeachers.map((teacher, index) => {
+                const status = statusTone(teacher.status);
+                const latestRequest =
+                  hrMatchRequests.find(
+                    (request) => request.teacherId === teacher.id,
+                  ) ?? null;
+                const interested = isTeacherInterested(teacher.id);
+                const saving = savingTeacherId === teacher.id;
+
+                return (
+                  <article
+                    key={teacher.id}
+                    className="rounded-md border border-[#dedbd2] bg-[#fbfaf6] p-5 transition-[border-color,box-shadow] hover:border-[#b9c5be] hover:shadow-[0_12px_30px_rgba(34,45,39,0.07)] sm:p-6"
+                  >
+                    <div className="flex flex-col gap-5 xl:flex-row xl:items-center">
+                      <div className="flex min-w-0 flex-1 items-start gap-4">
+                        <CharacterAvatar
+                          className="h-20 w-20 shrink-0 rounded-md"
+                          presetId={teacher.avatarPreset}
+                          priority={index === 0}
+                          size={80}
+                        />
+
+                        <div className="min-w-0 flex-1">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span
+                              className={`inline-flex rounded-full border px-2.5 py-1 text-xs font-semibold ${status.className}`}
+                            >
+                              {status.label}
+                            </span>
+                            {latestRequest ? (
+                              <span
+                                className={`inline-flex rounded-full border px-2.5 py-1 text-xs font-semibold ${requestTone(
+                                  latestRequest.status,
+                                )}`}
+                              >
+                                {latestRequest.status === "accepted"
+                                  ? "제안 수락"
+                                  : latestRequest.status === "rejected"
+                                    ? "제안 보류"
+                                    : latestRequest.status === "cancelled"
+                                      ? "요청 취소"
+                                      : "응답 대기"}
+                              </span>
+                            ) : null}
+                            {interested ? (
+                              <span className="inline-flex rounded-full border border-[#d6c8b9] bg-[#f6eee4] px-2.5 py-1 text-xs font-semibold text-[#775431]">
+                                관심 후보
+                              </span>
+                            ) : null}
+                          </div>
+
+                          <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1">
+                            <h3 className="break-keep text-xl font-bold text-[#17231e]">
+                              {teacher.name}
+                            </h3>
+                            <span className="text-sm font-medium text-[#0b4a37]">
+                              {teacher.qualification}
+                              {teacher.subject ? ` · ${teacher.subject}` : ""}
+                            </span>
+                          </div>
+
+                          <p className="mt-2 line-clamp-2 break-keep text-sm leading-6 text-[#626b66]">
+                            {teacher.summary}
+                          </p>
+
+                          <dl className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-sm text-[#59635d]">
+                            <div className="flex gap-1.5">
+                              <dt className="text-[#828985]">경력</dt>
+                              <dd className="font-medium">{teacher.experience}</dd>
+                            </div>
+                            <div className="flex gap-1.5">
+                              <dt className="text-[#828985]">거주</dt>
+                              <dd className="font-medium">{teacher.residence}</dd>
+                            </div>
+                            <div className="flex gap-1.5">
+                              <dt className="text-[#828985]">희망</dt>
+                              <dd className="font-medium">
+                                {teacher.preferredTypes.join(", ")}
+                              </dd>
+                            </div>
+                          </dl>
+
+                          <div className="mt-4 flex flex-wrap gap-2">
+                            {teacher.preferredRegions.map((region) => (
+                              <span
+                                key={region}
+                                className="inline-flex items-center gap-1 rounded-full border border-[#ddd9d0] bg-white px-2.5 py-1.5 text-xs font-medium text-[#626b66]"
+                              >
+                                <MapPin aria-hidden="true" className="h-3 w-3" />
+                                {region}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="grid w-full gap-2 border-t border-[#e1ded6] pt-4 xl:w-[220px] xl:border-l xl:border-t-0 xl:pl-5 xl:pt-0">
+                        <button
+                          aria-pressed={interested}
+                          className={`inline-flex min-h-11 items-center justify-center gap-2 rounded-md border px-4 py-2 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0b4a37] disabled:cursor-not-allowed disabled:opacity-60 ${
+                            interested
+                              ? "border-[#c9bda9] bg-[#f6eee4] text-[#775431]"
+                              : "border-[#d5d1c7] bg-white text-[#4e5953] hover:bg-[#f2f0ea]"
+                          }`}
+                          disabled={saving}
+                          onClick={() => void handleInterest(teacher.id)}
+                          type="button"
+                        >
+                          {saving ? (
+                            <LoaderCircle
+                              aria-hidden="true"
+                              className="h-4 w-4 animate-spin"
+                            />
+                          ) : (
+                            <Heart
+                              aria-hidden="true"
+                              className={`h-4 w-4 ${interested ? "fill-current" : ""}`}
+                            />
+                          )}
+                          {saving
+                            ? "저장 중"
+                            : interested
+                              ? "관심 해제"
+                              : "관심 후보"}
+                        </button>
+
+                        <Link
+                          className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md bg-[#0b4a37] px-4 py-2 text-sm font-semibold text-white shadow-[0_8px_20px_rgba(11,74,55,0.14)] hover:bg-[#083a2c] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0b4a37] focus-visible:ring-offset-2"
+                          href={`/pool/${teacher.id}`}
+                        >
+                          <Users aria-hidden="true" className="h-4 w-4" />
+                          {latestRequest || teacher.status === "employed"
+                            ? "프로필 확인"
+                            : "채용 제안"}
+                        </Link>
+
+                        <p className="break-keep text-xs leading-5 text-[#737b77]">
+                          {latestRequest
+                            ? latestRequest.summary
+                            : "상세 프로필에서 연결 공고와 제안 내용을 확인합니다."}
+                        </p>
+                      </div>
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+          )}
         </div>
       </section>
     </PortalShell>

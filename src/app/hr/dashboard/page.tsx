@@ -3,22 +3,27 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import {
+  AlertCircle,
   Briefcase,
   CalendarClock,
   CheckCircle2,
   LayoutDashboard,
+  LoaderCircle,
   MapPin,
   Plus,
   School,
   Search,
   Send,
   ShieldCheck,
+  Star,
   Users,
   XCircle,
 } from "lucide-react";
 
 import { PortalShell } from "@/components/portal-shell";
+import { HiringStateError } from "@/components/hiring-state-error";
 import { useDemoHiringState } from "@/lib/demo-hiring-state";
+import { useDemoSession } from "@/lib/demo-session-client";
 
 const navItems = [
   {
@@ -55,32 +60,53 @@ type JobDraft = {
   summary: string;
 };
 
+type ReviewDraft = {
+  comment: string;
+  rating: number;
+};
+
 function makeInterviewDraft(): InterviewDraft {
   return {
-    date: "2026-04-24",
-    time: "14:00",
-    place: "성진초등학교 2층 회의실",
-    note: "수업 운영 경험과 근무 가능 일정 확인 예정",
+    date: "",
+    time: "",
+    place: "",
+    note: "",
   };
 }
 
-function makeDefaultJobDraft(): JobDraft {
+function makeDefaultJobDraft(schoolName = ""): JobDraft {
   return {
-    schoolName: "성진초등학교",
-    schoolRegion: "수원",
-    schoolAddress: "경기도 수원시 영통구 창룡대로 58",
+    schoolName,
+    schoolRegion: "",
+    schoolAddress: "",
     employmentType: "기간제 교사",
-    startDate: "2026-05-07",
-    endDate: "2026-08-31",
+    startDate: "",
+    endDate: "",
     qualificationType: "초등",
     qualificationSubject: "",
-    gradeLevel: "4학년 담임",
+    gradeLevel: "",
     isHomeroom: true,
-    summary: "학급 운영과 기초학력 지원을 맡을 기간제 교사를 모집합니다.",
-    duties: "4학년 담임 및 학급 운영\n국어, 수학, 사회 수업\n학부모 상담 및 생활지도",
-    requirements: "초등 2급 정교사 이상\n담임 경험 1년 이상 우대\n즉시 근무 가능자 우대",
-    benefits: "경기도교육청 기준 보수 적용\n멘토 교사 배정\n급식 및 교재 지원",
+    summary: "",
+    duties: "",
+    requirements: "",
+    benefits: "",
   };
+}
+
+function assertInterviewDraft(
+  draft: InterviewDraft,
+  today: string,
+) {
+  if (
+    !draft.date ||
+    draft.date < today ||
+    !draft.time ||
+    !draft.place.trim()
+  ) {
+    throw new Error(
+      "오늘 이후의 면접 날짜와 시간, 장소를 모두 입력해 주세요.",
+    );
+  }
 }
 
 function jobTone(status: string) {
@@ -111,6 +137,8 @@ function applicationTone(status: string) {
 
 function requestTone(status: string) {
   switch (status) {
+    case "hired":
+      return "bg-secondary-50 text-secondary-700";
     case "accepted":
       return "bg-secondary-50 text-secondary-700";
     case "rejected":
@@ -123,13 +151,20 @@ function requestTone(status: string) {
 }
 
 export default function HRDashboardPage() {
+  const session = useDemoSession();
+  const today = new Date().toISOString().slice(0, 10);
   const {
     cancelPoolRequest,
+    completePoolRequestHire,
     createJob,
     getApplicationsForJob,
+    hrOrganization,
     hrMatchRequests,
     jobs,
+    loaded,
+    loadError,
     parseListInput,
+    refresh,
     scheduleInterviewForApplication,
     scheduleInterviewForRequest,
     updateApplicationStatus,
@@ -137,12 +172,24 @@ export default function HRDashboardPage() {
   } = useDemoHiringState();
   const [jobDraft, setJobDraft] = useState<JobDraft>(makeDefaultJobDraft());
   const [creationMessage, setCreationMessage] = useState("");
+  const [operationError, setOperationError] = useState("");
+  const [operationMessage, setOperationMessage] = useState("");
+  const [pendingAction, setPendingAction] = useState("");
   const [applicationInterviews, setApplicationInterviews] = useState<
     Record<number, InterviewDraft>
   >({});
   const [requestInterviews, setRequestInterviews] = useState<
     Record<number, InterviewDraft>
   >({});
+  const [reviewDrafts, setReviewDrafts] = useState<
+    Record<number, ReviewDraft>
+  >({});
+  const [submittedReviewTeacherIds, setSubmittedReviewTeacherIds] = useState<
+    number[]
+  >([]);
+  const schoolName = hrOrganization?.schoolName ?? session?.detail ?? "";
+  const schoolRegion = hrOrganization?.schoolRegion ?? "";
+  const schoolAddress = hrOrganization?.schoolAddress ?? "";
 
   const pendingMatches = hrMatchRequests.filter(
     (request) => request.status === "pending",
@@ -170,6 +217,35 @@ export default function HRDashboardPage() {
       item.applications.filter((application) => application.interview).length,
     0,
   );
+  const hiredCandidates = useMemo(() => {
+    const candidates = [
+      ...jobsWithApplications.flatMap(({ applications }) =>
+        applications
+          .filter(
+            (application) =>
+              application.status === "hired" && application.teacher,
+          )
+          .map((application) => ({
+            name: application.teacher?.name ?? "채용 교사",
+            qualification:
+              application.teacher?.qualification ?? "자격 정보 확인 필요",
+            teacherId: application.teacherId,
+          })),
+      ),
+      ...hrMatchRequests
+        .filter((request) => request.status === "hired" && request.teacher)
+        .map((request) => ({
+          name: request.teacher?.name ?? "채용 교사",
+          qualification:
+            request.teacher?.qualification ?? request.qualification,
+          teacherId: request.teacherId,
+        })),
+    ];
+
+    return Array.from(
+      new Map(candidates.map((candidate) => [candidate.teacherId, candidate])).values(),
+    );
+  }, [hrMatchRequests, jobsWithApplications]);
 
   const updateJobDraftField = <K extends keyof JobDraft>(
     key: K,
@@ -178,30 +254,127 @@ export default function HRDashboardPage() {
     setJobDraft((current) => ({ ...current, [key]: value }));
   };
 
-  const handleCreateJob = (event: React.FormEvent) => {
+  const runOperation = async (
+    key: string,
+    action: () => Promise<void>,
+    successMessage: string,
+  ) => {
+    setOperationError("");
+    setOperationMessage("");
+    setPendingAction(key);
+
+    try {
+      await action();
+      setOperationMessage(successMessage);
+    } catch (error) {
+      setOperationError(
+        error instanceof Error
+          ? error.message
+          : "요청을 처리하지 못했습니다. 잠시 후 다시 시도해 주세요.",
+      );
+    } finally {
+      setPendingAction("");
+    }
+  };
+
+  const handleCreateJob = async (event: React.FormEvent) => {
     event.preventDefault();
 
-    createJob({
-      schoolName: jobDraft.schoolName,
-      schoolRegion: jobDraft.schoolRegion,
-      schoolAddress: jobDraft.schoolAddress,
-      employmentType: jobDraft.employmentType,
-      startDate: jobDraft.startDate,
-      endDate: jobDraft.endDate,
-      qualificationType: jobDraft.qualificationType,
-      qualificationSubject:
-        jobDraft.qualificationSubject.trim() || undefined,
-      gradeLevel: jobDraft.gradeLevel,
-      isHomeroom: jobDraft.isHomeroom,
-      summary: jobDraft.summary,
-      duties: parseListInput(jobDraft.duties),
-      requirements: parseListInput(jobDraft.requirements),
-      benefits: parseListInput(jobDraft.benefits),
-    });
-    setCreationMessage(
-      `${jobDraft.schoolName} ${jobDraft.gradeLevel} 공고가 등록되었습니다.`,
+    if (
+      !schoolName.trim() ||
+      !schoolRegion.trim() ||
+      !schoolAddress.trim() ||
+      !jobDraft.gradeLevel.trim() ||
+      !jobDraft.summary.trim() ||
+      parseListInput(jobDraft.duties).length === 0 ||
+      parseListInput(jobDraft.requirements).length === 0
+    ) {
+      setOperationError("학교·근무 조건과 공고 내용을 모두 입력해 주세요.");
+      return;
+    }
+
+    if (jobDraft.startDate < today) {
+      setOperationError("근무 시작일은 오늘보다 빠를 수 없습니다.");
+      return;
+    }
+
+    if (new Date(jobDraft.endDate) < new Date(jobDraft.startDate)) {
+      setOperationError("근무 종료일은 시작일보다 빠를 수 없습니다.");
+      return;
+    }
+
+    setOperationError("");
+    setCreationMessage("");
+    setPendingAction("create-job");
+
+    try {
+      await createJob({
+        schoolName,
+        schoolRegion,
+        schoolAddress,
+        employmentType: jobDraft.employmentType,
+        startDate: jobDraft.startDate,
+        endDate: jobDraft.endDate,
+        qualificationType: jobDraft.qualificationType,
+        qualificationSubject:
+          jobDraft.qualificationSubject.trim() || undefined,
+        gradeLevel: jobDraft.gradeLevel,
+        isHomeroom: jobDraft.isHomeroom,
+        summary: jobDraft.summary,
+        duties: parseListInput(jobDraft.duties),
+        requirements: parseListInput(jobDraft.requirements),
+        benefits: parseListInput(jobDraft.benefits),
+      });
+      setCreationMessage(
+        `${schoolName} ${jobDraft.gradeLevel} 공고가 등록되었습니다.`,
+      );
+      setJobDraft(makeDefaultJobDraft());
+    } catch (error) {
+      setOperationError(
+        error instanceof Error
+          ? error.message
+          : "채용 공고를 등록하지 못했습니다.",
+      );
+    } finally {
+      setPendingAction("");
+    }
+  };
+
+  const submitPrivateReview = async (
+    teacherId: number,
+    teacherName: string,
+  ) => {
+    const draft = reviewDrafts[teacherId] ?? { comment: "", rating: 5 };
+
+    await runOperation(
+      `review-${teacherId}`,
+      async () => {
+        const response = await fetch("/api/reviews", {
+          body: JSON.stringify({
+            comment: draft.comment.trim(),
+            rating: draft.rating,
+            teacherId,
+          }),
+          credentials: "same-origin",
+          headers: { "Content-Type": "application/json" },
+          method: "POST",
+        });
+        const result = (await response.json().catch(() => null)) as
+          | { message?: string }
+          | null;
+
+        if (!response.ok) {
+          throw new Error(
+            result?.message ?? "비공개 평가를 저장하지 못했습니다.",
+          );
+        }
+
+        setSubmittedReviewTeacherIds((current) =>
+          current.includes(teacherId) ? current : [...current, teacherId],
+        );
+      },
+      `${teacherName} 교사 평가를 관리자 검토함에 제출했습니다.`,
     );
-    setJobDraft(makeDefaultJobDraft());
   };
 
   return (
@@ -211,38 +384,73 @@ export default function HRDashboardPage() {
       primaryAction={{ href: "/pool", label: "교사 인력풀 보기", icon: Search }}
       sectionLabel="학교 채용 운영"
       user={{
-        name: "홍수진",
+        name: session?.name ?? "학교 담당자",
         role: "인사담당",
-        detail: "성진초등학교",
+        detail: session?.detail ?? "소속 학교",
       }}
     >
+      {loadError ? (
+        <div className="mb-5">
+          <HiringStateError message={loadError} onRetry={refresh} />
+        </div>
+      ) : null}
+
+      {!loaded ? (
+        <div
+          aria-live="polite"
+          className="mb-5 flex items-center gap-2 rounded-md border border-[#d7d4cb] bg-[#fbfaf6] px-4 py-3 text-sm text-[#65706a]"
+        >
+          <LoaderCircle aria-hidden="true" className="h-4 w-4 animate-spin" />
+          채용 운영 데이터를 불러오는 중입니다.
+        </div>
+      ) : null}
+
+      {operationError ? (
+        <div
+          className="mb-5 flex items-start gap-2 rounded-md border border-[#e4b8ae] bg-[#fff3f0] px-4 py-3 text-sm text-[#8b3328]"
+          role="alert"
+        >
+          <AlertCircle aria-hidden="true" className="mt-0.5 h-4 w-4 shrink-0" />
+          {operationError}
+        </div>
+      ) : null}
+
+      {operationMessage ? (
+        <div
+          className="mb-5 flex items-start gap-2 rounded-md border border-[#b9cec1] bg-[#edf4ef] px-4 py-3 text-sm text-[#1f6248]"
+          role="status"
+        >
+          <CheckCircle2 aria-hidden="true" className="mt-0.5 h-4 w-4 shrink-0" />
+          {operationMessage}
+        </div>
+      ) : null}
       <section className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
-        <div className="self-start rounded-lg bg-[linear-gradient(135deg,#0058be,#2170e4)] p-6 text-white shadow-soft">
+        <div className="self-start rounded-md border border-[#174c3e] bg-[#123d31] p-6 text-white shadow-[0_14px_34px_rgba(18,61,49,0.12)]">
           <div className="flex min-h-[184px] flex-col justify-between">
             <div>
-              <div className="inline-flex rounded-full bg-white/12 px-3 py-2 text-sm font-semibold text-white/90">
-                채용 운영
+              <div className="text-xs font-semibold uppercase tracking-[0.18em] text-[#bdd2c7]">
+                HIRING OPERATIONS
               </div>
               <div className="mt-5 text-3xl font-bold tracking-tight sm:text-4xl">
                 학교 채용 관리
               </div>
               <div className="mt-3 break-keep text-sm leading-6 text-white/84">
-                공고 등록, 지원서 검토, 인력풀 제안, 면접 일정 요청까지 실제 운영
-                흐름처럼 이어서 체험할 수 있도록 구성했습니다.
+                공고 등록부터 지원서 검토, 인력풀 제안, 면접 일정까지 실제
+                채용 절차를 한곳에서 관리합니다.
               </div>
             </div>
 
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
               <Link
                 href="/pool"
-                className="inline-flex items-center justify-center gap-2 rounded-lg bg-white px-5 py-3 text-sm font-semibold text-primary-700"
+                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md bg-white px-5 py-3 text-sm font-semibold text-[#0b4a37] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
               >
                 <Search className="h-4 w-4" />
                 교사 인력풀 보기
               </Link>
               <Link
                 href="/jobs"
-                className="inline-flex items-center justify-center gap-2 rounded-lg border border-white/18 bg-white/10 px-5 py-3 text-sm font-semibold text-white"
+                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md border border-white/25 bg-white/10 px-5 py-3 text-sm font-semibold text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
               >
                 <Briefcase className="h-4 w-4" />
                 채용 공고 보기
@@ -297,7 +505,10 @@ export default function HRDashboardPage() {
           </div>
 
           {creationMessage ? (
-            <div className="mt-4 rounded-lg bg-secondary-50 px-4 py-3 text-sm text-secondary-700">
+            <div
+              className="mt-4 rounded-md border border-[#b9cec1] bg-[#edf4ef] px-4 py-3 text-sm text-[#1f6248]"
+              role="status"
+            >
               {creationMessage}
             </div>
           ) : null}
@@ -307,10 +518,9 @@ export default function HRDashboardPage() {
               <div className="mb-2 text-sm font-semibold text-ink">학교명</div>
               <input
                 className="input-surface"
-                value={jobDraft.schoolName}
-                onChange={(event) =>
-                  updateJobDraftField("schoolName", event.target.value)
-                }
+                readOnly
+                required
+                value={schoolName}
               />
             </label>
 
@@ -318,10 +528,9 @@ export default function HRDashboardPage() {
               <div className="mb-2 text-sm font-semibold text-ink">지역</div>
               <input
                 className="input-surface"
-                value={jobDraft.schoolRegion}
-                onChange={(event) =>
-                  updateJobDraftField("schoolRegion", event.target.value)
-                }
+                readOnly
+                required
+                value={schoolRegion}
               />
             </label>
 
@@ -329,10 +538,9 @@ export default function HRDashboardPage() {
               <div className="mb-2 text-sm font-semibold text-ink">주소</div>
               <input
                 className="input-surface"
-                value={jobDraft.schoolAddress}
-                onChange={(event) =>
-                  updateJobDraftField("schoolAddress", event.target.value)
-                }
+                readOnly
+                required
+                value={schoolAddress}
               />
             </label>
 
@@ -357,6 +565,7 @@ export default function HRDashboardPage() {
               <div className="mb-2 text-sm font-semibold text-ink">학년/포지션</div>
               <input
                 className="input-surface"
+                required
                 value={jobDraft.gradeLevel}
                 onChange={(event) =>
                   updateJobDraftField("gradeLevel", event.target.value)
@@ -398,6 +607,8 @@ export default function HRDashboardPage() {
               <div className="mb-2 text-sm font-semibold text-ink">시작일</div>
               <input
                 className="input-surface"
+                min={today}
+                required
                 type="date"
                 value={jobDraft.startDate}
                 onChange={(event) =>
@@ -410,6 +621,8 @@ export default function HRDashboardPage() {
               <div className="mb-2 text-sm font-semibold text-ink">종료일</div>
               <input
                 className="input-surface"
+                min={jobDraft.startDate || today}
+                required
                 type="date"
                 value={jobDraft.endDate}
                 onChange={(event) =>
@@ -433,6 +646,7 @@ export default function HRDashboardPage() {
               <div className="mb-2 text-sm font-semibold text-ink">공고 요약</div>
               <textarea
                 className="input-surface min-h-[110px]"
+                required
                 value={jobDraft.summary}
                 onChange={(event) =>
                   updateJobDraftField("summary", event.target.value)
@@ -444,6 +658,7 @@ export default function HRDashboardPage() {
               <div className="mb-2 text-sm font-semibold text-ink">주요 업무</div>
               <textarea
                 className="input-surface min-h-[140px]"
+                required
                 value={jobDraft.duties}
                 onChange={(event) =>
                   updateJobDraftField("duties", event.target.value)
@@ -455,6 +670,7 @@ export default function HRDashboardPage() {
               <div className="mb-2 text-sm font-semibold text-ink">자격 및 우대</div>
               <textarea
                 className="input-surface min-h-[140px]"
+                required
                 value={jobDraft.requirements}
                 onChange={(event) =>
                   updateJobDraftField("requirements", event.target.value)
@@ -476,10 +692,15 @@ export default function HRDashboardPage() {
 
           <button
             type="submit"
-            className="mt-6 inline-flex items-center justify-center gap-2 rounded-lg bg-[linear-gradient(135deg,#0058be,#2170e4)] px-5 py-3 text-sm font-semibold text-white shadow-soft"
+            className="mt-6 inline-flex min-h-12 items-center justify-center gap-2 rounded-md bg-[#0b4a37] px-5 py-3 text-sm font-semibold text-white shadow-[0_8px_20px_rgba(11,74,55,0.16)] hover:bg-[#083a2c] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0b4a37] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
+            disabled={pendingAction === "create-job"}
           >
-            <Plus className="h-4 w-4" />
-            채용 공고 등록
+            {pendingAction === "create-job" ? (
+              <LoaderCircle aria-hidden="true" className="h-4 w-4 animate-spin" />
+            ) : (
+              <Plus aria-hidden="true" className="h-4 w-4" />
+            )}
+            {pendingAction === "create-job" ? "공고 등록 중" : "채용 공고 등록"}
           </button>
         </form>
 
@@ -562,28 +783,64 @@ export default function HRDashboardPage() {
                   <div className="flex flex-wrap gap-2 xl:justify-end">
                     <button
                       type="button"
-                      className="rounded-lg border border-outline px-4 py-3 text-sm font-semibold text-ink-soft"
-                      onClick={() => updateJobStatus(job.id, "open")}
+                      aria-pressed={job.status === "open"}
+                      className={`min-h-10 rounded-md border px-4 py-2 text-sm font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0b4a37] disabled:opacity-60 ${
+                        job.status === "open"
+                          ? "border-[#9eb8a9] bg-[#e7efe9] text-[#0b4a37]"
+                          : "border-[#d3d0c7] bg-white text-[#5b6560]"
+                      }`}
+                      disabled={Boolean(pendingAction)}
+                      onClick={() =>
+                        void runOperation(
+                          `job-open-${job.id}`,
+                          () => updateJobStatus(job.id, "open"),
+                          `${job.schoolName} 공고를 모집 중으로 변경했습니다.`,
+                        )
+                      }
                     >
                       모집 중
                     </button>
                     <button
                       type="button"
-                      className="rounded-lg border border-outline px-4 py-3 text-sm font-semibold text-ink-soft"
-                      onClick={() => updateJobStatus(job.id, "closing-soon")}
+                      aria-pressed={job.status === "closing-soon"}
+                      className={`min-h-10 rounded-md border px-4 py-2 text-sm font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0b4a37] disabled:opacity-60 ${
+                        job.status === "closing-soon"
+                          ? "border-[#d9c38f] bg-[#fff7e6] text-[#865d13]"
+                          : "border-[#d3d0c7] bg-white text-[#5b6560]"
+                      }`}
+                      disabled={Boolean(pendingAction)}
+                      onClick={() =>
+                        void runOperation(
+                          `job-closing-${job.id}`,
+                          () => updateJobStatus(job.id, "closing-soon"),
+                          `${job.schoolName} 공고를 마감 임박으로 변경했습니다.`,
+                        )
+                      }
                     >
                       마감 임박
                     </button>
                     <button
                       type="button"
-                      className="rounded-lg border border-outline px-4 py-3 text-sm font-semibold text-ink-soft"
-                      onClick={() => updateJobStatus(job.id, "closed")}
+                      aria-pressed={job.status === "closed"}
+                      className={`min-h-10 rounded-md border px-4 py-2 text-sm font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0b4a37] disabled:opacity-60 ${
+                        job.status === "closed"
+                          ? "border-[#c6c2b7] bg-[#eceae4] text-[#515b55]"
+                          : "border-[#d3d0c7] bg-white text-[#5b6560]"
+                      }`}
+                      disabled={Boolean(pendingAction)}
+                      onClick={() =>
+                        void runOperation(
+                          `job-closed-${job.id}`,
+                          () => updateJobStatus(job.id, "closed"),
+                          `${job.schoolName} 공고를 마감했습니다.`,
+                        )
+                      }
                     >
                       마감
                     </button>
                     <Link
                       href={`/jobs/${job.id}`}
-                      className="rounded-lg border border-outline px-4 py-3 text-sm font-semibold text-primary-700"
+                      className="inline-flex min-h-10 items-center rounded-md border border-[#d3d0c7] bg-white px-4 py-2 text-sm font-semibold text-[#0b4a37] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0b4a37]"
                     >
                       공고 보기
                     </Link>
@@ -675,11 +932,17 @@ export default function HRDashboardPage() {
                               {application.status === "submitted" ? (
                                 <button
                                   type="button"
-                                  className="rounded-lg border border-outline px-4 py-3 text-sm font-semibold text-ink-soft"
+                                  className="min-h-10 rounded-md border border-[#d3d0c7] bg-white px-4 py-2 text-sm font-semibold text-[#5b6560] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0b4a37] disabled:opacity-60"
+                                  disabled={Boolean(pendingAction)}
                                   onClick={() =>
-                                    updateApplicationStatus(
-                                      application.id,
-                                      "reviewing",
+                                    void runOperation(
+                                      `application-review-${application.id}`,
+                                      () =>
+                                        updateApplicationStatus(
+                                          application.id,
+                                          "reviewing",
+                                        ),
+                                      "지원서 검토를 시작했습니다.",
                                     )
                                   }
                                 >
@@ -689,9 +952,18 @@ export default function HRDashboardPage() {
                               {application.status === "interview-confirmed" ? (
                                 <button
                                   type="button"
-                                  className="rounded-lg bg-secondary-600 px-4 py-3 text-sm font-semibold text-white"
+                                  className="min-h-10 rounded-md bg-[#0b4a37] px-4 py-2 text-sm font-semibold text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0b4a37] focus-visible:ring-offset-2 disabled:opacity-60"
+                                  disabled={Boolean(pendingAction)}
                                   onClick={() =>
-                                    updateApplicationStatus(application.id, "hired")
+                                    void runOperation(
+                                      `application-hire-${application.id}`,
+                                      () =>
+                                        updateApplicationStatus(
+                                          application.id,
+                                          "hired",
+                                        ),
+                                      "채용 확정을 저장했습니다.",
+                                    )
                                   }
                                 >
                                   채용 확정
@@ -702,11 +974,17 @@ export default function HRDashboardPage() {
                               ) ? (
                                 <button
                                   type="button"
-                                  className="rounded-lg border border-outline px-4 py-3 text-sm font-semibold text-ink-soft"
+                                  className="min-h-10 rounded-md border border-[#d3d0c7] bg-white px-4 py-2 text-sm font-semibold text-[#5b6560] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0b4a37] disabled:opacity-60"
+                                  disabled={Boolean(pendingAction)}
                                   onClick={() =>
-                                    updateApplicationStatus(
-                                      application.id,
-                                      "rejected",
+                                    void runOperation(
+                                      `application-reject-${application.id}`,
+                                      () =>
+                                        updateApplicationStatus(
+                                          application.id,
+                                          "rejected",
+                                        ),
+                                      "지원서 검토를 종료했습니다.",
                                     )
                                   }
                                 >
@@ -726,6 +1004,7 @@ export default function HRDashboardPage() {
                                 </div>
                                 <input
                                   className="input-surface"
+                                  min={today}
                                   type="date"
                                   value={draft.date}
                                   onChange={(event) =>
@@ -796,16 +1075,38 @@ export default function HRDashboardPage() {
                               </label>
                               <button
                                 type="button"
-                                className="inline-flex items-center justify-center gap-2 rounded-lg bg-[linear-gradient(135deg,#0058be,#2170e4)] px-4 py-3 text-sm font-semibold text-white shadow-soft md:col-span-2"
+                                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md bg-[#0b4a37] px-4 py-3 text-sm font-semibold text-white shadow-[0_8px_20px_rgba(11,74,55,0.14)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0b4a37] focus-visible:ring-offset-2 disabled:opacity-60 md:col-span-2"
+                                disabled={Boolean(pendingAction)}
                                 onClick={() =>
-                                  scheduleInterviewForApplication(
-                                    application.id,
-                                    draft,
+                                  void runOperation(
+                                    `application-interview-${application.id}`,
+                                    () => {
+                                      assertInterviewDraft(draft, today);
+                                      return scheduleInterviewForApplication(
+                                        application.id,
+                                        draft,
+                                      );
+                                    },
+                                    "면접 일정을 교사에게 보냈습니다.",
                                   )
                                 }
                               >
-                                <CalendarClock className="h-4 w-4" />
-                                면접 일정 보내기
+                                {pendingAction ===
+                                `application-interview-${application.id}` ? (
+                                  <LoaderCircle
+                                    aria-hidden="true"
+                                    className="h-4 w-4 animate-spin"
+                                  />
+                                ) : (
+                                  <CalendarClock
+                                    aria-hidden="true"
+                                    className="h-4 w-4"
+                                  />
+                                )}
+                                {pendingAction ===
+                                `application-interview-${application.id}`
+                                  ? "일정 전송 중"
+                                  : "면접 일정 보내기"}
                               </button>
                             </div>
                           ) : null}
@@ -847,8 +1148,10 @@ export default function HRDashboardPage() {
                           request.status,
                         )}`}
                       >
-                        {request.status === "accepted"
-                          ? "응답 완료"
+                        {request.status === "hired"
+                          ? "채용 확정"
+                          : request.status === "accepted"
+                            ? "응답 완료"
                           : request.status === "rejected"
                             ? "검토 종료"
                             : request.status === "cancelled"
@@ -879,10 +1182,37 @@ export default function HRDashboardPage() {
                       {request.status === "pending" ? (
                         <button
                           type="button"
-                          className="rounded-lg border border-outline px-4 py-3 text-sm font-semibold text-ink-soft"
-                          onClick={() => cancelPoolRequest(request.id)}
+                          className="min-h-10 rounded-md border border-[#d3d0c7] bg-white px-4 py-2 text-sm font-semibold text-[#5b6560] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0b4a37] disabled:opacity-60"
+                          disabled={Boolean(pendingAction)}
+                          onClick={() =>
+                            void runOperation(
+                              `request-cancel-${request.id}`,
+                              () => cancelPoolRequest(request.id),
+                              "대기 중인 채용 제안을 취소했습니다.",
+                            )
+                          }
                         >
-                          요청 취소
+                          {pendingAction === `request-cancel-${request.id}`
+                            ? "취소 중"
+                            : "요청 취소"}
+                        </button>
+                      ) : null}
+                      {request.status === "accepted" ? (
+                        <button
+                          type="button"
+                          className="min-h-10 rounded-md bg-[#0b4a37] px-4 py-2 text-sm font-semibold text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0b4a37] focus-visible:ring-offset-2 disabled:opacity-60"
+                          disabled={Boolean(pendingAction)}
+                          onClick={() =>
+                            void runOperation(
+                              `request-hire-${request.id}`,
+                              () => completePoolRequestHire(request.id),
+                              "직접 제안 채용과 계약을 확정했습니다.",
+                            )
+                          }
+                        >
+                          {pendingAction === `request-hire-${request.id}`
+                            ? "확정 중"
+                            : "채용 확정"}
                         </button>
                       ) : null}
                       <Link
@@ -902,6 +1232,7 @@ export default function HRDashboardPage() {
                         </div>
                         <input
                           className="input-surface"
+                          min={today}
                           type="date"
                           value={draft.date}
                           onChange={(event) =>
@@ -972,13 +1303,37 @@ export default function HRDashboardPage() {
                       </label>
                       <button
                         type="button"
-                        className="inline-flex items-center justify-center gap-2 rounded-lg bg-[linear-gradient(135deg,#0058be,#2170e4)] px-4 py-3 text-sm font-semibold text-white shadow-soft md:col-span-2"
+                        className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md bg-[#0b4a37] px-4 py-3 text-sm font-semibold text-white shadow-[0_8px_20px_rgba(11,74,55,0.14)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0b4a37] focus-visible:ring-offset-2 disabled:opacity-60 md:col-span-2"
+                        disabled={Boolean(pendingAction)}
                         onClick={() =>
-                          scheduleInterviewForRequest(request.id, draft)
+                          void runOperation(
+                            `request-interview-${request.id}`,
+                            () => {
+                              assertInterviewDraft(draft, today);
+                              return scheduleInterviewForRequest(
+                                request.id,
+                                draft,
+                              );
+                            },
+                            "면접 요청을 교사에게 보냈습니다.",
+                          )
                         }
                       >
-                        <CalendarClock className="h-4 w-4" />
-                        면접 요청 보내기
+                        {pendingAction ===
+                        `request-interview-${request.id}` ? (
+                          <LoaderCircle
+                            aria-hidden="true"
+                            className="h-4 w-4 animate-spin"
+                          />
+                        ) : (
+                          <CalendarClock
+                            aria-hidden="true"
+                            className="h-4 w-4"
+                          />
+                        )}
+                        {pendingAction === `request-interview-${request.id}`
+                          ? "요청 전송 중"
+                          : "면접 요청 보내기"}
                       </button>
                     </div>
                   ) : null}
@@ -987,6 +1342,174 @@ export default function HRDashboardPage() {
             })}
           </div>
         </div>
+      </section>
+
+      <section className="mt-8 panel-surface p-6">
+        <div className="flex flex-col gap-3 border-b border-outline pb-5 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <div className="text-xs font-semibold uppercase tracking-[0.16em] text-primary-700">
+              PRIVATE REFERENCE
+            </div>
+            <h2 className="mt-2 text-xl font-bold text-ink">
+              채용 후 비공개 평가
+            </h2>
+            <p className="mt-2 max-w-2xl break-keep text-sm leading-6 text-ink-soft">
+              채용이 확정된 교사에 대한 별점과 업무 후기를 남길 수 있습니다.
+              제출 내용은 에듀링크 관리자만 열람하며 교사와 다른 학교에는
+              공개되지 않습니다.
+            </p>
+          </div>
+          <span className="text-sm font-medium text-ink-muted">
+            평가 가능 {hiredCandidates.length}명
+          </span>
+        </div>
+
+        {hiredCandidates.length > 0 ? (
+          <div className="mt-6 grid gap-5 xl:grid-cols-2">
+            {hiredCandidates.map((candidate) => {
+              const draft = reviewDrafts[candidate.teacherId] ?? {
+                comment: "",
+                rating: 5,
+              };
+              const submitted = submittedReviewTeacherIds.includes(
+                candidate.teacherId,
+              );
+
+              return (
+                <div
+                  className="rounded-lg border border-outline bg-surface p-5"
+                  key={candidate.teacherId}
+                >
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <div className="text-lg font-bold text-ink">
+                        {candidate.name}
+                      </div>
+                      <div className="mt-1 text-sm text-ink-soft">
+                        {candidate.qualification}
+                      </div>
+                    </div>
+                    <ShieldCheck
+                      aria-hidden="true"
+                      className="h-5 w-5 text-primary-700"
+                    />
+                  </div>
+
+                  {submitted ? (
+                    <div
+                      className="mt-5 flex items-start gap-2 rounded-md border border-[#b9cec1] bg-[#edf4ef] px-4 py-3 text-sm leading-6 text-[#1f6248]"
+                      role="status"
+                    >
+                      <CheckCircle2
+                        aria-hidden="true"
+                        className="mt-0.5 h-4 w-4 shrink-0"
+                      />
+                      평가가 관리자 전용 검토함에 안전하게 제출되었습니다.
+                    </div>
+                  ) : (
+                    <>
+                      <fieldset className="mt-5">
+                        <legend className="text-sm font-semibold text-ink">
+                          별점
+                        </legend>
+                        <div className="mt-2 flex gap-1">
+                          {[1, 2, 3, 4, 5].map((rating) => (
+                            <button
+                              aria-label={`${rating}점`}
+                              aria-pressed={draft.rating === rating}
+                              className="flex h-11 w-11 items-center justify-center rounded-md border border-outline bg-white text-[#b3b8b4] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0b4a37] data-[selected=true]:border-[#0b4a37] data-[selected=true]:bg-[#edf4ef] data-[selected=true]:text-[#0b4a37]"
+                              data-selected={draft.rating >= rating}
+                              key={rating}
+                              onClick={() =>
+                                setReviewDrafts((current) => ({
+                                  ...current,
+                                  [candidate.teacherId]: {
+                                    ...draft,
+                                    rating,
+                                  },
+                                }))
+                              }
+                              type="button"
+                            >
+                              <Star
+                                aria-hidden="true"
+                                className="h-5 w-5"
+                                fill={
+                                  draft.rating >= rating
+                                    ? "currentColor"
+                                    : "none"
+                                }
+                              />
+                            </button>
+                          ))}
+                        </div>
+                      </fieldset>
+
+                      <label className="mt-5 block">
+                        <span className="mb-2 block text-sm font-semibold text-ink">
+                          업무 후기
+                        </span>
+                        <textarea
+                          className="input-surface min-h-[112px]"
+                          maxLength={2000}
+                          onChange={(event) =>
+                            setReviewDrafts((current) => ({
+                              ...current,
+                              [candidate.teacherId]: {
+                                ...draft,
+                                comment: event.target.value,
+                              },
+                            }))
+                          }
+                          placeholder="수업 운영, 협업, 책임감 등 채용 이후 확인한 내용을 작성해 주세요."
+                          value={draft.comment}
+                        />
+                      </label>
+
+                      <button
+                        className="mt-4 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-md bg-[#0b4a37] px-4 py-3 text-sm font-semibold text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0b4a37] focus-visible:ring-offset-2 disabled:opacity-60"
+                        disabled={Boolean(pendingAction)}
+                        onClick={() =>
+                          void submitPrivateReview(
+                            candidate.teacherId,
+                            candidate.name,
+                          )
+                        }
+                        type="button"
+                      >
+                        {pendingAction ===
+                        `review-${candidate.teacherId}` ? (
+                          <LoaderCircle
+                            aria-hidden="true"
+                            className="h-4 w-4 animate-spin"
+                          />
+                        ) : (
+                          <ShieldCheck
+                            aria-hidden="true"
+                            className="h-4 w-4"
+                          />
+                        )}
+                        {pendingAction === `review-${candidate.teacherId}`
+                          ? "평가 제출 중"
+                          : "관리자 전용 평가 제출"}
+                      </button>
+                    </>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="mt-6 rounded-lg border border-dashed border-outline bg-surface-subtle px-5 py-9 text-center">
+            <div className="text-sm font-semibold text-ink">
+              아직 평가할 수 있는 채용 건이 없습니다.
+            </div>
+            <p className="mt-2 text-sm leading-6 text-ink-soft">
+              지원 또는 직접 제안에서 채용 확정을 완료하면 이곳에 평가 대상이
+              표시됩니다.
+            </p>
+          </div>
+        )}
       </section>
     </PortalShell>
   );

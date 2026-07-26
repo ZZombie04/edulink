@@ -10,22 +10,24 @@ datasource db {
 // 사용자 기본 테이블
 // ─────────────────────────────────────
 model User {
-  id               String    @id @default(cuid())
-  email            String    @unique
-  passwordHash     String
-  role             UserRole
-  name             String
-  phone            String
-  birthDate        DateTime
-  isActive         Boolean   @default(true)
-  isVerified       Boolean   @default(false)
-  privacyConsent   Boolean   @default(false)
-  privacyConsentAt DateTime?
-  termsConsent     Boolean   @default(false)
-  termsConsentAt   DateTime?
-  createdAt        DateTime  @default(now())
-  updatedAt        DateTime  @updatedAt
-  lastLoginAt      DateTime?
+  id                  String    @id @default(cuid())
+  email               String    @unique
+  passwordHash        String
+  role                UserRole
+  name                String
+  phone               String
+  birthDate           DateTime
+  isActive            Boolean   @default(true)
+  isVerified          Boolean   @default(false)
+  privacyConsent      Boolean   @default(false)
+  privacyConsentAt    DateTime?
+  thirdPartyConsent   Boolean   @default(false)
+  thirdPartyConsentAt DateTime?
+  termsConsent        Boolean   @default(false)
+  termsConsentAt      DateTime?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+  lastLoginAt         DateTime?
 
   teacherProfile TeacherProfile?
   hrProfile      HRProfile?
@@ -78,6 +80,7 @@ model TeacherProfile {
   // 구직 상태
   seekingStatus      SeekingStatus @default(SEEKING)
   reservationEnabled Boolean       @default(false) // 예약하기 활성화 여부
+  availableFrom      DateTime? // 즉시 근무 가능일
 
   // 추가 정보
   introduction  String? @db.Text // 자기소개
@@ -91,6 +94,7 @@ model TeacherProfile {
   contracts        Contract[]
   applications     Application[]
   reservations     Reservation[]  @relation("TeacherReservations")
+  reviews          Review[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -146,6 +150,7 @@ model Career {
   endDate        DateTime?
   employmentType TeacherType // 기간제/시간강사
   description    String?     @db.Text // 업무 설명
+  region         String? // 근무 지역
 
   createdAt DateTime @default(now())
 
@@ -177,10 +182,11 @@ model HRProfile {
   rejectionReason  String? // 반려 사유
 
   // 관계
-  sentRequests MatchRequest[] @relation("HRRequests")
-  jobPostings  JobPosting[]
-  contracts    Contract[]     @relation("HRContracts")
-  reservations Reservation[]  @relation("HRReservations")
+  sentRequests     MatchRequest[] @relation("HRRequests")
+  jobPostings      JobPosting[]
+  contracts        Contract[]     @relation("HRContracts")
+  reservations     Reservation[]  @relation("HRReservations")
+  submittedReviews Review[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -200,8 +206,8 @@ enum ApprovalStatus {
 // 매칭 요청 (인사담당자 → 교사)
 // ─────────────────────────────────────
 model MatchRequest {
-  id String @id @default(cuid())
-  demoId Int? @unique
+  id     String @id @default(cuid())
+  demoId Int?   @unique
 
   hrProfileId String
   hrProfile   HRProfile @relation("HRRequests", fields: [hrProfileId], references: [id])
@@ -311,8 +317,8 @@ enum PostingStatus {
 // 구인공고 지원 (교사 → 구인공고)
 // ─────────────────────────────────────
 model Application {
-  id String @id @default(cuid())
-  demoId Int? @unique
+  id     String @id @default(cuid())
+  demoId Int?   @unique
 
   teacherProfileId String
   teacherProfile   TeacherProfile @relation(fields: [teacherProfileId], references: [id])
@@ -323,6 +329,7 @@ model Application {
   status      MatchStatus @default(PENDING)
   coverLetter String?     @db.Text // 지원 메시지
   meta        Json?
+  contract    Contract?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -343,7 +350,10 @@ model Contract {
   hrProfileId String
   hrProfile   HRProfile @relation("HRContracts", fields: [hrProfileId], references: [id])
 
-  matchRequest MatchRequest?
+  matchRequest  MatchRequest?
+  applicationId String?       @unique
+  application   Application?  @relation(fields: [applicationId], references: [id])
+  review        Review?
 
   schoolName     String
   employmentType TeacherType
@@ -368,6 +378,32 @@ model Contract {
   @@index([teacherProfileId, status])
   @@index([endDate])
   @@map("contracts")
+}
+
+// ─────────────────────────────────────
+// 채용 후 학교 평가 (관리자 전용 열람)
+// ─────────────────────────────────────
+model Review {
+  id String @id @default(cuid())
+
+  teacherProfileId String
+  teacherProfile   TeacherProfile @relation(fields: [teacherProfileId], references: [id])
+
+  hrProfileId String
+  hrProfile   HRProfile @relation(fields: [hrProfileId], references: [id])
+
+  contractId String   @unique
+  contract   Contract @relation(fields: [contractId], references: [id])
+
+  rating  Int
+  comment String? @db.Text
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([teacherProfileId, createdAt(sort: Desc)])
+  @@index([hrProfileId, createdAt(sort: Desc)])
+  @@map("reviews")
 }
 
 enum ContractStatus {

@@ -1,13 +1,17 @@
 import Link from "next/link";
 import {
   ArrowRight,
+  ArrowUpRight,
   Bell,
-  Briefcase,
-  Clock3,
+  BriefcaseBusiness,
+  Building2,
+  CheckCircle2,
   LayoutDashboard,
   MapPin,
-  School,
   Search,
+  ShieldCheck,
+  UserRoundCheck,
+  UsersRound,
   type LucideIcon,
 } from "lucide-react";
 
@@ -22,41 +26,6 @@ import { getDashboardHref } from "@/lib/demo-session";
 import { getDemoSessionFromServerCookie } from "@/lib/demo-session-server";
 import { featuredTeachers, jobPosts, teacherMatchRequests } from "@/lib/demo-data";
 
-type TeacherStatusTone = {
-  className: string;
-  label: string;
-};
-
-const publicLaunchRows: Array<{
-  Icon: LucideIcon;
-  detail: string;
-  href: string;
-  meta: string;
-  title: string;
-}> = [
-  {
-    Icon: Search,
-    title: "교사 인력풀",
-    detail: "경력과 희망 조건 확인",
-    href: "/pool",
-    meta: "바로 보기",
-  },
-  {
-    Icon: Briefcase,
-    title: "채용 공고",
-    detail: "기간제교사 및 시간강사 공고",
-    href: "/jobs",
-    meta: "공고 보기",
-  },
-  {
-    Icon: School,
-    title: "학교 가입",
-    detail: "채용 공고 등록",
-    href: "/auth/register/hr",
-    meta: "가입하기",
-  },
-];
-
 const publicPoolPreview: Array<{
   avatarPreset: Parameters<typeof CharacterAvatar>[0]["presetId"];
   href: string;
@@ -68,37 +37,29 @@ const publicPoolPreview: Array<{
     avatarPreset: "teacher-f-mint",
     href: "/pool/1",
     title: "초등 담임",
-    summary: "학급 운영, 생활지도, 기초학력 보강 중심으로 빠르게 검토합니다.",
-    tags: ["초등 자격", "담임", "남부권"],
+    summary:
+      "학급 운영, 생활지도, 기초학력 보강 경험을 중심으로 검토할 수 있는 교사 프로필입니다.",
+    tags: ["초등 자격", "담임 경력", "경기 남부"],
   },
   {
     avatarPreset: "teacher-m-navy",
     href: "/pool/2",
     title: "중등 수학",
-    summary: "중등 교과 수업과 평가 운영이 가능한 프로필 흐름으로 정리합니다.",
-    tags: ["중등 자격", "수학", "서남권"],
+    summary:
+      "교과 수업과 평가 운영 경험, 근무 가능 시점을 한눈에 확인할 수 있습니다.",
+    tags: ["중등 자격", "수학", "경기 서남"],
   },
   {
     avatarPreset: "teacher-f-violet",
     href: "/pool/4",
-    title: "특수 지원",
-    summary: "통합학급 지원과 개별화 수업 경험 중심으로 확인할 수 있습니다.",
-    tags: ["특수 자격", "지원 수업", "동부권"],
+    title: "특수교육 지원",
+    summary:
+      "통합학급 지원과 개별화 수업 경험을 중심으로 정리된 검증 대기 프로필입니다.",
+    tags: ["특수 자격", "지원 수업", "경기 동부"],
   },
 ];
 
-const publicJobPreview: Array<{
-  detail: string;
-  employmentType: string;
-  gradeLevel: string;
-  id: string;
-  qualificationSubject?: string;
-  qualificationType: string;
-  schedule: string;
-  schoolName: string;
-  schoolRegion: string;
-  summary: string;
-}> = [
+const publicJobPreview = [
   {
     id: "1",
     schoolName: "정인초등학교",
@@ -107,7 +68,7 @@ const publicJobPreview: Array<{
     employmentType: "기간제 교사",
     qualificationType: "초등",
     summary: "3학년 담임과 생활지도를 담당할 기간제 교사를 모집합니다.",
-    schedule: "2026-05-01 - 2026-08-31",
+    schedule: "2026.08.18 - 2026.12.18",
     detail: "주 5일 / 담임",
   },
   {
@@ -118,8 +79,8 @@ const publicJobPreview: Array<{
     employmentType: "시간강사",
     qualificationType: "중등",
     qualificationSubject: "수학",
-    summary: "중1 수학 수업을 맡을 시간강사를 모집합니다.",
-    schedule: "2026-04-22 - 2026-05-30",
+    summary: "중학교 1학년 수학 수업을 맡을 시간강사를 모집합니다.",
+    schedule: "2026.08.10 - 2026.09.18",
     detail: "교과 수업 / 평가",
   },
   {
@@ -130,44 +91,60 @@ const publicJobPreview: Array<{
     employmentType: "기간제 교사",
     qualificationType: "중등",
     qualificationSubject: "영어",
-    summary: "영어 수업과 담임 업무를 맡을 기간제 교사를 모집합니다.",
-    schedule: "2026-03-01 - 2027-02-28",
+    summary: "영어 수업과 학년 운영 업무를 맡을 기간제 교사를 모집합니다.",
+    schedule: "2026.03.01 - 2027.02.28",
     detail: "교과 수업 / 학년 운영",
   },
 ];
 
-function teacherStatusLabel(status: string): TeacherStatusTone {
+const startLinks: Array<{
+  Icon: LucideIcon;
+  href: string;
+  title: string;
+  detail: string;
+}> = [
+  {
+    Icon: Search,
+    href: "/auth/login?next=/pool",
+    title: "교사 인력풀 찾기",
+    detail: "자격·경력·희망 조건으로 탐색",
+  },
+  {
+    Icon: BriefcaseBusiness,
+    href: "/jobs",
+    title: "채용 공고 보기",
+    detail: "기간제·시간강사 공고 확인",
+  },
+  {
+    Icon: Building2,
+    href: "/auth/register/hr",
+    title: "학교 계정 신청",
+    detail: "승인 후 채용 기능 이용",
+  },
+];
+
+function statusLabel(status: string) {
   switch (status) {
     case "seeking":
-      return {
-        label: "채용 제안 가능",
-        className: "bg-secondary-50 text-secondary-700",
-      };
+      return "채용 제안 가능";
     case "interviewing":
-      return {
-        label: "면접 진행 중",
-        className: "bg-[var(--warning-soft)] text-[#9a6a00]",
-      };
+      return "면접 진행 중";
     case "employed":
-      return {
-        label: "근무 중",
-        className: "bg-primary-50 text-primary-700",
-      };
+      return "근무 중";
     default:
-      return {
-        label: "노출 일시중지",
-        className: "bg-surface-panel text-ink-soft",
-      };
+      return "프로필 비공개";
   }
 }
 
 export default async function Home() {
   const session = await getDemoSessionFromServerCookie();
+  const demoMode = process.env.EDULINK_ENABLE_DEMO_SEED === "true";
   const dashboardHref = getDashboardHref(session?.role);
-  const openJobs = jobPosts.filter((job) => job.status !== "closed");
-  const closingSoonJobs = jobPosts.filter((job) => job.status === "closing-soon");
+  const openJobs = demoMode
+    ? jobPosts.filter((job) => job.status !== "closed")
+    : [];
   const signedInTeacher =
-    session?.role === "teacher"
+    demoMode && session?.role === "teacher"
       ? featuredTeachers.find((teacher) => teacher.name === session.name) ??
         featuredTeachers.find(
           (teacher) => teacher.avatarPreset === session.avatarPreset,
@@ -182,445 +159,456 @@ export default async function Home() {
             request.teacherId === signedInTeacher.id ||
             signedInTeacher.preferredRegions.includes(request.region),
         );
-  const desktopGhostLinkClassName =
-    "hidden items-center gap-2 rounded-lg border border-white/20 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-white/10 sm:inline-flex";
-  const desktopPrimaryLinkClassName =
-    "inline-flex items-center gap-2 rounded-lg bg-white px-4 py-2 text-sm font-semibold text-primary-700 transition-transform hover:-translate-y-px";
-  const mobileQuickLinkClassName =
-    "inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-white/16 bg-white/8 px-3 py-2 text-sm font-semibold text-white backdrop-blur transition-colors hover:bg-white/14";
-  const mobilePrimaryLinkClassName =
-    "inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-white px-4 py-2 text-sm font-semibold text-primary-700 transition-transform hover:-translate-y-px";
+  const primaryHeroHref =
+    session?.role === "teacher"
+      ? "/teacher/dashboard"
+      : session?.role === "hr"
+        ? "/pool"
+        : "/auth/register/hr";
+  const primaryHeroLabel =
+    session?.role === "teacher"
+      ? "내 대시보드 열기"
+      : session?.role === "hr"
+        ? "교사 인력풀 보기"
+        : "학교 계정으로 시작";
 
   return (
     <div className="min-h-screen bg-surface text-ink">
-      <header className="sticky top-0 z-50 border-b border-white/12 bg-[#07122b] md:bg-[rgba(7,18,43,0.82)] md:backdrop-blur">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6">
-          <div className="flex min-h-16 items-center justify-between gap-3 py-3 md:h-16 md:py-0">
-            <Link href="/">
-              <BrandLockup textClassName="text-white" />
+      <header className="sticky top-0 z-50 border-b border-outline bg-[rgba(247,246,241,0.94)] backdrop-blur">
+        <div className="mx-auto flex h-[68px] max-w-7xl items-center justify-between gap-5 px-4 sm:px-6">
+          <Link href="/" aria-label="EduLink 홈">
+            <BrandLockup />
+          </Link>
+
+          <nav
+            className="hidden items-center gap-7 text-sm font-semibold text-ink-soft md:flex"
+            aria-label="주요 메뉴"
+          >
+            <Link href="#teacher-pool" className="hover:text-primary-700">
+              교사 인력풀
             </Link>
+            <Link href="#jobs" className="hover:text-primary-700">
+              채용 공고
+            </Link>
+            <Link href="#how-it-works" className="hover:text-primary-700">
+              이용 방법
+            </Link>
+          </nav>
 
-            <nav className="hidden items-center gap-6 text-sm font-medium text-white md:flex">
-              <Link
-                href="#teacher-pool"
-                className="transition-colors hover:text-white"
-              >
-                교사 인력풀
-              </Link>
-              <Link href="#jobs" className="transition-colors hover:text-white">
-                채용 공고
-              </Link>
-            </nav>
-
-            <div className="hidden items-center gap-2 md:flex">
-              {dashboardHref ? (
-                <>
-                  <Link href={dashboardHref} className={desktopGhostLinkClassName}>
-                    <LayoutDashboard className="h-4 w-4" />
-                    내 홈
-                  </Link>
-                  <Link href="/jobs" className={desktopPrimaryLinkClassName}>
-                    <Briefcase className="h-4 w-4" />
-                    공고 보기
-                  </Link>
-                  <LogoutButton className="hidden border border-white/20 text-white hover:bg-white/10 sm:inline-flex" />
-                </>
-              ) : (
-                <>
-                  <Link href="/auth/login" className={desktopGhostLinkClassName}>
-                    로그인
-                  </Link>
-                  <Link
-                    href="/auth/register/teacher"
-                    className={desktopGhostLinkClassName}
-                  >
-                    교사 가입
-                  </Link>
-                  <Link
-                    href="/auth/register/hr"
-                    className={desktopPrimaryLinkClassName}
-                  >
-                    학교 가입
-                    <ArrowRight className="h-4 w-4" />
-                  </Link>
-                </>
-              )}
-            </div>
-
-            <div className="flex md:hidden">
-              {dashboardHref ? (
-                <Link href={dashboardHref} className={mobilePrimaryLinkClassName}>
-                  <LayoutDashboard className="h-4 w-4" />
-                  내 홈
-                </Link>
-              ) : (
-                <Link href="/auth/register/hr" className={mobilePrimaryLinkClassName}>
-                  학교 가입
-                  <ArrowRight className="h-4 w-4" />
-                </Link>
-              )}
-            </div>
-          </div>
-
-          <div className="grid gap-2 pb-3 md:hidden">
+          <div className="flex items-center gap-2">
             {dashboardHref ? (
               <>
-                <div className="grid grid-cols-2 gap-2">
-                  <Link href="/jobs" className={mobileQuickLinkClassName}>
-                    <Briefcase className="mr-2 h-4 w-4" />
-                    채용 공고
-                  </Link>
-                  <Link href="#teacher-pool" className={mobileQuickLinkClassName}>
-                    <Search className="mr-2 h-4 w-4" />
-                    교사 인력풀
-                  </Link>
-                </div>
-                <div className="grid grid-cols-2 gap-2">
-                  <Link href="#jobs" className={mobileQuickLinkClassName}>
-                    <School className="mr-2 h-4 w-4" />
-                    학교 채용
-                  </Link>
-                  <LogoutButton className="min-h-11 w-full border border-white/16 bg-white/8 text-white hover:bg-white/14" />
-                </div>
+                <Link
+                  href={dashboardHref}
+                  className="inline-flex min-h-10 items-center gap-2 border border-outline bg-surface-contrast px-3.5 text-sm font-semibold text-ink transition-colors hover:border-primary-400"
+                >
+                  <LayoutDashboard className="h-4 w-4" />
+                  <span className="hidden sm:inline">내 대시보드</span>
+                  <span className="sm:hidden">내 홈</span>
+                </Link>
+                <LogoutButton className="hidden min-h-10 border-outline bg-transparent text-ink-soft hover:bg-surface-panel sm:inline-flex" />
               </>
             ) : (
               <>
-                <div className="grid grid-cols-2 gap-2">
-                  <Link href="/auth/login" className={mobileQuickLinkClassName}>
-                    로그인
-                  </Link>
-                  <Link
-                    href="/auth/register/teacher"
-                    className={mobileQuickLinkClassName}
-                  >
-                    교사 가입
-                  </Link>
-                </div>
-                <div className="grid grid-cols-2 gap-2">
-                  <Link href="#teacher-pool" className={mobileQuickLinkClassName}>
-                    <Search className="mr-2 h-4 w-4" />
-                    교사 인력풀
-                  </Link>
-                  <Link href="/jobs" className={mobileQuickLinkClassName}>
-                    <Briefcase className="mr-2 h-4 w-4" />
-                    채용 공고
-                  </Link>
-                </div>
+                <Link
+                  href="/auth/login"
+                  className="inline-flex px-2 py-2 text-sm font-semibold text-ink-soft hover:text-primary-700 sm:px-3"
+                >
+                  로그인
+                </Link>
+                <Link
+                  href="/auth/register/teacher"
+                  className="hidden min-h-10 items-center border border-outline bg-surface-contrast px-3.5 text-sm font-semibold text-ink hover:border-primary-400 md:inline-flex"
+                >
+                  교사 가입
+                </Link>
+                <Link
+                  href="/auth/register/hr"
+                  className="inline-flex min-h-10 items-center gap-2 bg-primary-700 px-3.5 text-sm font-semibold text-white transition-colors hover:bg-primary-800"
+                >
+                  학교 가입
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
               </>
             )}
           </div>
         </div>
       </header>
 
-      <main className="bg-[#06162f] text-white">
-        <section className="relative overflow-hidden bg-[linear-gradient(140deg,#071b3a,#0a4da4,#18907c)]">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.18),transparent_30%),radial-gradient(circle_at_bottom_right,rgba(255,255,255,0.12),transparent_34%)]" />
+      <main>
+        <section className="border-b border-outline">
+          <div className="mx-auto grid max-w-7xl gap-12 px-4 py-16 sm:px-6 sm:py-24 lg:grid-cols-[minmax(0,1.08fr)_minmax(400px,0.92fr)] lg:items-center lg:py-28">
+            <div className="max-w-3xl">
+              <p className="kicker">
+                {signedInTeacher
+                  ? `${signedInTeacher.name} 선생님의 채용 네트워크`
+                  : "학교와 교사를 위한 채용 네트워크"}
+              </p>
+              <h1 className="mt-6 break-keep text-[clamp(2.65rem,7vw,5.4rem)] font-bold leading-[1.05] tracking-[-0.06em] text-ink">
+                {signedInTeacher ? (
+                  <>
+                    새로운 제안을
+                    <br />
+                    한눈에 확인하세요.
+                  </>
+                ) : (
+                  <>
+                    교육의 다음을,
+                    <br />
+                    사람으로 연결합니다.
+                  </>
+                )}
+              </h1>
+              <p className="mt-7 max-w-2xl break-keep text-base leading-8 text-ink-soft sm:text-lg">
+                {signedInTeacher
+                  ? "현재 프로필 노출 상태와 학교의 채용 제안, 희망 근무 조건을 안전하게 관리할 수 있습니다."
+                  : "검증된 교사 프로필과 구체적인 학교 채용 정보를 바탕으로, 필요한 사람과 기회를 더 정확하게 연결합니다."}
+              </p>
 
-          <div className="relative mx-auto max-w-7xl px-4 pb-8 pt-10 sm:px-6 sm:pb-12 sm:pt-18">
-            {signedInTeacher ? (
-              <div className="grid gap-10 lg:grid-cols-[1.05fr_0.95fr] lg:items-start">
-                <div className="max-w-3xl">
-                  <div className="inline-flex items-center gap-2 rounded-full bg-white/12 px-4 py-2 text-sm font-semibold text-white backdrop-blur-sm">
-                    <Bell className="h-4 w-4" />
-                    교사 홈
+              <div className="mt-9 flex flex-col gap-3 sm:flex-row">
+                <Link
+                  href={primaryHeroHref}
+                  className="inline-flex min-h-12 items-center justify-center gap-2 bg-primary-700 px-5 text-sm font-bold text-white transition-colors hover:bg-primary-800"
+                >
+                  {session?.role === "teacher" ? (
+                    <LayoutDashboard className="h-4 w-4" />
+                  ) : (
+                    <Search className="h-4 w-4" />
+                  )}
+                  {primaryHeroLabel}
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
+                <Link
+                  href="/jobs"
+                  className="inline-flex min-h-12 items-center justify-center gap-2 border border-outline-strong bg-transparent px-5 text-sm font-bold text-ink transition-colors hover:bg-surface-contrast"
+                >
+                  <BriefcaseBusiness className="h-4 w-4" />
+                  채용 공고 보기
+                </Link>
+              </div>
+
+              <div className="mt-10 flex flex-wrap gap-x-7 gap-y-3 border-t border-outline pt-5 text-sm text-ink-soft">
+                {[
+                  "승인된 학교 계정",
+                  "자격·경력 기반 매칭",
+                  "단계별 개인정보 보호",
+                ].map((item) => (
+                  <span key={item} className="inline-flex items-center gap-2">
+                    <CheckCircle2 className="h-4 w-4 text-primary-600" />
+                    {item}
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            <div className="border border-outline bg-surface-contrast">
+              {signedInTeacher ? (
+                <>
+                  <div className="flex items-start gap-4 border-b border-outline p-6">
+                    <CharacterAvatar
+                      presetId={signedInTeacher.avatarPreset}
+                      size={72}
+                    />
+                    <div className="min-w-0 flex-1">
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <span className="text-xs font-bold text-primary-700">
+                          {statusLabel(signedInTeacher.status)}
+                        </span>
+                        <span className="text-xs text-ink-muted">
+                          프로필 조회 {signedInTeacher.portfolioViews}회
+                        </span>
+                      </div>
+                      <h2 className="mt-2 text-xl font-bold text-ink">
+                        {signedInTeacher.qualification}
+                      </h2>
+                      <p className="mt-2 text-sm leading-6 text-ink-soft">
+                        {signedInTeacher.summary}
+                      </p>
+                    </div>
                   </div>
-
-                  <h1 className="mt-6 text-3xl font-bold leading-tight text-white sm:text-5xl lg:text-6xl">
-                    {signedInTeacher.name} 선생님
-                  </h1>
-
-                  <p className="mt-5 max-w-2xl text-base leading-7 text-white sm:text-lg">
-                    현재 노출 상태와 받은 제안, 희망 근무 조건을 바로 확인할 수
-                    있습니다.
-                  </p>
-
-                  <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-                    <Link
-                      href="/teacher/dashboard"
-                      className="inline-flex items-center justify-center gap-2 rounded-lg bg-white px-5 py-3 text-sm font-semibold text-primary-700 transition-transform hover:-translate-y-px"
-                    >
-                      <LayoutDashboard className="h-4 w-4" />
-                      내 대시보드
-                    </Link>
-                    <Link
-                      href="/jobs"
-                      className="inline-flex items-center justify-center gap-2 rounded-lg border border-white/25 bg-white/10 px-5 py-3 text-sm font-semibold text-white backdrop-blur transition-colors hover:bg-white/16"
-                    >
-                      <Briefcase className="h-4 w-4" />
-                      채용 공고 보기
-                    </Link>
-                  </div>
-
-                  <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-3">
+                  <div className="grid grid-cols-3 border-b border-outline">
                     {[
                       ["받은 제안", `${teacherRequests.length}건`],
                       ["희망 지역", `${signedInTeacher.preferredRegions.length}곳`],
-                      ["프로필 조회", `${signedInTeacher.portfolioViews}회`],
+                      ["등록 공고", `${openJobs.length}건`],
                     ].map(([label, value]) => (
                       <div
                         key={label}
-                        className="rounded-xl border border-white/12 bg-white/10 px-4 py-4 backdrop-blur-sm last:col-span-2 sm:last:col-span-1"
+                        className="border-r border-outline px-4 py-5 last:border-r-0"
                       >
-                        <div className="text-sm font-semibold text-white">
-                          {label}
-                        </div>
-                        <div className="mt-2 text-xl font-bold text-white sm:text-2xl">
+                        <div className="text-xs text-ink-muted">{label}</div>
+                        <div className="mt-1.5 text-xl font-bold text-ink">
                           {value}
                         </div>
                       </div>
                     ))}
                   </div>
-                </div>
-
-                <div className="grid gap-4">
-                  <div className="rounded-[26px] border border-white/12 bg-white/10 p-6 backdrop-blur-sm">
-                    <div className="flex items-start gap-4">
-                      <CharacterAvatar
-                        className="h-20 w-20 rounded-[22px]"
-                        presetId={signedInTeacher.avatarPreset}
-                        size={80}
-                      />
-                      <div className="min-w-0 flex-1">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <span
-                            className={`rounded-full px-2.5 py-1 text-xs font-semibold ${teacherStatusLabel(signedInTeacher.status).className}`}
-                          >
-                            {teacherStatusLabel(signedInTeacher.status).label}
-                          </span>
-                        </div>
-                        <div className="mt-3 text-2xl font-bold text-white">
-                          {signedInTeacher.qualification}
-                        </div>
-                        <p className="mt-2 text-sm leading-6 text-white/80">
-                          {signedInTeacher.summary}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="mt-5 grid gap-3 sm:grid-cols-2">
-                      <div className="rounded-xl bg-white/10 px-4 py-4">
-                        <div className="text-xs font-semibold text-white/70">
-                          희망 근무 형태
-                        </div>
-                        <div className="mt-2 text-sm font-semibold text-white">
-                          {signedInTeacher.preferredTypes.join(", ")}
-                        </div>
-                      </div>
-                      <div className="rounded-xl bg-white/10 px-4 py-4">
-                        <div className="text-xs font-semibold text-white/70">
-                          거주 지역
-                        </div>
-                        <div className="mt-2 text-sm font-semibold text-white">
-                          {signedInTeacher.residence}
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="mt-5 flex flex-wrap gap-2">
-                      {signedInTeacher.preferredRegions.map((region) => (
-                        <span
-                          key={region}
-                          className="rounded-full bg-white/12 px-3 py-2 text-xs font-semibold text-white"
-                        >
-                          {region}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="rounded-[26px] border border-white/12 bg-white/10 p-6 backdrop-blur-sm">
-                    <div className="flex items-center justify-between gap-4">
-                      <div className="text-lg font-bold text-white">
+                  <div>
+                    <div className="flex items-center justify-between px-5 py-4">
+                      <span className="inline-flex items-center gap-2 text-sm font-bold">
+                        <Bell className="h-4 w-4 text-primary-600" />
                         최근 받은 제안
-                      </div>
+                      </span>
                       <Link
                         href="/teacher/dashboard"
-                        className="text-sm font-semibold text-white"
+                        className="text-xs font-bold text-primary-700"
                       >
                         전체 보기
                       </Link>
                     </div>
-
-                    <div className="mt-4 space-y-3">
-                      {teacherRequests.slice(0, 2).map((request) => (
-                        <div key={request.id} className="rounded-xl bg-white/10 px-4 py-4">
-                          <div className="text-sm font-semibold text-white">
+                    {teacherRequests.slice(0, 2).map((request) => (
+                      <Link
+                        key={request.id}
+                        href={`/teacher/offers/${request.id}`}
+                        className="flex items-center justify-between gap-4 border-t border-outline px-5 py-4 hover:bg-surface-subtle"
+                      >
+                        <div>
+                          <div className="text-sm font-bold text-ink">
                             {request.schoolName}
                           </div>
-                          <div className="mt-1 text-sm text-white/78">
-                            {request.position}
-                          </div>
-                          <div className="mt-2 flex items-center gap-2 text-xs text-white/70">
+                          <div className="mt-1 flex items-center gap-1.5 text-xs text-ink-muted">
                             <MapPin className="h-3.5 w-3.5" />
-                            {request.region}
+                            {request.region} · {request.position}
                           </div>
                         </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <div className="grid gap-10 lg:grid-cols-[0.96fr_1.04fr] lg:items-center">
-                <div className="max-w-3xl">
-                  <div className="inline-flex rounded-full bg-white/12 px-4 py-2 text-sm font-semibold text-white backdrop-blur-sm">
-                    경기도 기간제·시간강사
-                  </div>
-
-                  <h1 className="mt-6 text-3xl font-bold leading-tight text-white sm:text-5xl lg:text-6xl">
-                    교사 채용 포털
-                  </h1>
-
-                  <p className="mt-5 max-w-2xl text-base leading-7 text-white sm:text-lg">
-                    기간제교사 및 시간강사 구인 구직
-                  </p>
-
-                  <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-                    <Link
-                      href="/pool"
-                      className="inline-flex items-center justify-center gap-2 rounded-lg bg-white px-5 py-3 text-sm font-semibold text-primary-700 transition-transform hover:-translate-y-px"
-                    >
-                      <Search className="h-4 w-4" />
-                      교사 인력풀 보기
-                    </Link>
-                    <Link
-                      href="/jobs"
-                      className="inline-flex items-center justify-center gap-2 rounded-lg border border-white/25 bg-white/10 px-5 py-3 text-sm font-semibold text-white backdrop-blur transition-colors hover:bg-white/16"
-                    >
-                      <Briefcase className="h-4 w-4" />
-                      채용 공고 보기
-                    </Link>
-                  </div>
-
-                  <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-3">
-                    {[
-                      ["모집 중 공고", `${openJobs.length}건`],
-                      ["등록 교사", `${featuredTeachers.length}명`],
-                      ["마감 임박 공고", `${closingSoonJobs.length}건`],
-                    ].map(([label, value]) => (
-                      <div
-                        key={label}
-                        className="rounded-xl border border-white/12 bg-white/10 px-4 py-4 backdrop-blur-sm last:col-span-2 sm:last:col-span-1"
-                      >
-                        <div className="text-sm font-semibold text-white">
-                          {label}
-                        </div>
-                        <div className="mt-2 text-xl font-bold text-white sm:text-2xl">
-                          {value}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="rounded-[32px] border border-white/14 bg-white/10 p-5 text-white backdrop-blur-sm sm:p-7">
-                  <div className="flex flex-wrap items-center justify-between gap-3">
-                    <div className="text-sm font-semibold text-white">
-                      오늘 바로 시작
-                    </div>
-                  </div>
-
-                  <div className="mt-6 grid gap-3">
-                    {publicLaunchRows.map((item) => (
-                      <Link
-                        key={item.title}
-                        href={item.href}
-                        className="grid gap-3 rounded-xl border border-white/10 bg-white/8 px-4 py-4 transition-colors hover:bg-white/12 sm:grid-cols-[auto_1fr_auto] sm:items-center"
-                      >
-                        <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-white/14 text-white">
-                          <item.Icon className="h-5 w-5" />
-                        </div>
-                        <div>
-                          <div className="text-sm font-semibold text-white">
-                            {item.title}
-                          </div>
-                          <div className="mt-1 text-sm leading-6 text-white">
-                            {item.detail}
-                          </div>
-                        </div>
-                        <div className="text-xs font-semibold text-white">
-                          {item.meta}
-                        </div>
+                        <ArrowUpRight className="h-4 w-4 text-ink-muted" />
                       </Link>
                     ))}
                   </div>
-
-                  <div className="mt-6 grid gap-3 sm:grid-cols-2">
-                    <div className="rounded-xl bg-white/8 px-4 py-4">
-                      <div className="text-xs font-semibold text-white">
-                        교사 가입
+                </>
+              ) : (
+                <>
+                  <div className="bg-primary-900 px-6 py-7 text-white">
+                    <div className="flex items-center justify-between gap-4">
+                      <div>
+                        <div className="text-xs font-semibold text-white/60">
+                          지금 EduLink에서
+                        </div>
+                        <div className="mt-2 text-2xl font-bold">
+                          필요한 채용 업무를 시작하세요
+                        </div>
                       </div>
-                      <div className="mt-2 text-lg font-bold text-white">
-                        경력과 희망 근무 조건 등록
-                      </div>
+                      <UsersRound className="h-8 w-8 text-[#b7cec1]" />
                     </div>
-                    <div className="rounded-xl bg-white/8 px-4 py-4">
-                      <div className="text-xs font-semibold text-white">
-                        학교 가입
+                    <div className="mt-6 grid grid-cols-2 border-t border-white/16 pt-5">
+                      <div>
+                        <div className="text-xs text-white/55">등록 교사</div>
+                        <div className="mt-1 text-2xl font-bold">
+                          {demoMode ? `${featuredTeachers.length}명` : "—"}
+                        </div>
                       </div>
-                      <div className="mt-2 text-lg font-bold text-white">
-                        채용 공고 등록
+                      <div className="border-l border-white/16 pl-5">
+                        <div className="text-xs text-white/55">모집 중 공고</div>
+                        <div className="mt-1 text-2xl font-bold">
+                          {openJobs.length}건
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              </div>
-            )}
-          </div>
-        </section>
-
-        <section className="relative z-10 px-4 pt-4 sm:px-6 sm:pt-6" id="teacher-pool">
-          <div className="mx-auto max-w-7xl">
-            <div className="rounded-[28px] border border-white/10 bg-white/[0.06] p-6 text-white sm:p-8">
-              <div className="flex items-center justify-between gap-4">
-                <div>
-                  <div className="text-sm font-semibold text-white">
-                    기간제·시간강사
+                  <div>
+                    {startLinks.map(({ Icon, href, title, detail }) => (
+                      <Link
+                        key={title}
+                        href={
+                          title === "교사 인력풀 찾기" &&
+                          session?.role === "hr"
+                            ? "/pool"
+                            : href
+                        }
+                        className="grid grid-cols-[auto_1fr_auto] items-center gap-4 border-b border-outline px-5 py-5 transition-colors last:border-b-0 hover:bg-surface-subtle"
+                      >
+                        <Icon className="h-5 w-5 text-primary-600" />
+                        <div>
+                          <div className="text-sm font-bold text-ink">{title}</div>
+                          <div className="mt-1 text-xs text-ink-muted">
+                            {detail}
+                          </div>
+                        </div>
+                        <ArrowUpRight className="h-4 w-4 text-ink-muted" />
+                      </Link>
+                    ))}
                   </div>
-                  <h2 className="mt-2 text-3xl font-bold tracking-tight text-white">
-                    교사 인력풀
-                  </h2>
-                </div>
-                <Link
-                  href="/pool"
-                  className="inline-flex items-center gap-2 text-sm font-semibold text-white"
-                >
-                  전체 보기
-                  <ArrowRight className="h-4 w-4" />
-                </Link>
-              </div>
-
-              <div className="mt-8">
-                <RotatingPoolShowcase items={publicPoolPreview} />
-              </div>
+                </>
+              )}
             </div>
           </div>
         </section>
 
-        <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 sm:py-20" id="jobs">
-          <div className="flex items-center justify-between gap-4">
+        <section
+          className="mx-auto max-w-7xl px-4 py-20 sm:px-6 sm:py-24"
+          id="teacher-pool"
+        >
+          <div className="mb-9 flex flex-col justify-between gap-5 sm:flex-row sm:items-end">
             <div>
-              <div className="text-sm font-semibold text-white">
-                학교 채용
-              </div>
-              <h2 className="mt-2 text-3xl font-bold tracking-tight text-white">
-                채용 공고
+              <p className="kicker">Talent network</p>
+              <h2 className="mt-4 text-3xl font-bold tracking-[-0.045em] text-ink sm:text-4xl">
+                조건에 맞는 교사를 더 빠르게
               </h2>
+              <p className="mt-3 max-w-2xl break-keep text-sm leading-7 text-ink-soft">
+                공개 프로필에는 자격과 경력, 희망 조건만 표시되며 상세 연락처는
+                제안 수락 이후 확인할 수 있습니다.
+              </p>
             </div>
             <Link
-              href="/jobs"
-              className="inline-flex items-center gap-2 text-sm font-semibold text-white"
+              href={
+                session?.role === "hr"
+                  ? "/pool"
+                  : "/auth/login?next=/pool"
+              }
+              className="inline-flex items-center gap-2 text-sm font-bold text-primary-700 hover:underline"
             >
-              전체 보기
+              인력풀 전체 보기
               <ArrowRight className="h-4 w-4" />
             </Link>
           </div>
+          {demoMode ? (
+            <RotatingPoolShowcase items={publicPoolPreview} />
+          ) : (
+            <div className="border-y border-outline bg-surface-contrast px-6 py-14 text-center">
+              <h3 className="text-lg font-bold text-ink">
+                등록된 교사 프로필은 승인된 학교 계정에서 확인합니다.
+              </h3>
+              <p className="mt-2 text-sm leading-6 text-ink-soft">
+                개인정보 보호를 위해 공개 화면에는 실제 인재 정보를 노출하지
+                않습니다.
+              </p>
+            </div>
+          )}
+        </section>
 
-          <div className="mt-8">
+        <section
+          className="bg-primary-900 text-white"
+          id="how-it-works"
+        >
+          <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6 sm:py-24">
+            <div className="grid gap-10 lg:grid-cols-[0.72fr_1.28fr]">
+              <div>
+                <p className="text-xs font-bold uppercase tracking-[0.15em] text-[#a9c4b6]">
+                  How it works
+                </p>
+                <h2 className="mt-4 break-keep text-3xl font-bold tracking-[-0.045em] sm:text-4xl">
+                  신뢰를 지키는 채용 절차
+                </h2>
+                <p className="mt-4 break-keep text-sm leading-7 text-white/66">
+                  가입부터 제안, 검토까지 각 역할에 필요한 정보와 기능을
+                  구분했습니다.
+                </p>
+              </div>
+
+              <div className="border-t border-white/18">
+                {[
+                  {
+                    number: "01",
+                    Icon: UserRoundCheck,
+                    title: "프로필과 학교 정보 등록",
+                    detail: "교사는 자격·경력, 학교는 담당자와 기관 정보를 등록합니다.",
+                  },
+                  {
+                    number: "02",
+                    Icon: ShieldCheck,
+                    title: "권한과 자격 검토",
+                    detail: "학교 계정은 관리자 승인 후 인력풀과 채용 기능을 이용합니다.",
+                  },
+                  {
+                    number: "03",
+                    Icon: BriefcaseBusiness,
+                    title: "공고·제안·지원 관리",
+                    detail: "학교와 교사가 각자의 대시보드에서 진행 상태를 확인합니다.",
+                  },
+                ].map(({ number, Icon, title, detail }) => (
+                  <div
+                    key={number}
+                    className="grid gap-4 border-b border-white/18 py-6 sm:grid-cols-[48px_36px_1fr] sm:items-start"
+                  >
+                    <span className="text-xs font-bold text-[#a9c4b6]">
+                      {number}
+                    </span>
+                    <Icon className="h-5 w-5 text-[#b9d0c3]" />
+                    <div>
+                      <h3 className="text-base font-bold text-white">{title}</h3>
+                      <p className="mt-2 text-sm leading-6 text-white/62">
+                        {detail}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section
+          className="mx-auto max-w-7xl px-4 py-20 sm:px-6 sm:py-24"
+          id="jobs"
+        >
+          <div className="mb-9 flex flex-col justify-between gap-5 sm:flex-row sm:items-end">
+            <div>
+              <p className="kicker">Open positions</p>
+              <h2 className="mt-4 text-3xl font-bold tracking-[-0.045em] text-ink sm:text-4xl">
+                지금 확인할 수 있는 채용 공고
+              </h2>
+              <p className="mt-3 max-w-2xl text-sm leading-7 text-ink-soft">
+                근무 형태, 기간, 자격 조건을 확인하고 지원 과정을 이어가세요.
+              </p>
+            </div>
+            <Link
+              href="/jobs"
+              className="inline-flex items-center gap-2 text-sm font-bold text-primary-700 hover:underline"
+            >
+              채용 공고 전체 보기
+              <ArrowRight className="h-4 w-4" />
+            </Link>
+          </div>
+          {demoMode ? (
             <RotatingJobShowcase items={publicJobPreview} />
+          ) : (
+            <div className="border-y border-outline bg-surface-contrast px-6 py-14 text-center">
+              <h3 className="text-lg font-bold text-ink">
+                현재 공개된 채용 공고가 없습니다.
+              </h3>
+              <p className="mt-2 text-sm leading-6 text-ink-soft">
+                승인된 학교가 공고를 등록하면 이 영역과 공고 목록에 표시됩니다.
+              </p>
+            </div>
+          )}
+        </section>
+
+        <section className="border-t border-outline bg-surface-contrast">
+          <div className="mx-auto flex max-w-7xl flex-col items-start justify-between gap-8 px-4 py-16 sm:px-6 lg:flex-row lg:items-center">
+            <div>
+              <p className="kicker">Join Edulink</p>
+              <h2 className="mt-4 break-keep text-3xl font-bold tracking-[-0.045em] text-ink">
+                더 나은 채용 연결을 시작하세요.
+              </h2>
+              <p className="mt-3 text-sm leading-7 text-ink-soft">
+                교사와 학교에 맞는 가입 절차를 선택할 수 있습니다.
+              </p>
+            </div>
+            <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
+              <Link
+                href="/auth/register/teacher"
+                className="inline-flex min-h-12 items-center justify-center gap-2 border border-outline-strong px-5 text-sm font-bold text-ink hover:bg-surface-subtle"
+              >
+                교사로 가입
+              </Link>
+              <Link
+                href="/auth/register/hr"
+                className="inline-flex min-h-12 items-center justify-center gap-2 bg-primary-700 px-5 text-sm font-bold text-white hover:bg-primary-800"
+              >
+                학교 계정 신청
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+            </div>
           </div>
         </section>
       </main>
+
+      <footer className="border-t border-outline bg-surface px-4 py-7 sm:px-6">
+        <div className="mx-auto flex max-w-7xl flex-col gap-3 text-xs text-ink-muted sm:flex-row sm:items-center sm:justify-between">
+          <BrandLockup className="[&>span:first-child]:h-7 [&>span:first-child]:w-7" />
+          <p>학교와 교사의 개인정보는 역할과 채용 단계에 따라 보호됩니다.</p>
+        </div>
+      </footer>
     </div>
   );
 }

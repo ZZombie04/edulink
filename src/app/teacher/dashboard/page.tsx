@@ -3,39 +3,51 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import {
+  AlertCircle,
   Bell,
   Briefcase,
   CalendarClock,
+  CheckCircle2,
   Clock3,
   Home,
   LayoutDashboard,
+  LoaderCircle,
   MapPin,
   ShieldCheck,
-  Sparkles,
   UserRound,
 } from "lucide-react";
 
 import { CharacterAvatar } from "@/components/character-avatar";
+import { HiringStateError } from "@/components/hiring-state-error";
 import { PortalShell } from "@/components/portal-shell";
 import { featuredTeachers } from "@/lib/demo-data";
 import { useDemoHiringState } from "@/lib/demo-hiring-state";
+import { useDemoSession } from "@/lib/demo-session-client";
 
 const navItems = [
-  { href: "/teacher/dashboard", label: "내 홈", icon: LayoutDashboard, active: true },
-  { href: "/", label: "메인", icon: Home },
+  {
+    href: "/teacher/dashboard",
+    label: "내 홈",
+    icon: LayoutDashboard,
+    active: true,
+  },
   { href: "/jobs", label: "채용 공고", icon: Briefcase },
+  { href: "/", label: "메인", icon: Home },
 ];
+
+type VisibilityStatus = "seeking" | "paused";
 
 function offerTone(status: string) {
   switch (status) {
     case "accepted":
-      return "bg-secondary-50 text-secondary-700";
+      return "border-[#b9cec1] bg-[#edf4ef] text-[#1f6248]";
     case "rejected":
-      return "bg-[var(--danger-soft)] text-[#9c2f24]";
+      return "border-[#e4b8ae] bg-[#fff3f0] text-[#8b3328]";
     case "cancelled":
-      return "bg-surface-panel text-ink-soft";
+    case "archived":
+      return "border-[#d8d5cc] bg-[#f0eee8] text-[#666e69]";
     default:
-      return "bg-[var(--warning-soft)] text-[#9a6a00]";
+      return "border-[#e6d1a2] bg-[#fff7e6] text-[#865d13]";
   }
 }
 
@@ -43,33 +55,75 @@ function applicationTone(status: string) {
   switch (status) {
     case "interview-requested":
     case "interview-confirmed":
-      return "bg-primary-50 text-primary-700";
+      return "border-[#b8c9c0] bg-[#edf2ef] text-[#24533f]";
     case "hired":
-      return "bg-secondary-50 text-secondary-700";
+      return "border-[#a9c8b7] bg-[#e6f2ea] text-[#155c3c]";
     case "rejected":
     case "withdrawn":
-      return "bg-surface-panel text-ink-soft";
+      return "border-[#d8d5cc] bg-[#f0eee8] text-[#666e69]";
     default:
-      return "bg-[var(--warning-soft)] text-[#9a6a00]";
+      return "border-[#e6d1a2] bg-[#fff7e6] text-[#865d13]";
+  }
+}
+
+function applicationLabel(status: string) {
+  switch (status) {
+    case "reviewing":
+      return "서류 검토 중";
+    case "interview-requested":
+      return "면접 요청";
+    case "interview-confirmed":
+      return "면접 일정 확인";
+    case "hired":
+      return "채용 확정";
+    case "rejected":
+      return "검토 종료";
+    default:
+      return "지원 완료";
+  }
+}
+
+function offerLabel(status: string) {
+  switch (status) {
+    case "accepted":
+      return "제안 수락";
+    case "rejected":
+      return "제안 보류";
+    case "cancelled":
+      return "학교 요청 취소";
+    default:
+      return "응답 대기";
   }
 }
 
 export default function TeacherDashboardPage() {
-  const teacher = featuredTeachers[0];
-  const {
-    getApplicationsForTeacher,
-    getTeacherOffersForTeacher,
-    updateApplicationStatus,
-    withdrawApplication,
-  } = useDemoHiringState();
-  const [availability, setAvailability] = useState<"seeking" | "paused">(
-    teacher.status === "paused" ? "paused" : "seeking",
-  );
-  const [archivedOfferIds, setArchivedOfferIds] = useState<number[]>([]);
+  const session = useDemoSession();
+  const hiring = useDemoHiringState();
+  const teacher = hiring.currentTeacher ?? featuredTeachers[0];
+  const extendedHiring = hiring as typeof hiring & {
+    archiveTeacherOffer?: (requestId: number) => Promise<void>;
+    updateTeacherVisibility?: (status: VisibilityStatus) => Promise<void>;
+  };
+  const extendedState = hiring.state as typeof hiring.state & {
+    teacherVisibility?: VisibilityStatus;
+  };
+  const [availabilityOverride, setAvailabilityOverride] =
+    useState<VisibilityStatus | null>(null);
+  const [pendingAction, setPendingAction] = useState("");
+  const [feedback, setFeedback] = useState<{
+    tone: "error" | "success";
+    message: string;
+  } | null>(null);
 
-  const applications = getApplicationsForTeacher(teacher.id);
-  const offers = getTeacherOffersForTeacher(teacher.id).filter(
-    (request) => !archivedOfferIds.includes(request.id),
+  const availability =
+    availabilityOverride ??
+    extendedState.teacherVisibility ??
+    (teacher.status === "paused" ? "paused" : "seeking");
+
+  // The server already scopes these collections to the signed-in teacher.
+  const applications = hiring.state.applications;
+  const offers = hiring.state.requests.filter(
+    (request) => request.status !== "archived",
   );
 
   const pendingOffers = useMemo(
@@ -77,7 +131,10 @@ export default function TeacherDashboardPage() {
     [offers],
   );
   const visibleApplications = useMemo(
-    () => applications.filter((application) => application.status !== "withdrawn"),
+    () =>
+      applications.filter(
+        (application) => application.status !== "withdrawn",
+      ),
     [applications],
   );
   const interviewItems = useMemo(
@@ -88,6 +145,119 @@ export default function TeacherDashboardPage() {
       ].sort((left, right) => right.id - left.id),
     [offers, visibleApplications],
   );
+
+  const displayName = session?.name ?? teacher.name;
+  const displayQualification = session?.detail ?? teacher.qualification;
+  const displayAvatar = session?.avatarPreset ?? teacher.avatarPreset;
+
+  const saveVisibility = async (status: VisibilityStatus) => {
+    if (status === availability || pendingAction) {
+      return;
+    }
+
+    setFeedback(null);
+    setPendingAction("visibility");
+
+    try {
+      if (!extendedHiring.updateTeacherVisibility) {
+        throw new Error("프로필 공개 상태 저장 기능을 불러오지 못했습니다.");
+      }
+      await extendedHiring.updateTeacherVisibility(status);
+      setAvailabilityOverride(status);
+      setFeedback({
+        tone: "success",
+        message:
+          status === "seeking"
+            ? "인력풀 공개를 시작했습니다."
+            : "인력풀 노출을 일시중지했습니다.",
+      });
+    } catch (error) {
+      setFeedback({
+        tone: "error",
+        message:
+          error instanceof Error
+            ? error.message
+            : "프로필 공개 상태를 저장하지 못했습니다.",
+      });
+    } finally {
+      setPendingAction("");
+    }
+  };
+
+  const confirmInterview = async (applicationId: number) => {
+    setFeedback(null);
+    setPendingAction(`confirm-${applicationId}`);
+
+    try {
+      await hiring.updateApplicationStatus(
+        applicationId,
+        "interview-confirmed",
+      );
+      setFeedback({
+        tone: "success",
+        message: "면접 일정을 확인했습니다. 학교 담당자에게 상태가 전달됩니다.",
+      });
+    } catch (error) {
+      setFeedback({
+        tone: "error",
+        message:
+          error instanceof Error
+            ? error.message
+            : "면접 일정을 확인하지 못했습니다.",
+      });
+    } finally {
+      setPendingAction("");
+    }
+  };
+
+  const withdraw = async (applicationId: number) => {
+    setFeedback(null);
+    setPendingAction(`withdraw-${applicationId}`);
+
+    try {
+      await hiring.withdrawApplication(applicationId);
+      setFeedback({
+        tone: "success",
+        message: "지원 취소가 처리되었습니다.",
+      });
+    } catch (error) {
+      setFeedback({
+        tone: "error",
+        message:
+          error instanceof Error
+            ? error.message
+            : "지원 취소를 처리하지 못했습니다.",
+      });
+    } finally {
+      setPendingAction("");
+    }
+  };
+
+  const archiveOffer = async (requestId: number) => {
+    setFeedback(null);
+    setPendingAction(`archive-${requestId}`);
+
+    try {
+      if (!extendedHiring.archiveTeacherOffer) {
+        throw new Error("제안 보관 기능을 불러오지 못했습니다.");
+      }
+      await extendedHiring.archiveTeacherOffer(requestId);
+      setFeedback({
+        tone: "success",
+        message: "제안을 보관했습니다. 학교의 요청 상태는 변경되지 않습니다.",
+      });
+    } catch (error) {
+      setFeedback({
+        tone: "error",
+        message:
+          error instanceof Error
+            ? error.message
+            : "제안을 보관하지 못했습니다.",
+      });
+    } finally {
+      setPendingAction("");
+    }
+  };
 
   return (
     <PortalShell
@@ -101,333 +271,439 @@ export default function TeacherDashboardPage() {
       primaryAction={{ href: "/jobs", label: "채용 공고 보기", icon: Briefcase }}
       sectionLabel="교사 홈"
       user={{
-        name: teacher.name,
+        name: displayName,
         role: "등록 교사",
-        detail: teacher.qualification,
-        avatarPreset: teacher.avatarPreset,
+        detail: displayQualification,
+        avatarPreset: displayAvatar,
       }}
     >
-      <section className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
-        <div className="self-start rounded-lg bg-[linear-gradient(135deg,#0058be,#2170e4)] p-6 text-white shadow-soft">
-          <div className="flex min-h-[196px] flex-col justify-between">
-            <div>
-              <div className="inline-flex items-center gap-2 rounded-full bg-white/12 px-3 py-2 text-sm font-semibold text-white/90">
-                <Sparkles className="h-4 w-4" />
-                지원 현황
-              </div>
-              <div className="mt-5 text-3xl font-bold tracking-tight sm:text-4xl">
-                {teacher.name} 선생님
-              </div>
-              <div className="mt-3 break-keep text-sm leading-6 text-white/82">
-                공고 지원, 학교 제안 응답, 면접 일정 확인까지 한 화면에서 이어서
-                관리할 수 있습니다.
-              </div>
-            </div>
+      {hiring.loadError ? (
+        <div className="mb-5">
+          <HiringStateError
+            message={hiring.loadError}
+            onRetry={hiring.refresh}
+          />
+        </div>
+      ) : null}
 
-            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-              <Link
-                href="/jobs"
-                className="inline-flex items-center justify-center gap-2 rounded-lg bg-white px-5 py-3 text-sm font-semibold text-primary-700"
-              >
-                <Briefcase className="h-4 w-4" />
-                채용 공고 보기
-              </Link>
-              <Link
-                href="/"
-                className="inline-flex items-center justify-center gap-2 rounded-lg border border-white/18 bg-white/10 px-5 py-3 text-sm font-semibold text-white"
-              >
-                <Home className="h-4 w-4" />
-                메인으로
-              </Link>
+      <section className="border-b border-[#dcd9d0] pb-7">
+        <div className="flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
+          <div className="flex items-start gap-4">
+            <CharacterAvatar
+              className="h-16 w-16 shrink-0 rounded-md"
+              presetId={displayAvatar}
+              priority
+              size={64}
+            />
+            <div>
+              <div className="text-xs font-semibold uppercase tracking-[0.18em] text-[#0b4a37]">
+                TEACHER WORKSPACE
+              </div>
+              <h1 className="mt-2 text-3xl font-bold tracking-[-0.03em] text-[#17231e] sm:text-4xl">
+                {displayName} 선생님
+              </h1>
+              <p className="mt-2 break-keep text-sm leading-6 text-[#65706a]">
+                지원과 학교 제안, 면접 일정을 한 흐름에서 확인하세요.
+              </p>
             </div>
           </div>
-        </div>
 
-        <div className="panel-surface p-6">
-          <div className="text-sm font-semibold text-ink-soft">현재 노출 상태</div>
-          <div className="mt-5 space-y-3">
-            <button
-              type="button"
-              className={`flex w-full items-center justify-between rounded-lg px-4 py-4 text-left ${
-                availability === "seeking"
-                  ? "bg-primary-50 text-primary-700"
-                  : "bg-surface-subtle text-ink-soft"
-              }`}
-              onClick={() => setAvailability("seeking")}
+          <div className="flex flex-col gap-2 sm:flex-row">
+            <Link
+              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md bg-[#0b4a37] px-4 py-2 text-sm font-semibold text-white shadow-[0_8px_20px_rgba(11,74,55,0.14)] hover:bg-[#083a2c] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0b4a37] focus-visible:ring-offset-2"
+              href="/jobs"
             >
-              <div>
-                <div className="font-semibold">채용 제안 가능</div>
-                <div className="mt-1 break-keep text-sm">
-                  학교가 인력풀을 보고 직접 제안을 보낼 수 있는 상태입니다.
-                </div>
-              </div>
-              <ShieldCheck className="h-5 w-5" />
-            </button>
-
-            <button
-              type="button"
-              className={`flex w-full items-center justify-between rounded-lg px-4 py-4 text-left ${
-                availability === "paused"
-                  ? "bg-primary-50 text-primary-700"
-                  : "bg-surface-subtle text-ink-soft"
-              }`}
-              onClick={() => setAvailability("paused")}
+              <Briefcase aria-hidden="true" className="h-4 w-4" />
+              새 공고 찾기
+            </Link>
+            <Link
+              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md border border-[#d3d0c7] bg-white px-4 py-2 text-sm font-semibold text-[#4f5954] hover:bg-[#f0eee8] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0b4a37]"
+              href="/"
             >
-              <div>
-                <div className="font-semibold">노출 일시중지</div>
-                <div className="mt-1 break-keep text-sm">
-                  새 제안은 잠시 멈추고 현재 지원과 면접 일정만 관리합니다.
-                </div>
-              </div>
-              <Clock3 className="h-5 w-5" />
-            </button>
+              <Home aria-hidden="true" className="h-4 w-4" />
+              메인
+            </Link>
           </div>
         </div>
       </section>
 
-      <section className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      {feedback ? (
+        <div
+          className={`mt-5 flex items-start gap-2 rounded-md border px-4 py-3 text-sm ${
+            feedback.tone === "error"
+              ? "border-[#e4b8ae] bg-[#fff3f0] text-[#8b3328]"
+              : "border-[#b9cec1] bg-[#edf4ef] text-[#1f6248]"
+          }`}
+          role={feedback.tone === "error" ? "alert" : "status"}
+        >
+          {feedback.tone === "error" ? (
+            <AlertCircle aria-hidden="true" className="mt-0.5 h-4 w-4 shrink-0" />
+          ) : (
+            <CheckCircle2 aria-hidden="true" className="mt-0.5 h-4 w-4 shrink-0" />
+          )}
+          {feedback.message}
+        </div>
+      ) : null}
+
+      <section className="mt-7 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {[
-          { label: "프로필 조회", value: `${teacher.portfolioViews}회`, Icon: UserRound },
-          { label: "대기 중 제안", value: `${pendingOffers.length}건`, Icon: Bell },
-          { label: "지원 완료", value: `${visibleApplications.length}건`, Icon: Briefcase },
-          { label: "면접 일정", value: `${interviewItems.length}건`, Icon: CalendarClock },
+          {
+            label: "프로필 조회",
+            value: `${teacher.portfolioViews}회`,
+            Icon: UserRound,
+          },
+          {
+            label: "응답 대기 제안",
+            value: `${pendingOffers.length}건`,
+            Icon: Bell,
+          },
+          {
+            label: "진행 중 지원",
+            value: `${visibleApplications.length}건`,
+            Icon: Briefcase,
+          },
+          {
+            label: "면접 일정",
+            value: `${interviewItems.length}건`,
+            Icon: CalendarClock,
+          },
         ].map((item) => (
-          <div key={item.label} className="panel-surface p-5">
-            <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-primary-50 text-primary-700">
-              <item.Icon className="h-5 w-5" />
+          <div
+            key={item.label}
+            className="rounded-md border border-[#dedbd2] bg-[#fbfaf6] p-5"
+          >
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <div className="text-sm text-[#737b77]">{item.label}</div>
+                <div className="mt-2 text-2xl font-bold text-[#17231e]">
+                  {item.value}
+                </div>
+              </div>
+              <div className="flex h-10 w-10 items-center justify-center rounded-md bg-[#e8f0eb] text-[#0b4a37]">
+                <item.Icon aria-hidden="true" className="h-5 w-5" />
+              </div>
             </div>
-            <div className="mt-4 text-3xl font-bold text-ink">{item.value}</div>
-            <div className="mt-1 text-sm text-ink-soft">{item.label}</div>
           </div>
         ))}
       </section>
 
-      <section className="mt-8 grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
-        <div className="panel-surface p-6">
-          <div className="flex items-center justify-between">
-            <div className="text-xl font-bold text-ink">지원 현황</div>
-            <Link href="/jobs" className="text-sm font-semibold text-primary-700">
-              공고 더 보기
-            </Link>
-          </div>
-
-          <div className="mt-6 space-y-4">
-            {visibleApplications.length > 0 ? (
-              visibleApplications.map((application) => (
-                <div
-                  key={application.id}
-                  className="rounded-lg border border-outline bg-surface p-5"
-                >
-                  <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-                    <div className="min-w-0">
-                      <span
-                        className={`rounded-full px-2.5 py-1 text-xs font-semibold ${applicationTone(
-                          application.status,
-                        )}`}
-                      >
-                        {application.status === "interview-requested"
-                          ? "면접 요청"
-                          : application.status === "interview-confirmed"
-                            ? "면접 일정 확인"
-                            : application.status === "hired"
-                              ? "채용 확정"
-                              : application.status === "rejected"
-                                ? "검토 종료"
-                                : "지원 완료"}
-                      </span>
-                      <div className="mt-3 text-xl font-bold text-ink">
-                        {application.job?.schoolName ?? "공고 정보 없음"}
-                      </div>
-                      <div className="mt-1 break-keep text-sm text-ink-soft">
-                        {application.job?.gradeLevel ?? "공고 정보 없음"} / 제출{" "}
-                        {application.submittedAt}
-                      </div>
-                      <div className="mt-2 break-keep text-sm leading-6 text-ink-muted">
-                        {application.summary}
-                      </div>
-                      {application.interview ? (
-                        <div className="mt-4 rounded-lg bg-primary-50 px-4 py-3 text-sm text-primary-700">
-                          {application.interview.date} {application.interview.time} /{" "}
-                          {application.interview.place}
-                          <div className="mt-1 break-keep text-primary-700/80">
-                            {application.interview.note}
-                          </div>
-                        </div>
-                      ) : null}
-                    </div>
-
-                    <div className="flex flex-wrap gap-2 sm:justify-end">
-                      {application.status === "interview-requested" ? (
-                        <button
-                          type="button"
-                          className="rounded-lg bg-[linear-gradient(135deg,#0058be,#2170e4)] px-4 py-3 text-sm font-semibold text-white shadow-soft"
-                          onClick={() =>
-                            updateApplicationStatus(
-                              application.id,
-                              "interview-confirmed",
-                            )
-                          }
-                        >
-                          일정 확인
-                        </button>
-                      ) : null}
-                      {!["rejected", "hired", "withdrawn"].includes(application.status) ? (
-                        <button
-                          type="button"
-                          className="rounded-lg border border-outline px-4 py-3 text-sm font-semibold text-ink-soft"
-                          onClick={() => withdrawApplication(application.id)}
-                        >
-                          지원 취소
-                        </button>
-                      ) : null}
-                      {application.job ? (
-                        <Link
-                          href={`/jobs/${application.job.id}`}
-                          className="rounded-lg border border-outline px-4 py-3 text-sm font-semibold text-primary-700"
-                        >
-                          공고 보기
-                        </Link>
-                      ) : null}
-                    </div>
-                  </div>
-                </div>
-              ))
-            ) : (
-              <div className="rounded-lg border border-dashed border-outline bg-surface-subtle px-4 py-8 text-center text-sm text-ink-soft">
-                아직 제출한 지원서가 없습니다. 채용 공고에서 바로 지원을 시작할 수
-                있습니다.
-              </div>
-            )}
-          </div>
-        </div>
-
+      <section className="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1fr)_380px]">
         <div className="space-y-6">
-          <div className="panel-surface p-6">
-            <div className="flex items-center justify-between">
-              <div className="text-xl font-bold text-ink">받은 제안</div>
+          <section className="rounded-md border border-[#dedbd2] bg-[#fbfaf6] p-6">
+            <div className="flex items-end justify-between gap-4 border-b border-[#e1ded6] pb-4">
+              <div>
+                <h2 className="text-xl font-bold text-[#17231e]">지원 현황</h2>
+                <p className="mt-1 text-sm text-[#727a76]">
+                  학교 검토와 면접 진행 상태
+                </p>
+              </div>
               <Link
-                href={pendingOffers[0] ? `/teacher/offers/${pendingOffers[0].id}` : "/jobs"}
-                className="text-sm font-semibold text-primary-700"
+                className="rounded-md text-sm font-semibold text-[#0b4a37] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0b4a37]"
+                href="/jobs"
               >
-                최근 제안 보기
+                공고 더 보기
               </Link>
             </div>
 
-            <div className="mt-6 space-y-4">
-              {offers.length > 0 ? (
-                offers.map((offer) => (
-                  <div
-                    key={offer.id}
-                    className="rounded-lg border border-outline bg-surface p-5"
+            {!hiring.loaded ? (
+              <div className="mt-5 h-44 animate-pulse rounded-md bg-[#eeece6]">
+                <span className="sr-only">지원 현황을 불러오는 중입니다.</span>
+              </div>
+            ) : visibleApplications.length === 0 ? (
+              <div className="mt-5 rounded-md border border-dashed border-[#c9c5ba] bg-[#f4f2ec] px-5 py-10 text-center">
+                <Briefcase
+                  aria-hidden="true"
+                  className="mx-auto h-7 w-7 text-[#7a827e]"
+                />
+                <h3 className="mt-3 font-semibold text-[#344039]">
+                  아직 제출한 지원서가 없습니다
+                </h3>
+                <Link
+                  className="mt-4 inline-flex text-sm font-semibold text-[#0b4a37]"
+                  href="/jobs"
+                >
+                  채용 공고 확인하기
+                </Link>
+              </div>
+            ) : (
+              <div className="mt-5 divide-y divide-[#e2dfd7]">
+                {visibleApplications.map((application) => (
+                  <article
+                    key={application.id}
+                    className="py-5 first:pt-0 last:pb-0"
                   >
-                    <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                    <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                       <div className="min-w-0">
                         <span
-                          className={`rounded-full px-2.5 py-1 text-xs font-semibold ${offerTone(
-                            offer.status,
+                          className={`inline-flex rounded-full border px-2.5 py-1 text-xs font-semibold ${applicationTone(
+                            application.status,
                           )}`}
                         >
-                          {offer.status === "accepted"
-                            ? "응답 완료"
-                            : offer.status === "rejected"
-                              ? "검토 종료"
-                              : offer.status === "cancelled"
-                                ? "요청 취소"
-                                : "응답 대기"}
+                          {applicationLabel(application.status)}
                         </span>
-                        <div className="mt-3 text-xl font-bold text-ink">
-                          {offer.schoolName}
-                        </div>
-                        <div className="mt-1 break-keep text-sm text-ink-soft">
-                          {offer.position}
-                        </div>
-                        <div className="mt-2 break-keep text-sm leading-6 text-ink-muted">
-                          {offer.summary}
-                        </div>
-                        {offer.interview ? (
-                          <div className="mt-4 rounded-lg bg-primary-50 px-4 py-3 text-sm text-primary-700">
-                            {offer.interview.date} {offer.interview.time} / {offer.interview.place}
-                            <div className="mt-1 break-keep text-primary-700/80">
-                              {offer.interview.note}
+                        <h3 className="mt-3 text-lg font-bold text-[#17231e]">
+                          {application.job?.schoolName ?? "공고 정보 없음"}
+                        </h3>
+                        <p className="mt-1 break-keep text-sm text-[#65706a]">
+                          {application.job?.gradeLevel ?? "공고 정보 없음"} · 제출{" "}
+                          {application.submittedAt}
+                        </p>
+                        <p className="mt-2 break-keep text-sm leading-6 text-[#727a76]">
+                          {application.summary}
+                        </p>
+                        {application.interview ? (
+                          <div className="mt-4 rounded-md border border-[#bfd0c5] bg-[#edf4ef] px-4 py-3 text-sm text-[#24533f]">
+                            <div className="font-semibold">
+                              {application.interview.date}{" "}
+                              {application.interview.time} ·{" "}
+                              {application.interview.place}
+                            </div>
+                            <div className="mt-1 break-keep leading-6">
+                              {application.interview.note}
                             </div>
                           </div>
                         ) : null}
-                        <div className="mt-3 inline-flex items-center gap-2 text-sm text-ink-muted">
-                          <MapPin className="h-4 w-4 text-primary-600" />
-                          {offer.region}
-                        </div>
                       </div>
 
-                      <div className="flex flex-wrap gap-2 sm:justify-end">
+                      <div className="flex shrink-0 flex-wrap gap-2">
+                        {application.status === "interview-requested" ? (
+                          <button
+                            className="inline-flex min-h-10 items-center gap-2 rounded-md bg-[#0b4a37] px-3 py-2 text-sm font-semibold text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0b4a37] focus-visible:ring-offset-2 disabled:opacity-60"
+                            disabled={Boolean(pendingAction)}
+                            onClick={() => void confirmInterview(application.id)}
+                            type="button"
+                          >
+                            {pendingAction === `confirm-${application.id}` ? (
+                              <LoaderCircle
+                                aria-hidden="true"
+                                className="h-4 w-4 animate-spin"
+                              />
+                            ) : (
+                              <CheckCircle2
+                                aria-hidden="true"
+                                className="h-4 w-4"
+                              />
+                            )}
+                            일정 확인
+                          </button>
+                        ) : null}
+                        {!["rejected", "hired", "withdrawn"].includes(
+                          application.status,
+                        ) ? (
+                          <button
+                            className="min-h-10 rounded-md border border-[#d3d0c7] bg-white px-3 py-2 text-sm font-semibold text-[#5b6560] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0b4a37] disabled:opacity-60"
+                            disabled={Boolean(pendingAction)}
+                            onClick={() => void withdraw(application.id)}
+                            type="button"
+                          >
+                            {pendingAction === `withdraw-${application.id}`
+                              ? "처리 중"
+                              : "지원 취소"}
+                          </button>
+                        ) : null}
+                        {application.job ? (
+                          <Link
+                            className="inline-flex min-h-10 items-center rounded-md border border-[#d3d0c7] bg-white px-3 py-2 text-sm font-semibold text-[#0b4a37] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0b4a37]"
+                            href={`/jobs/${application.job.id}`}
+                          >
+                            공고 보기
+                          </Link>
+                        ) : null}
+                      </div>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            )}
+          </section>
+
+          <section className="rounded-md border border-[#dedbd2] bg-[#fbfaf6] p-6">
+            <div className="flex items-end justify-between gap-4 border-b border-[#e1ded6] pb-4">
+              <div>
+                <h2 className="text-xl font-bold text-[#17231e]">받은 제안</h2>
+                <p className="mt-1 text-sm text-[#727a76]">
+                  학교가 보낸 직접 채용 제안
+                </p>
+              </div>
+              {pendingOffers[0] ? (
+                <Link
+                  className="text-sm font-semibold text-[#0b4a37]"
+                  href={`/teacher/offers/${pendingOffers[0].id}`}
+                >
+                  최근 제안
+                </Link>
+              ) : null}
+            </div>
+
+            {!hiring.loaded ? (
+              <div className="mt-5 h-40 animate-pulse rounded-md bg-[#eeece6]" />
+            ) : offers.length === 0 ? (
+              <div className="mt-5 rounded-md border border-dashed border-[#c9c5ba] bg-[#f4f2ec] px-5 py-9 text-center text-sm text-[#65706a]">
+                현재 확인할 제안이 없습니다.
+              </div>
+            ) : (
+              <div className="mt-5 divide-y divide-[#e2dfd7]">
+                {offers.map((offer) => (
+                  <article key={offer.id} className="py-5 first:pt-0 last:pb-0">
+                    <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                      <div className="min-w-0">
+                        <span
+                          className={`inline-flex rounded-full border px-2.5 py-1 text-xs font-semibold ${offerTone(
+                            offer.status,
+                          )}`}
+                        >
+                          {offerLabel(offer.status)}
+                        </span>
+                        <h3 className="mt-3 text-lg font-bold text-[#17231e]">
+                          {offer.schoolName}
+                        </h3>
+                        <p className="mt-1 text-sm text-[#65706a]">
+                          {offer.position}
+                        </p>
+                        <p className="mt-2 break-keep text-sm leading-6 text-[#727a76]">
+                          {offer.summary}
+                        </p>
+                        <div className="mt-3 inline-flex items-center gap-2 text-sm text-[#65706a]">
+                          <MapPin
+                            aria-hidden="true"
+                            className="h-4 w-4 text-[#0b4a37]"
+                          />
+                          {offer.region}
+                        </div>
+                        {offer.interview ? (
+                          <div className="mt-4 rounded-md border border-[#bfd0c5] bg-[#edf4ef] px-4 py-3 text-sm text-[#24533f]">
+                            {offer.interview.date} {offer.interview.time} ·{" "}
+                            {offer.interview.place}
+                          </div>
+                        ) : null}
+                      </div>
+
+                      <div className="flex shrink-0 flex-wrap gap-2">
                         {offer.status === "pending" ? (
                           <>
                             <Link
+                              className="inline-flex min-h-10 items-center rounded-md bg-[#0b4a37] px-3 py-2 text-sm font-semibold text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0b4a37] focus-visible:ring-offset-2"
                               href={`/teacher/offers/${offer.id}`}
-                              className="rounded-lg bg-[linear-gradient(135deg,#0058be,#2170e4)] px-4 py-3 text-sm font-semibold text-white shadow-soft"
                             >
                               검토하기
                             </Link>
                             <button
+                              className="min-h-10 rounded-md border border-[#d3d0c7] bg-white px-3 py-2 text-sm font-semibold text-[#5b6560] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0b4a37] disabled:opacity-60"
+                              disabled={Boolean(pendingAction)}
+                              onClick={() => void archiveOffer(offer.id)}
                               type="button"
-                              className="rounded-lg border border-outline px-4 py-3 text-sm font-semibold text-ink-soft"
-                              onClick={() =>
-                                setArchivedOfferIds((current) => [...current, offer.id])
-                              }
                             >
-                              보관
+                              {pendingAction === `archive-${offer.id}`
+                                ? "보관 중"
+                                : "보관"}
                             </button>
                           </>
                         ) : (
-                          <div className="text-sm text-ink-muted">{offer.sentAt}</div>
+                          <span className="text-xs text-[#7a827e]">
+                            {offer.sentAt}
+                          </span>
                         )}
                       </div>
                     </div>
-                  </div>
-                ))
-              ) : (
-                <div className="rounded-lg border border-dashed border-outline bg-surface-subtle px-4 py-8 text-center text-sm text-ink-soft">
-                  보관하지 않은 제안이 없습니다.
-                </div>
-              )}
+                  </article>
+                ))}
+              </div>
+            )}
+          </section>
+        </div>
+
+        <aside className="space-y-5">
+          <section className="rounded-md border border-[#d5d2c9] bg-[#fbfaf6] p-6 shadow-[0_14px_36px_rgba(31,44,37,0.06)]">
+            <div className="flex items-center gap-2">
+              <ShieldCheck aria-hidden="true" className="h-5 w-5 text-[#0b4a37]" />
+              <h2 className="text-lg font-bold text-[#17231e]">인력풀 공개 상태</h2>
             </div>
-          </div>
+            <p className="mt-2 break-keep text-sm leading-6 text-[#6b746f]">
+              변경 내용은 저장되며 학교 인력풀 노출에 반영됩니다.
+            </p>
 
-          <div className="panel-surface p-6">
-            <div className="text-xl font-bold text-ink">내 프로필</div>
+            <div className="mt-5 space-y-2">
+              <button
+                aria-pressed={availability === "seeking"}
+                className={`flex w-full items-start justify-between gap-3 rounded-md border p-4 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0b4a37] disabled:opacity-60 ${
+                  availability === "seeking"
+                    ? "border-[#9eb8a9] bg-[#e7efe9] text-[#0b4a37]"
+                    : "border-[#dedbd2] bg-white text-[#59635d]"
+                }`}
+                disabled={Boolean(pendingAction)}
+                onClick={() => void saveVisibility("seeking")}
+                type="button"
+              >
+                <span>
+                  <span className="block text-sm font-semibold">채용 제안 가능</span>
+                  <span className="mt-1 block break-keep text-xs leading-5">
+                    학교가 내 프로필을 확인하고 제안할 수 있습니다.
+                  </span>
+                </span>
+                {pendingAction === "visibility" ? (
+                  <LoaderCircle
+                    aria-hidden="true"
+                    className="h-5 w-5 shrink-0 animate-spin"
+                  />
+                ) : (
+                  <ShieldCheck aria-hidden="true" className="h-5 w-5 shrink-0" />
+                )}
+              </button>
+              <button
+                aria-pressed={availability === "paused"}
+                className={`flex w-full items-start justify-between gap-3 rounded-md border p-4 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0b4a37] disabled:opacity-60 ${
+                  availability === "paused"
+                    ? "border-[#9eb8a9] bg-[#e7efe9] text-[#0b4a37]"
+                    : "border-[#dedbd2] bg-white text-[#59635d]"
+                }`}
+                disabled={Boolean(pendingAction)}
+                onClick={() => void saveVisibility("paused")}
+                type="button"
+              >
+                <span>
+                  <span className="block text-sm font-semibold">노출 일시중지</span>
+                  <span className="mt-1 block break-keep text-xs leading-5">
+                    기존 지원과 면접만 관리하고 새 제안은 받지 않습니다.
+                  </span>
+                </span>
+                <Clock3 aria-hidden="true" className="h-5 w-5 shrink-0" />
+              </button>
+            </div>
+          </section>
 
-            <div className="mt-6 flex items-center gap-4">
+          <section className="rounded-md border border-[#dedbd2] bg-[#fbfaf6] p-6">
+            <h2 className="text-lg font-bold text-[#17231e]">내 프로필 요약</h2>
+            <div className="mt-5 flex items-center gap-4">
               <CharacterAvatar
-                className="h-20 w-20 rounded-lg"
-                presetId={teacher.avatarPreset}
-                size={80}
+                className="h-16 w-16 rounded-md"
+                presetId={displayAvatar}
+                size={64}
               />
               <div>
-                <div className="text-2xl font-bold text-ink">{teacher.name}</div>
-                <div className="mt-1 text-sm text-ink-soft">
-                  {teacher.qualification} / {teacher.residence}
+                <div className="text-xl font-bold text-[#17231e]">{displayName}</div>
+                <div className="mt-1 text-sm text-[#626c66]">
+                  {displayQualification}
                 </div>
-                <div className="mt-2 text-sm font-medium text-primary-700">
+                <div className="mt-1 text-sm font-medium text-[#0b4a37]">
                   경력 {teacher.experience}
                 </div>
               </div>
             </div>
-
-            <p className="mt-5 break-keep text-sm leading-6 text-ink-soft">
+            <p className="mt-5 break-keep text-sm leading-6 text-[#626c66]">
               {teacher.summary}
             </p>
-
-            <div className="mt-5 flex flex-wrap gap-2">
+            <div className="mt-4 flex flex-wrap gap-2">
               {teacher.preferredRegions.map((region) => (
                 <span
                   key={region}
-                  className="rounded-full bg-surface-subtle px-3 py-2 text-xs font-medium text-ink-soft"
+                  className="rounded-full border border-[#ddd9d0] bg-white px-2.5 py-1.5 text-xs font-medium text-[#626b66]"
                 >
                   {region}
                 </span>
               ))}
             </div>
-          </div>
-        </div>
+          </section>
+        </aside>
       </section>
     </PortalShell>
   );
