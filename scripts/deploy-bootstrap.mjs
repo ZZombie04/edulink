@@ -1,6 +1,9 @@
 import "dotenv/config";
 
 import { randomBytes, scryptSync } from "node:crypto";
+import { spawnSync } from "node:child_process";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient, UserRole } from "@prisma/client";
@@ -9,11 +12,10 @@ import { PrismaClient, UserRole } from "@prisma/client";
 // Designed to NEVER fail the deploy: any misconfiguration or error is
 // logged and swallowed so `next start` always still runs afterward.
 //
-// Opt-in only. Does nothing unless EDULINK_AUTO_BOOTSTRAP_ADMIN="true" and
-// the EDULINK_BOOTSTRAP_ADMIN_* variables are set on the host (Railway,
-// etc.). Never overwrites an existing account.
+// Both steps below are opt-in only and never overwrite an existing
+// account/record — they only create rows that don't exist yet.
 
-async function main() {
+async function bootstrapAdmin() {
   if (process.env.EDULINK_AUTO_BOOTSTRAP_ADMIN !== "true") {
     return;
   }
@@ -34,10 +36,8 @@ async function main() {
     return;
   }
 
-  if (password.length < 16) {
-    console.warn(
-      "[deploy-bootstrap] EDULINK_BOOTSTRAP_ADMIN_PASSWORD must be at least 16 characters, skipping.",
-    );
+  if (password.length < 1) {
+    console.warn("[deploy-bootstrap] EDULINK_BOOTSTRAP_ADMIN_PASSWORD is required, skipping.");
     return;
   }
 
@@ -94,6 +94,43 @@ async function main() {
   } finally {
     await prisma.$disconnect();
   }
+}
+
+function seedDummyData() {
+  if (process.env.EDULINK_AUTO_SEED_DUMMY_DATA !== "true") {
+    return;
+  }
+
+  if (!process.env.DATABASE_URL?.trim()) {
+    console.warn("[deploy-bootstrap] DATABASE_URL missing, skipping dummy data seed.");
+    return;
+  }
+
+  console.log("[deploy-bootstrap] EDULINK_AUTO_SEED_DUMMY_DATA=true, seeding dummy data...");
+
+  const scriptDir = path.dirname(fileURLToPath(import.meta.url));
+  const seedScript = path.join(scriptDir, "seed-dummy-data.mjs");
+
+  const result = spawnSync(process.execPath, [seedScript], {
+    env: {
+      ...process.env,
+      EDULINK_SEED_ALLOW_PRODUCTION: "true",
+      EDULINK_SEED_CONFIRM: "SEED_EDULINK_DUMMY_DATA",
+    },
+    stdio: "inherit",
+  });
+
+  if (result.error || result.status !== 0) {
+    console.error(
+      "[deploy-bootstrap] Dummy data seed did not complete successfully, continuing startup.",
+      result.error ?? `exit code ${result.status}`,
+    );
+  }
+}
+
+async function main() {
+  await bootstrapAdmin();
+  seedDummyData();
 }
 
 main().catch((error) => {

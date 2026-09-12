@@ -63,6 +63,8 @@ const initialForm: FormState = {
   verificationCode: "",
 };
 
+type EmailCheckStatus = "idle" | "checking" | "available" | "taken" | "error";
+
 export default function HRRegisterPage() {
   const [currentStep, setCurrentStep] = useState(1);
   const [privacyConsent, setPrivacyConsent] = useState(false);
@@ -72,11 +74,63 @@ export default function HRRegisterPage() {
   const [submitError, setSubmitError] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [emailCheckStatus, setEmailCheckStatus] =
+    useState<EmailCheckStatus>("idle");
+  const [emailCheckMessage, setEmailCheckMessage] = useState("");
 
   const updateField = (field: keyof FormState, value: string) => {
     setForm((current) => ({ ...current, [field]: value }));
     setFieldErrors((current) => ({ ...current, [field]: undefined }));
     setSubmitError("");
+
+    if (field === "email") {
+      setEmailCheckStatus("idle");
+      setEmailCheckMessage("");
+    }
+  };
+
+  const checkEmailDuplicate = async () => {
+    const email = form.email.trim();
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setEmailCheckStatus("error");
+      setEmailCheckMessage("사용 가능한 이메일 형식으로 입력해 주세요.");
+      return;
+    }
+
+    setEmailCheckStatus("checking");
+    setEmailCheckMessage("");
+
+    try {
+      const response = await fetch(
+        `/api/auth/check-email?email=${encodeURIComponent(email)}`,
+      );
+      const result = (await response.json().catch(() => null)) as {
+        available?: boolean;
+        message?: string;
+      } | null;
+
+      if (!response.ok || !result) {
+        setEmailCheckStatus("error");
+        setEmailCheckMessage(
+          result?.message ?? "이메일 확인에 실패했습니다. 잠시 후 다시 시도해 주세요.",
+        );
+        return;
+      }
+
+      if (result.available) {
+        setEmailCheckStatus("available");
+        setEmailCheckMessage("사용 가능한 이메일입니다.");
+      } else {
+        setEmailCheckStatus("taken");
+        setEmailCheckMessage(
+          result.message ?? "이미 사용 중인 이메일입니다.",
+        );
+      }
+    } catch {
+      setEmailCheckStatus("error");
+      setEmailCheckMessage("이메일 확인에 실패했습니다. 잠시 후 다시 시도해 주세요.");
+    }
   };
 
   const validate = () => {
@@ -428,22 +482,45 @@ export default function HRRegisterPage() {
                   />
                 </Field>
                 <Field error={fieldErrors.email} id="email" label="업무 이메일">
-                  <div className="relative">
-                    <Mail className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-muted" />
-                    <input
-                      id="email"
-                      className="input-surface pl-10"
-                      aria-invalid={Boolean(fieldErrors.email)}
-                      autoComplete="email"
-                      inputMode="email"
-                      placeholder="name@school.go.kr"
-                      type="email"
-                      value={form.email}
-                      onChange={(event) =>
-                        updateField("email", event.target.value)
+                  <div className="flex gap-2">
+                    <div className="relative flex-1">
+                      <Mail className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-muted" />
+                      <input
+                        id="email"
+                        className="input-surface pl-10"
+                        aria-invalid={Boolean(fieldErrors.email)}
+                        autoComplete="email"
+                        inputMode="email"
+                        placeholder="name@school.go.kr"
+                        type="email"
+                        value={form.email}
+                        onChange={(event) =>
+                          updateField("email", event.target.value)
+                        }
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      className="inline-flex min-h-12 shrink-0 items-center justify-center border border-outline-strong px-4 text-sm font-bold text-ink hover:bg-surface-subtle disabled:opacity-50"
+                      disabled={
+                        !form.email.trim() || emailCheckStatus === "checking"
                       }
-                    />
+                      onClick={checkEmailDuplicate}
+                    >
+                      {emailCheckStatus === "checking" ? "확인 중" : "중복확인"}
+                    </button>
                   </div>
+                  {emailCheckMessage ? (
+                    <span
+                      className={`mt-1.5 block text-xs font-medium ${
+                        emailCheckStatus === "available"
+                          ? "text-primary-700"
+                          : "text-[#a14339]"
+                      }`}
+                    >
+                      {emailCheckMessage}
+                    </span>
+                  ) : null}
                 </Field>
                 <Field id="department" label="부서 (선택)">
                   <input

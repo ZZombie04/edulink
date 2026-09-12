@@ -26,10 +26,8 @@ if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
   throw new Error("EDULINK_BOOTSTRAP_ADMIN_EMAIL must be a valid email.");
 }
 
-if (password.length < 16) {
-  throw new Error(
-    "EDULINK_BOOTSTRAP_ADMIN_PASSWORD must contain at least 16 characters.",
-  );
+if (password.length < 1) {
+  throw new Error("EDULINK_BOOTSTRAP_ADMIN_PASSWORD is required.");
 }
 
 if (!name || name.length > 80) {

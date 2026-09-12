@@ -2675,6 +2675,31 @@ function normalizeEmail(value: string) {
   return email;
 }
 
+export async function checkEmailAvailability(rawEmail: string) {
+  await ensureDemoPlatformSeed();
+
+  const email = normalizeEmail(rawEmail);
+
+  if (isReservedDemoEmail(email)) {
+    return {
+      available: false,
+      email,
+      reason: "RESERVED_DEMO_EMAIL" as const,
+    };
+  }
+
+  const existingUser = await prisma.user.findUnique({
+    where: { email },
+    select: { id: true },
+  });
+
+  return {
+    available: !existingUser,
+    email,
+    reason: existingUser ? ("EMAIL_ALREADY_REGISTERED" as const) : null,
+  };
+}
+
 function validateRegistrationPassword(value: string) {
   if (
     typeof value !== "string" ||

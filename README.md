@@ -120,12 +120,17 @@ idempotent upsert로 준비됩니다. `EDULINK_ENABLE_DEMO_SEED=false`로
 
 ```bash
 EDULINK_BOOTSTRAP_ADMIN_EMAIL="admin@example.kr" \
-EDULINK_BOOTSTRAP_ADMIN_PASSWORD="16자 이상의 별도 비밀번호" \
+EDULINK_BOOTSTRAP_ADMIN_PASSWORD="원하는 비밀번호" \
 EDULINK_BOOTSTRAP_ADMIN_NAME="운영 관리자" \
 EDULINK_BOOTSTRAP_ADMIN_PHONE="010-1234-5678" \
 EDULINK_BOOTSTRAP_CONFIRM="CREATE_EDULINK_SUPER_ADMIN" \
 npm run admin:bootstrap
 ```
+
+이 스크립트와 아래 배포 자동 생성 경로는 최소 길이·복잡도 제한이
+없습니다(빈 값만 아니면 됩니다). 실제 교사·학교 담당자 회원가입
+비밀번호 정책(8자 이상, 영문+숫자 포함)과는 별개이며 그쪽은 그대로
+유지됩니다.
 
 ### 배포 시 자동 관리자 생성
 
@@ -138,7 +143,7 @@ npm run admin:bootstrap
 ```dotenv
 EDULINK_AUTO_BOOTSTRAP_ADMIN="true"
 EDULINK_BOOTSTRAP_ADMIN_EMAIL="admin@example.kr"
-EDULINK_BOOTSTRAP_ADMIN_PASSWORD="16자 이상의 별도 비밀번호"
+EDULINK_BOOTSTRAP_ADMIN_PASSWORD="원하는 비밀번호"
 EDULINK_BOOTSTRAP_ADMIN_NAME="운영 관리자"
 EDULINK_BOOTSTRAP_ADMIN_PHONE="010-1234-5678"
 ```
@@ -167,6 +172,21 @@ npm run seed:dummy
   `Edulink2026!Demo!`입니다. `EDULINK_DUMMY_PASSWORD`로 바꿀 수
   있습니다.
 - 생성되는 계정 목록은 스크립트 실행 로그에 출력됩니다.
+
+### 배포할 때 자동으로 채워 넣기
+
+호스팅 플랫폼에 `EDULINK_AUTO_SEED_DUMMY_DATA="true"`를 등록해 두면
+위 관리자 자동 생성과 같은 타이밍(`npm start`)에
+`scripts/seed-dummy-data.mjs`가 자동으로 실행되어, 연결된 실제
+Postgres에 샘플 학교·교사 데이터가 들어가고 프론트엔드에도 바로
+반영됩니다. 이미 들어있는 레코드는 갱신만 하고 중복 생성하지
+않으므로 배포/재시작마다 실행돼도 안전합니다. 값이 없으면 이 단계는
+완전히 비활성 상태입니다.
+
+```dotenv
+EDULINK_AUTO_SEED_DUMMY_DATA="true"
+EDULINK_DUMMY_PASSWORD="공유 비밀번호(선택, 기본값 Edulink2026!Demo!)"
+```
 
 ## 검증
 
