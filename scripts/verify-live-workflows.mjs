@@ -45,6 +45,12 @@ async function request(path, options = {}) {
   };
 }
 
+function futureDateString(daysFromNow) {
+  const date = new Date();
+  date.setUTCDate(date.getUTCDate() + daysFromNow);
+  return date.toISOString().slice(0, 10);
+}
+
 function sessionCookie(setCookie) {
   const match = setCookie.match(/(?:^|,\s*)(edulink_session=[^;]+)/);
 
@@ -297,7 +303,7 @@ const reviewing = await mutate(hrCookie, "updateApplicationStatus", {
 check(reviewing.status === 200, "HR can start application review");
 const interview = await mutate(hrCookie, "scheduleInterviewForApplication", {
   applicationId: application.id,
-  date: "2026-08-05",
+  date: futureDateString(14),
   note: "수업 운영 경험을 확인합니다.",
   place: "본관 2층 회의실",
   time: "14:00",
