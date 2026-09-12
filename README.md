@@ -127,6 +127,47 @@ EDULINK_BOOTSTRAP_CONFIRM="CREATE_EDULINK_SUPER_ADMIN" \
 npm run admin:bootstrap
 ```
 
+### 배포 시 자동 관리자 생성
+
+호스팅 플랫폼(예: Railway)의 환경 변수 화면에 아래 값을 등록해 두면
+`npm start`가 실행될 때마다 `scripts/deploy-bootstrap.mjs`가 먼저
+실행되어 최초 1회만 SUPER_ADMIN 계정을 생성합니다. 이미 해당 이메일의
+계정이 있으면 아무 것도 하지 않고 건너뛰며, 값이 없거나 형식이
+잘못되면 경고만 남기고 앱 시작을 막지 않습니다.
+
+```dotenv
+EDULINK_AUTO_BOOTSTRAP_ADMIN="true"
+EDULINK_BOOTSTRAP_ADMIN_EMAIL="admin@example.kr"
+EDULINK_BOOTSTRAP_ADMIN_PASSWORD="16자 이상의 별도 비밀번호"
+EDULINK_BOOTSTRAP_ADMIN_NAME="운영 관리자"
+EDULINK_BOOTSTRAP_ADMIN_PHONE="010-1234-5678"
+```
+
+`EDULINK_AUTO_BOOTSTRAP_ADMIN`이 `"true"`가 아니면 이 단계는 완전히
+비활성 상태이므로 기존 배포 환경에는 영향이 없습니다.
+
+## 여러 학교·교사 샘플 데이터
+
+파일럿 시연이나 운영 가능성 점검을 위해 여러 학교(학교 담당자
+계정)와 여러 교사, 채용 공고·지원·직접 제안·계약·평가까지 한 번에
+채워 넣는 스크립트입니다. 내장 데모 시드(`EDULINK_ENABLE_DEMO_SEED`)와
+별개로 동작하며, 재실행해도 같은 레코드를 갱신할 뿐 중복 생성되지
+않습니다. 계정 이메일은 실제 가입과 절대 겹치지 않도록
+`*.dummy.edulink.local` 도메인을 사용합니다.
+
+```bash
+DATABASE_URL="postgresql://..." \
+EDULINK_SEED_CONFIRM="SEED_EDULINK_DUMMY_DATA" \
+npm run seed:dummy
+```
+
+- 운영 DB(`NODE_ENV=production`)에 실행하려면
+  `EDULINK_SEED_ALLOW_PRODUCTION="true"`를 함께 지정해야 합니다.
+- 모든 더미 계정은 같은 비밀번호를 사용하며, 기본값은
+  `Edulink2026!Demo!`입니다. `EDULINK_DUMMY_PASSWORD`로 바꿀 수
+  있습니다.
+- 생성되는 계정 목록은 스크립트 실행 로그에 출력됩니다.
+
 ## 검증
 
 정적 품질 게이트는 다음 명령으로 한 번에 실행합니다.
